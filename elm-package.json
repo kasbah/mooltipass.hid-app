@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "summary": "",
+    "repository": "https://github.com/kasbah/mooltipass.hid-app.git",
+    "license": "CDDL",
+    "source-directories": [
+        "src/"
+    ],
+    "exposed-modules": [],
+    "dependencies": {
+        "elm-lang/core": "1.0.0 <= v < 2.0.0"
+    }
+}
