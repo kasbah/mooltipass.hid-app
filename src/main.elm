@@ -7,6 +7,6 @@ import Mouse
 import Window
 
 background (w',h') = let (w,h) = (toFloat w', toFloat h')
-                     in collage w' h' [filled red <| square 64]
+                     in collage w' h' [filled green <| square 64]
 
 main = background <~ Window.dimensions
