@@ -6,7 +6,7 @@ import Signal(..)
 import Mouse
 import Window
 
-main = scene <~ Window.dimensions ~ constant False
+main = scene <~ Window.dimensions ~ foldp (\_ s -> not s) False Mouse.clicks
 
 scene (w',h') connected =
     let (w,h) = (toFloat w', toFloat h')
@@ -14,19 +14,21 @@ scene (w',h') connected =
 
 header w h connected =
     if connected then
-        flow right [ container (round (w/1.5)) 85 midLeft (logo "blue")
-                   , container (round (w/2.5)) 85 middle menuButton
+        flow right [ logo w "blue"
+                   , menuButton w
                    ]
                  else
-        flow right [container (round (w/1.5)) 85 midLeft (logo "red")]
+        logo w "red"
 
-logo color =
+logo w color =
     let aspect = 3.394144559879574
-    in image (round (85 * aspect)) 85 ("images/logo-" ++ color ++ ".svg")
+        logo'  = image (round (85 * aspect)) 85 ("images/logo-" ++ color ++ ".svg")
+    in  container (round (w/1.5)) 85 midLeft logo'
 
-menuButton =
+menuButton w =
     let aspect = 1.548105123408364
-    in image (round (32 * aspect)) 32 ("images/menu_button.svg")
+        button = image (round (32 * aspect)) 32 ("images/menu_button.svg")
+    in  container (round (w/2.5)) 85 middle button
 
 blue = Color.rgb 0x0C 0xFE 0xFF
 spacer' x = spacer (round x) (round x)
