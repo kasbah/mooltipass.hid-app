@@ -1,0 +1,7 @@
+build/
+elm-stuff/
+*.sw*
+.cabal-sandbox/
+cabal.sandbox.config
+*repl-temp-*.elm
+*repl-temp-*.js
