@@ -28,8 +28,16 @@ app dims connected = let state = {defaultState | connected <- connected}
 
 scene : (Int, Int) -> State -> Element
 scene (w',h') state =
-    let (w,h) = (toFloat w', toFloat h')
-    in withMargins w h <| header (w - (2*(margin w))) state.connected
+    let (w,h)        = (toFloat w', toFloat h')
+        withMargin x = x - 2*(margin x)
+        header'      = header (withMargin w) state.connected
+        console'     = console (withMargin w) ((withMargin h) - (85 + 32))
+    in if not state.connected
+       then withMargins w h <| header'
+       else withMargins w h <| flow down [ header'
+                                         , spacer' 32
+                                         , console'
+                                         ]
 
 header : Float -> Bool -> Element
 header w connected =
@@ -40,6 +48,9 @@ header w connected =
                    ]
     else
         logo w "red"
+
+console : Float -> Float -> Element
+console w h = collage (round w) (round h) [filled grey <| rect w h]
 
 logo : Float -> String -> Element
 logo w color =
@@ -55,6 +66,9 @@ menuButton w =
 
 blue : Color.Color
 blue = Color.rgb 0x0C 0xFE 0xFF
+
+grey : Color.Color
+grey = Color.rgb 0x1A 0x1A 0x1A
 
 spacer' : Float -> Element
 spacer' x = spacer (round x) (round x)
