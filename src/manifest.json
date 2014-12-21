@@ -1,7 +1,7 @@
 {
     "name": "Mooltipass Client",
     "description": "Mooltipass password manager client",
-    "version": "0.6",
+    "version": "0.7",
     "app": {
         "background": {
             "scripts": ["main.js"]
@@ -14,7 +14,7 @@
                 { "vendorId": 5840, "productId": 2464 }
             ]
         },
-	{"fileSystem": ["write", "retainEntries"]} 
+	{"fileSystem": ["write", "retainEntries"]}
     ],
-    "icons": { "16": "mooltipass-16.png", "128": "mooltipass-active.png" }
+    "icons": { "16": "images/logo16.png", "128": "images/logo128.png" }
 }
