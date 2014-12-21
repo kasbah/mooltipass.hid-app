@@ -6,16 +6,19 @@ import Signal(..)
 import Mouse
 import Window
 
-main = scene <~ Window.dimensions ~ constant True
+main = scene <~ Window.dimensions ~ constant False
 
 scene (w',h') connected =
     let (w,h) = (toFloat w', toFloat h')
-    in  case connected of
-        True  -> withMargins w h <| header (w - (2*(margin w))) (h - (2*(margin h)))
+    in withMargins w h <| header (w - (2*(margin w))) (h - (2*(margin h))) connected
 
-header w h = flow right [ container (round (w/1.5)) 85 midLeft (logo "blue")
-                        , container (round (w/2.5)) 85 middle menuButton
-                        ]
+header w h connected =
+    if connected then
+        flow right [ container (round (w/1.5)) 85 midLeft (logo "blue")
+                   , container (round (w/2.5)) 85 middle menuButton
+                   ]
+                 else
+        flow right [container (round (w/1.5)) 85 midLeft (logo "red")]
 
 logo color =
     let aspect = 3.394144559879574
