@@ -8,25 +8,26 @@ import Window
 
 blue = Color.rgb 0x0C 0xFE 0xFF
 spacer' x = spacer (round x) (round x)
-margin x = x/30
+margin x = x/20
 
-logo w h color =
+logo color =
     let aspect = 3.394144559879574
-    in scaledImage w h 2 aspect 100 350 ("images/logo-" ++ color ++ ".svg")
+    in image (round (85 * aspect)) 85 ("images/logo-" ++ color ++ ".svg")
 
-withMargins w h x = flow down [spacer' (margin w), flow right [spacer' (margin h), x]]
+withMargins w h x = flow down [spacer' (margin h), flow right [spacer' (margin w), x, spacer' (margin w)], spacer' (margin h)]
 
 scaledImage w h scale aspect min max path =
     fittedImage (floor (clamp min max (w / scale))) (floor (clamp (min / aspect) (max / aspect) (w / scale / aspect))) path
 
-menuButton w h =
+menuButton =
     let aspect = 1.548105123408364
-    in scaledImage w h 10 aspect 25 50 "images/menu_button.svg"
+    in image (round (32 * aspect)) 32 ("images/menu_button.svg")
+
+header w h = flow right [container (round (w/1.5)) 85 midLeft (logo "blue"), container (round (w/2.5)) 85 middle menuButton]
 
 scene (w',h') connected =
     let (w,h) = (toFloat w', toFloat h')
     in  case connected of
-        False -> withMargins w h <| logo w h "red"
-        True  -> withMargins w h <| flow right [logo w h "blue", spacer' (w/4), menuButton w h]
+        True  -> withMargins w h <| header (w - (2*(margin w))) (h - (2*(margin h)))
 
 main = scene <~ Window.dimensions ~ constant True
