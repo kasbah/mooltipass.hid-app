@@ -32,12 +32,13 @@ scene (w',h') state =
     let (w,h)        = (toFloat w', toFloat h')
         withMargin x = x - 2*(margin x)
         header'      = header (withMargin w) state.connected
-        console'     = console (withMargin w) ((withMargin h) - (85 + 32))
+        console'     = console (withMargin w) ((withMargin h) - (85 + 32 + 64))
     in if not state.connected
        then withMargins w h <| header'
        else withMargins w h <| flow down [ header'
                                          , spacer' 32
                                          , console'
+                                         , clearButton (withMargin w)
                                          ]
 
 header : Float -> Bool -> Element
@@ -64,6 +65,12 @@ menuButton w =
     let aspect = 1.548105123408364
         button = image (round (32 * aspect)) 32 ("images/menu_button.svg")
     in  container (max 85 (round (w * 0.249))) 85 middle button
+
+clearButton : Float -> Element
+clearButton w =
+    let aspect = 2.96658357613427
+        button = image (round (32 * aspect)) 32 ("images/clear_button.svg")
+    in  container (round w) 64 middle button
 
 blue : Color.Color
 blue = Color.rgb 0x0C 0xFE 0xFF
