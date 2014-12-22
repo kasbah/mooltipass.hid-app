@@ -1,4 +1,3 @@
-
 all: dir images build/manifest.json build/main.js
 	elm-make src/main.elm --output build/elm.js
 	install src/index.html build/
@@ -7,8 +6,6 @@ js: $(patsubst src/%, build/%, $(wildcard src/*.js))
 
 build/%.js: src/%.js
 	install $< $@
-
-dir: build/.dirstamp
 
 build/.dirstamp:
 	mkdir -p build
@@ -20,5 +17,7 @@ build/manifest.json: dir
 images: dir
 	mkdir -p build
 	cp -r src/images build/
+
+dir: build/.dirstamp
 
 .PHONY: all images dir js

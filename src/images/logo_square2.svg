@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="128"
+   height="128"
+   viewBox="0 0 33.866666 33.866666"
+   id="svg4243"
+   version="1.1"
+   inkscape:version="0.91+devel r"
+   inkscape:export-filename="/home/kaspar/projects/mooltipass/code/ext/chromeipass/icons/mooltipass-blue19.png"
+   inkscape:export-xdpi="34.922058"
+   inkscape:export-ydpi="34.922058"
+   sodipodi:docname="logo_square.svg">
+  <defs
+     id="defs4245" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="5.6"
+     inkscape:cx="88.978049"
+     inkscape:cy="32.892003"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     units="px"
+     inkscape:window-width="1440"
+     inkscape:window-height="886"
+     inkscape:window-x="0"
+     inkscape:window-y="14"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata4248">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-107.41784,-54.264183)">
+    <rect
+       style="opacity:1;fill:#333333;fill-opacity:1;stroke:none;stroke-width:2;stroke-opacity:1"
+       id="rect4841-2"
+       width="18.146263"
+       height="18.146263"
+       x="114.83085"
+       y="66.474655"
+       ry="2.8309758"
+       inkscape:export-xdpi="179.17"
+       inkscape:export-ydpi="179.17"
+       inkscape:export-filename="/home/kaspar/projects/mooltipass/code/app/src/images/logo_square128.png"
+       clip-path="none" />
+    <g
+       id="g4912"
+       transform="matrix(0.79002515,0,0,0.79929063,25.698778,15.502531)"
+       inkscape:export-filename="/home/kaspar/projects/mooltipass/code/app/src/images/logo_square128.png"
+       inkscape:export-xdpi="179.17"
+       inkscape:export-ydpi="179.17"
+       style="stroke:#0cfeff;stroke-width:0.65838253;stroke-opacity:1"
+       clip-path="none">
+      <g
+         transform="matrix(0.18600708,0,0,0.18416311,98.018689,-97.772454)"
+         id="g3965-9"
+         style="stroke:#0cfeff;stroke-width:0.65838253;stroke-opacity:1"
+         inkscape:export-filename="/home/kaspar/projects/mooltipass/code/ext/chromeipass/icons/mooltipass-red38.png"
+         inkscape:export-xdpi="56.889999"
+         inkscape:export-ydpi="56.889999">
+        <g
+           inkscape:export-ydpi="90"
+           inkscape:export-xdpi="90"
+           inkscape:export-filename="/home/blmwielens/Mooltipass/ui/elements/leftCtrl.png"
+           id="g4044-5"
+           transform="translate(-14.230513,-83.544211)"
+           style="stroke:#0cfeff;stroke-width:0.65838253;stroke-opacity:1">
+          <path
+             style="opacity:0.98814231;fill:none;stroke:#0cfeff;stroke-width:5.24616194;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
+             d="m 101.72526,23.948654 c 3.01571,-8.482807 9.74059,-15.2076808 18.22339,-18.2233955"
+             id="path3253-2"
+             transform="translate(0,988.36218)"
+             inkscape:connector-curvature="0" />
+          <path
+             style="opacity:0.98814231;fill:none;stroke:#0cfeff;stroke-width:5.24616194;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
+             d="m 119.94865,62.274742 c -8.4828,-3.015715 -15.20768,-9.740589 -18.22339,-18.223395"
+             id="path3249-8"
+             transform="translate(0,988.36218)"
+             inkscape:connector-curvature="0" />
+        </g>
+        <g
+           inkscape:export-ydpi="90"
+           inkscape:export-xdpi="90"
+           inkscape:export-filename="/home/blmwielens/Mooltipass/ui/elements/rightCtrl.png"
+           id="g4039-3"
+           transform="translate(-16.230513,-83.544211)"
+           style="stroke:#0cfeff;stroke-width:0.65838253;stroke-opacity:1">
+          <path
+             style="opacity:0.98814231;fill:none;stroke:#0cfeff;stroke-width:5.24616194;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
+             d="m 140.05135,5.7252583 c 8.4828,3.0157146 15.20768,9.7405887 18.22339,18.2233947"
+             id="path3257-0"
+             transform="translate(0,988.36218)"
+             inkscape:connector-curvature="0" />
+          <path
+             style="opacity:0.98814231;fill:none;stroke:#0cfeff;stroke-width:5.24616194;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
+             d="m 158.27474,44.051346 c -3.01571,8.482807 -9.74059,15.207681 -18.22339,18.223395"
+             id="path3239-4"
+             transform="translate(0,988.36218)"
+             inkscape:connector-curvature="0" />
+        </g>
+      </g>
+      <path
+         id="path4408-1"
+         style="opacity:0.98814231;fill:#0cfef8;fill-opacity:0.50196078;stroke:#0cfeff;stroke-width:0.41068754;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:0.57868024"
+         d="m 117.97022,71.742127 0.3202,0.775283 m 2.15244,5.211526 0.3202,0.775284 m -4.81134,-1.99846 0.78304,-0.31703 m 5.26372,-2.131075 0.78305,-0.317049 m -6.81702,-0.03057 0.78012,0.324041 m 5.244,2.1782 0.78012,0.324041 m -4.82941,1.955267 0.32728,-0.772382 m 2.20001,-5.192033 0.32728,-0.772381"
+         inkscape:connector-curvature="0"
+         inkscape:export-filename="/home/kaspar/projects/mooltipass/code/ext/chromeipass/icons/mooltipass-red19.png"
+         inkscape:export-xdpi="38.259998"
+         inkscape:export-ydpi="38.259998" />
+      <ellipse
+         ry="3.537008"
+         rx="3.5724227"
+         cy="75.123184"
+         cx="119.36663"
+         style="opacity:0.98814231;fill:none;stroke:#0cfeff;stroke-width:0.65490115;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
+         id="path4378-5"
+         inkscape:export-filename="/home/kaspar/projects/mooltipass/code/ext/chromeipass/icons/mooltipass-red38.png"
+         inkscape:export-xdpi="56.889999"
+         inkscape:export-ydpi="56.889999" />
+      <ellipse
+         ry="1.1860882"
+         rx="1.1979642"
+         cy="75.123192"
+         cx="119.36663"
+         id="path4380-0"
+         style="opacity:0.98814231;fill:none;fill-opacity:1;stroke:#0cfeff;stroke-width:0.41068748;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
+         inkscape:export-filename="/home/kaspar/projects/mooltipass/code/ext/chromeipass/icons/mooltipass-red38.png"
+         inkscape:export-xdpi="56.889999"
+         inkscape:export-ydpi="56.889999" />
+      <path
+         id="path4396-6"
+         style="opacity:0.98814231;fill:none;stroke:#0cfeff;stroke-width:0.41068754;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
+         d="m 121.96492,72.556903 -0.94313,0.933778 0.94313,-0.933778 z m -5.19804,0 0.93878,0.929475 -0.93878,-0.929475 z m 4.25926,4.217048 0.93878,0.929475 -0.93878,-0.929475 z m -3.32483,0.0043 -0.93878,0.929476 0.93878,-0.929476 z m 1.66241,-5.288096 0,1.320564 0,-1.320564 z m -3.67556,3.63913 1.32763,0 -1.32763,0 z m 6.0235,0 1.32764,0 -1.32764,0 z m -2.34794,2.330757 0,1.314468 0,-1.314468 z"
+         inkscape:connector-curvature="0"
+         inkscape:export-filename="/home/kaspar/projects/mooltipass/code/ext/chromeipass/icons/mooltipass-red19.png"
+         inkscape:export-xdpi="38.259998"
+         inkscape:export-ydpi="38.259998" />
+    </g>
+    <g
+       transform="matrix(1.165887,0,0,1.165887,12.447621,-2.0616308)"
+       id="g11254"
+       inkscape:export-filename="/home/kaspar/projects/mooltipass/code/app/src/images/logo_square128.png"
+       inkscape:export-xdpi="179.17"
+       inkscape:export-ydpi="179.17">
+      <path
+         style="display:inline;opacity:0.98814231;fill:none;stroke:#0cfeff;stroke-width:0.60000002;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
+         d="m 97.614453,65.3006 4.337957,0"
+         id="path3269-9"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cc" />
+      <path
+         style="display:inline;opacity:0.98814231;fill:none;stroke:#0cfeff;stroke-width:0.60000002;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
+         d="m 97.614452,66.566839 4.337958,0"
+         id="path3269-9-2"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cc" />
+      <path
+         style="display:inline;opacity:0.98814231;fill:none;stroke:#0cfeff;stroke-width:0.60000002;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
+         d="m 97.614454,67.833087 4.337956,0"
+         id="path3269-9-2-9"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cc" />
+    </g>
+  </g>
+</svg>
