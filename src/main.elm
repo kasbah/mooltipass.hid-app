@@ -65,10 +65,16 @@ logo w color =
         logo'  = image (round (48 * aspect)) 48 ("images/logo-" ++ color ++ ".svg")
     in  container (max (round (48 * aspect)) (round (w * 0.749))) 48 midLeft logo'
 
+menuChannel : Channel ()
+menuChannel = channel ()
+
 menuButton : Float -> Element
 menuButton w =
-    let aspect = 1.548105123408364
-        button = image (round (19 * aspect)) 19 ("images/menu_button.svg")
+    let aspect = 1.4404321532671787
+        up     = image (round (24 * aspect)) 24 ("images/menu_button.svg")
+        hover  = image (round (24 * aspect)) 24 ("images/menu_button_hover.svg")
+        down   = image (round (24 * aspect)) 24 ("images/menu_button_down.svg")
+        button = customButton (send clearChannel ()) up hover down
     in  container (max 48 (round (w * 0.249))) 48 middle button
 
 clearChannel : Channel ()
