@@ -1,6 +1,7 @@
 import Text(..)
 import Graphics.Element(..)
 import Graphics.Collage(..)
+import Graphics.Input(..)
 import Color
 import Signal(..)
 import Mouse
@@ -12,12 +13,14 @@ type Screen = Log | Settings | Manage | Developer
 type alias State =
     { connected : Bool
     , screen    : Screen
+    , menuOpen  : Bool
     }
 
 defaultState : State
 defaultState =
     { connected = False
     , screen    = Log
+    , menuOpen  = False
     }
 
 main : Signal Element
@@ -68,16 +71,28 @@ menuButton w =
         button = image (round (19 * aspect)) 19 ("images/menu_button.svg")
     in  container (max 48 (round (w * 0.249))) 48 middle button
 
+clearChannel : Channel ()
+clearChannel = channel ()
+
 clearButton : Float -> Element
 clearButton w =
     let aspect = 2.96658357613427
-        button = image (round (24 * aspect)) 24 ("images/clear_button.svg")
+        up     = image (round (24 * aspect)) 24 ("images/clear_button.svg")
+        hover  = image (round (24 * aspect)) 24 ("images/clear_button_hover.svg")
+        down   = image (round (24 * aspect)) 24 ("images/clear_button_down.svg")
+        button = customButton (send clearChannel ()) up hover down
     in  container (round w) 48 midBottom button
+
+connectChannel : Channel ()
+connectChannel = channel ()
 
 connectButton : Float -> Float -> Element
 connectButton w h =
-    let aspect = 3.8123121543185907
-        button = image (round (24 * aspect)) 24 ("images/connect_button.svg")
+    let aspect = 3.3747858968383753
+        up     = image (round (24 * aspect)) 24 ("images/connect_button.svg")
+        hover  = image (round (24 * aspect)) 24 ("images/connect_button_hover.svg")
+        down   = image (round (24 * aspect)) 24 ("images/connect_button_down.svg")
+        button = customButton (send connectChannel ()) up hover down
     in  container (round w) (round h) middle button
 
 blue : Color.Color

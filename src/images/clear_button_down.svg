@@ -15,7 +15,7 @@
    id="svg12732"
    version="1.1"
    inkscape:version="0.91+devel r"
-   sodipodi:docname="clear_button.svg">
+   sodipodi:docname="clear_button_filled.svg">
   <defs
      id="defs12734" />
   <sodipodi:namedview
@@ -25,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="3.959798"
-     inkscape:cx="-27.487521"
-     inkscape:cy="36.088966"
+     inkscape:zoom="7.9195959"
+     inkscape:cx="61.457326"
+     inkscape:cy="13.199864"
      inkscape:document-units="mm"
      inkscape:current-layer="g6495-9"
      showgrid="false"
@@ -48,7 +48,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -68,15 +68,27 @@
          height="8.0180864"
          width="24.277979"
          id="rect6489-3"
-         style="opacity:1;fill:none;fill-opacity:1;stroke:#00ffff;stroke-width:0.50000001;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none" />
+         style="opacity:1;fill:#0cfeff;fill-opacity:1;stroke:#00ffff;stroke-width:0.50000001;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none" />
+      <path
+         style="opacity:1;fill:#0cfeff;fill-opacity:1;stroke:none;stroke-width:1.88976383;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 46.493526,16.408477 c 0.17362,-0.07006 0.457725,-0.07006 0.631345,0 0.17362,0.07006 0.03157,0.127377 -0.315673,0.127377 -0.34724,0 -0.489292,-0.05732 -0.315672,-0.127377 z"
+         id="path6138"
+         inkscape:connector-curvature="0"
+         transform="matrix(0.26458334,0,0,0.26458334,217.65415,156.17133)" />
+      <path
+         style="opacity:1;fill:#0cfeff;fill-opacity:1;stroke:none;stroke-width:1.88976383;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d=""
+         id="path6140"
+         inkscape:connector-curvature="0"
+         transform="matrix(0.26458334,0,0,0.26458334,217.65415,156.17133)" />
       <text
          sodipodi:linespacing="125%"
          id="text6491-8"
          y="161.89494"
          x="223.42964"
-         style="font-style:normal;font-weight:normal;font-size:10.58333397px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#00ffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         style="font-style:normal;font-weight:normal;font-size:10.58333397px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;"
          xml:space="preserve"><tspan
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333359px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#00ffff;stroke:none"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333359px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff;stroke:none;"
            y="161.89494"
            x="223.42964"
            id="tspan6493-6"
