@@ -1,12 +1,12 @@
-import Text(..)
-import Graphics.Element(..)
-import Graphics.Collage(..)
-import Graphics.Input(..)
 import Color
-import Signal(..)
-import Mouse
-import Window
+import Graphics.Collage(..)
+import Graphics.Element(..)
+import Graphics.Input(..)
 import List
+import Mouse
+import Signal(..)
+import Text
+import Window
 
 type Screen = Log | Settings | Manage | Developer
 
@@ -28,23 +28,31 @@ main = app <~ Window.dimensions ~ foldp (\_ s -> not s) False Mouse.clicks
 
 app : (Int, Int) -> Bool -> Element
 app dims connected = let state = {defaultState | connected <- connected}
-                     in  scene dims state
+                     in  layers [layer1 dims state, layer2 dims state, popup dims state]
 
-scene : (Int, Int) -> State -> Element
-scene (w',h') state =
+layer2 : (Int, Int) -> State -> Element
+layer2 (w',h') state = empty
+
+popup : (Int, Int) -> State -> Element
+popup (w',h') state = empty
+
+layer1 : (Int, Int) -> State -> Element
+layer1 (w',h') state =
     let (w,h)          = (toFloat w', toFloat h')
         withMargin x   = x - 2*(margin x)
         header'        = header (withMargin w) state.connected
         console'       = console (withMargin w) ((withMargin h) - (64 + 64))
         connectButton' = connectButton (withMargin w) ((withMargin h) - (64 + 64))
-    in if not state.connected
-       then withMargins w h <| flow down [ header'
-                                         , connectButton'
-                                         ]
-       else withMargins w h <| flow down [ header'
-                                         , console'
-                                         , clearButton (withMargin w)
-                                         ]
+    in withMargins w h
+       <| flow down
+       <| if not state.connected
+            then [ header'
+                 , connectButton'
+                 ]
+            else [ header'
+                 , console'
+                 , clearButton (withMargin w)
+                 ]
 
 header : Float -> Bool -> Element
 header w connected =
