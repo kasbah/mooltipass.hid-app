@@ -15,7 +15,6 @@ build/manifest.json: dir
 	cp src/manifest.json build/
 
 images: dir
-	mkdir -p build
 	cp -r src/images build/
 
 dir: build/.dirstamp

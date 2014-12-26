@@ -28,22 +28,24 @@ main = app <~ Window.dimensions ~ foldp (\_ s -> not s) False Mouse.clicks
 
 app : (Int, Int) -> Bool -> Element
 app dims connected = let state = {defaultState | connected <- connected}
-                     in  layers [layer1 dims state, layer2 dims state, popup dims state]
+                     in  layers [fst (layer1 dims state), layer2 dims state, popup dims (snd (layer1 dims state)) state]
 
 layer2 : (Int, Int) -> State -> Element
 layer2 (w',h') state = empty
 
-popup : (Int, Int) -> State -> Element
-popup (w',h') state = empty
+popup : (Int, Int) -> Element -> State -> Element
+popup (w',h') hdr state =
+    let aspect = 0.7009962578555462
+    in  (image 200 (round (200 / aspect)) "images/popup.svg") `below` hdr
 
-layer1 : (Int, Int) -> State -> Element
+layer1 : (Int, Int) -> State -> (Element, Element)
 layer1 (w',h') state =
     let (w,h)          = (toFloat w', toFloat h')
         withMargin x   = x - 2*(margin x)
         header'        = header (withMargin w) state.connected
         console'       = console (withMargin w) ((withMargin h) - (64 + 64))
         connectButton' = connectButton (withMargin w) ((withMargin h) - (64 + 64))
-    in withMargins w h
+    in (withMargins w h
        <| flow down
        <| if not state.connected
             then [ header'
@@ -53,6 +55,7 @@ layer1 (w',h') state =
                  , console'
                  , clearButton (withMargin w)
                  ]
+       , header')
 
 header : Float -> Bool -> Element
 header w connected =
