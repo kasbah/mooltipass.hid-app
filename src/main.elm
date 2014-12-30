@@ -8,27 +8,41 @@ import Signal(..)
 import Text
 import Window
 
-type Screen = Log | Settings | Manage | Developer
+main : Signal Element
+main = scene <~ Window.dimensions ~ (foldp update defaultState (subscribe actions))
 
+-- State
+type Screen = Log | Settings | Credentials | Developer
+
+{-| The entire application state -}
 type alias State =
     { connected : Bool
     , screen    : Screen
-    , menuOpen  : Bool
     }
 
 defaultState : State
 defaultState =
     { connected = False
     , screen    = Log
-    , menuOpen  = False
     }
 
-main : Signal Element
-main = app <~ Window.dimensions ~ foldp (\_ s -> not s) False Mouse.clicks
+{-| All actions that can be performed to change state -}
+type Action = ChangeScreen Screen | SetConnected Bool | NoOp
 
-app : (Int, Int) -> Bool -> Element
-app dims connected = let state = {defaultState | connected <- connected}
-                     in  layers [fst (layer1 dims state), layer2 dims state, popup dims (snd (layer1 dims state)) state]
+{-| Transform the state to a new state according to an action -}
+update : Action -> State -> State
+update action state =
+    case action of
+        (ChangeScreen s) -> {state | screen <- s}
+        (SetConnected c) -> {state | connected <- c}
+        NoOp             -> state
+
+actions : Channel Action
+actions = channel NoOp
+
+-- Scene
+scene : (Int,Int) -> State -> Element
+scene dims state = layers [fst (layer1 dims state), layer2 dims state, popup dims (snd (layer1 dims state)) state]
 
 layer2 : (Int, Int) -> State -> Element
 layer2 (w',h') state = empty
