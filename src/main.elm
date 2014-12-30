@@ -43,24 +43,16 @@ actions = channel NoOp
 
 -- Scene
 scene : (Int,Int) -> State -> Element
-scene dims state = layers [fst (layer1 dims state), layer2 dims state, popup dims (snd (layer1 dims state)) state]
+scene dims state = layers [layer1 dims state]
 
-layer2 : (Int, Int) -> State -> Element
-layer2 (w',h') state = empty
-
-popup : (Int, Int) -> Element -> State -> Element
-popup (w',h') hdr state =
-    let aspect = 0.7009962578555462
-    in  (image 200 (round (200 / aspect)) "images/popup.svg") `below` hdr
-
-layer1 : (Int, Int) -> State -> (Element, Element)
+layer1 : (Int, Int) -> State -> Element
 layer1 (w',h') state =
     let (w,h)          = (toFloat w', toFloat h')
         withMargin x   = x - 2*(margin x)
         header'        = header (withMargin w) state.connected
         console'       = console (withMargin w) ((withMargin h) - (64 + 64))
         connectButton' = connectButton (withMargin w) ((withMargin h) - (64 + 64))
-    in (withMargins w h
+    in withMargins w h
        <| flow down
        <| if not state.connected
             then [ header'
@@ -70,7 +62,22 @@ layer1 (w',h') state =
                  , console'
                  , clearButton (withMargin w)
                  ]
-       , header')
+
+connectButton : Float -> Float -> Element
+connectButton w h =
+    let aspect = 3.3747858968383753
+        up     = image (round (24 * aspect)) 24 ("images/connect_button.svg")
+        hover  = image (round (24 * aspect)) 24 ("images/connect_button_hover.svg")
+        down   = image (round (24 * aspect)) 24 ("images/connect_button_down.svg")
+        button = customButton (send actions (SetConnected True)) up hover down
+    in  container (round w) (round h) middle button
+
+popup : (Int, Int) -> Element -> State -> Element
+popup (w',h') hdr state =
+    let aspect = 0.7009962578555462
+    in  (image 200 (round (200 / aspect)) "images/popup.svg") `below` hdr
+
+
 
 header : Float -> Bool -> Element
 header w connected =
@@ -118,14 +125,6 @@ clearButton w =
 connectChannel : Channel ()
 connectChannel = channel ()
 
-connectButton : Float -> Float -> Element
-connectButton w h =
-    let aspect = 3.3747858968383753
-        up     = image (round (24 * aspect)) 24 ("images/connect_button.svg")
-        hover  = image (round (24 * aspect)) 24 ("images/connect_button_hover.svg")
-        down   = image (round (24 * aspect)) 24 ("images/connect_button_down.svg")
-        button = customButton (send connectChannel ()) up hover down
-    in  container (round w) (round h) middle button
 
 blue : Color.Color
 blue = Color.rgb 0x0C 0xFE 0xFF

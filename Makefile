@@ -19,7 +19,7 @@ build/.dirstamp:
 	mkdir -p build
 	touch build/.dirstamp
 
-build/elm.js:
+build/elm.js: $(ELM_FILES)
 	elm-make $(ELM_FILES) --output build/elm.js
 
 build/%.js: src/%.js
