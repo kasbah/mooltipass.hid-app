@@ -60,11 +60,11 @@ layer1 dims state =
               ]
 
 heights =
-    { logo    = 38
+    { logo    = 42
     , title   = 64
     , tab     = 32
-    , nav     = 38
-    , consoleButton  = 24
+    , nav     = 42
+    , consoleButton  = 28
     , consoleToolbar = 48
     , marginBottom   = 3
     }
