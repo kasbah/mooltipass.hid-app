@@ -19,17 +19,22 @@ type ConnectState = NotConnected | Connected | NoCard | NoPin
 {-| The entire application state -}
 type alias State =
     { connected : ConnectState
-    , activeTab    : Tab
+    , activeTab : Tab
+    , log       : String
     }
 
 defaultState : State
 defaultState =
     { connected = Connected
     , activeTab = Log
+    , log       = "connecting ..."
     }
 
 {-| All actions that can be performed to change state -}
-type Action = ChangeTab Tab | SetConnected ConnectState | NoOp
+type Action = ChangeTab Tab
+            | SetConnected ConnectState
+            | ClearLog
+            | NoOp
 
 {-| Transform the state to a new state according to an action -}
 update : Action -> State -> State
@@ -37,6 +42,7 @@ update action state =
     case action of
         (ChangeTab t)    -> {state | activeTab <- t}
         (SetConnected c) -> {state | connected <- c}
+        ClearLog         -> {state | log <- ""}
         NoOp             -> state
 
 actions : Channel Action
@@ -49,7 +55,6 @@ scene dims state = layers [layer1 dims state]
 layer1 : (Int, Int) -> State -> Element
 layer1 dims state =
     flow down [ title dims state
-              , spacer 42 heights.spacer1
               , navigation dims state
               , content dims state
               ]
@@ -57,11 +62,11 @@ layer1 dims state =
 heights =
     { logo    = 38
     , title   = 64
-    , spacer1 = 16
     , tab     = 32
     , nav     = 38
     , button  = 32
-    , bottom  = 16
+    , consoleToolbar = 48
+    , marginBottom   = 3
     }
 
 -- Title
@@ -124,13 +129,26 @@ tab t active disabled =
 -- Content
 content : (Int, Int) -> State -> Element
 content (w,h) state =
-    let h' = h - heights.title - heights.spacer1 - heights.nav - heights.bottom
+    let h' = h - heights.title - heights.nav - heights.marginBottom
         w' = w - (32 * 2)
     in container w h' middle <| console (w',h')
 
 console : (Int, Int) -> Element
-console (w,h) = let (w',h') = (toFloat w, toFloat h)
-                in collage w h [filled grey <| roundedRect w' h' (max w' h'/80)]
+console (w,h) =
+    let (w',h')  = (toFloat w, toFloat h)
+        screenH  = h - heights.consoleToolbar
+        screenH' = toFloat screenH
+        screen   = collage w screenH [filled grey <| roundedRect w' screenH' (max w' h'/80)]
+        toolbar  = container w heights.consoleToolbar middle clearButton
+    in flow down [screen, toolbar]
+
+clearButton : Element
+clearButton =
+    let aspect = 2.96658357613427
+        up     = image (round (24 * aspect)) 24 ("images/button_clear-up.svg")
+        hover  = image (round (24 * aspect)) 24 ("images/button_clear-hover.svg")
+        down   = image (round (24 * aspect)) 24 ("images/button_clear-down.svg")
+    in  customButton (send actions ClearLog) up hover down
 
 grey : Color.Color
 grey = Color.rgb 0x1A 0x1A 0x1A
@@ -176,14 +194,6 @@ grey = Color.rgb 0x1A 0x1A 0x1A
 --clearChannel : Channel ()
 --clearChannel = channel ()
 --
---clearButton : Float -> Element
---clearButton w =
---    let aspect = 2.96658357613427
---        up     = image (round (24 * aspect)) 24 ("images/clear_button.svg")
---        hover  = image (round (24 * aspect)) 24 ("images/clear_button_hover.svg")
---        down   = image (round (24 * aspect)) 24 ("images/clear_button_down.svg")
---        button = customButton (send clearChannel ()) up hover down
---    in  container (round w) 48 midBottom button
 --
 --connectChannel : Channel ()
 --connectChannel = channel ()
