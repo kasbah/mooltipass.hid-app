@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="25.966965mm"
+   height="8.3910713mm"
+   viewBox="0 0 25.966965 8.3910713"
+   id="svg7318"
+   version="1.1"
+   inkscape:version="0.91+devel r"
+   sodipodi:docname="tab_manage-inactive.svg">
+  <defs
+     id="defs7320" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="-79.553209"
+     inkscape:cy="44.623389"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:window-width="1440"
+     inkscape:window-height="886"
+     inkscape:window-x="0"
+     inkscape:window-y="14"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata7323">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-63.722876,-166.11872)">
+    <rect
+       style="fill:#000000;stroke:#666666;stroke-width:0.26458335px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="rect5653-9-1"
+       width="25.702383"
+       height="8.1264877"
+       x="63.85516"
+       y="166.25101"
+       rx="0.79375005" />
+    <g
+       id="g5747-4"
+       transform="matrix(0.9375,0,0,0.9375,-3.0736116,99.144272)">
+      <text
+         sodipodi:linespacing="125%"
+         id="text5655-6-5"
+         y="77.243729"
+         x="80.129868"
+         style="font-style:normal;font-weight:normal;font-size:5.10021019px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+         xml:space="preserve"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.57014704px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff"
+           y="77.243729"
+           x="80.129868"
+           id="tspan5657-9-6"
+           sodipodi:role="line">manage</tspan></text>
+      <path
+         inkscape:export-ydpi="90"
+         inkscape:export-xdpi="90"
+         inkscape:export-filename="/home/blmwielens/Mooltipass/ui/elements/lightning.png"
+         sodipodi:nodetypes="ccccccc"
+         inkscape:connector-curvature="0"
+         id="path5155"
+         d="m 73.349114,73.717003 2.033792,3.050687 0.508448,-0.762671 1.779568,2.288016 -1.779568,-3.050688 -0.508448,0.762672 z"
+         style="fill:#ffffff;stroke:#ffffff;stroke-width:0.254224px;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1" />
+    </g>
+  </g>
+</svg>

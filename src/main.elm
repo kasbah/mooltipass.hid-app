@@ -13,29 +13,29 @@ main : Signal Element
 main = scene <~ Window.dimensions ~ (foldp update defaultState (subscribe actions))
 
 -- State
-type Screen = Log | Settings | Credentials | Developer
+type Tab = Log | Settings | Manage | Developer
 type ConnectState = NotConnected | Connected | NoCard | NoPin
 
 {-| The entire application state -}
 type alias State =
     { connected : ConnectState
-    , screen    : Screen
+    , activeTab    : Tab
     }
 
 defaultState : State
 defaultState =
-    { connected = NotConnected
-    , screen    = Log
+    { connected = Connected
+    , activeTab = Log
     }
 
 {-| All actions that can be performed to change state -}
-type Action = ChangeScreen Screen | SetConnected ConnectState | NoOp
+type Action = ChangeTab Tab | SetConnected ConnectState | NoOp
 
 {-| Transform the state to a new state according to an action -}
 update : Action -> State -> State
 update action state =
     case action of
-        (ChangeScreen s) -> {state | screen <- s}
+        (ChangeTab t)    -> {state | activeTab <- t}
         (SetConnected c) -> {state | connected <- c}
         NoOp             -> state
 
@@ -49,7 +49,8 @@ scene dims state = layers [layer1 dims state]
 layer1 : (Int, Int) -> State -> Element
 layer1 dims state =
     flow down [ title dims state
-              --, navigation dims state
+              , spacer 16 16
+              , navigation dims state
               --, content dims state
               ]
 
@@ -66,6 +67,43 @@ logo : String -> Element
 logo color =
     let aspect = 3.394144559879574
     in  image (round (38 * aspect)) 38 ("images/logo-" ++ color ++ ".svg")
+
+navigation : (Int, Int) -> State -> Element
+navigation (w,h) state =
+    container w 38 midLeft (flow right [spacer 32 38, tabs state])
+
+tabs : State -> Element
+tabs state =
+    let disabled = case state.connected of
+        Connected    -> []
+        NotConnected -> [Settings, Manage]
+        NoCard       -> [Settings, Manage]
+        NoPin        -> [Manage]
+    in flow right [ tab Log      state.activeTab disabled
+                  , spacer 5 5
+                  , tab Settings state.activeTab disabled
+                  , spacer 5 5
+                  , tab Manage   state.activeTab disabled
+                  ]
+
+tab : Tab -> Tab -> (List Tab) -> Element
+tab t active disabled =
+    let aspect         = 3.094594610699232
+        name = case t of
+            Log      -> "log"
+            Settings -> "settings"
+            Manage   -> "manage"
+        up             = image (round (32 * aspect)) 32 ("images/tab_" ++ name ++ "-inactive.svg")
+        hover          = image (round (32 * aspect)) 32 ("images/tab_" ++ name ++ "-active.svg")
+        down           = image (round (32 * aspect)) 32 ("images/tab_" ++ name ++ "-active.svg")
+        disabledButton = image (round (32 * aspect)) 32 ("images/tab_" ++ name ++ "-disabled.svg")
+        activeButton   = image (round (32 * aspect)) 32 ("images/tab_" ++ name ++ "-active.svg")
+        button         = customButton (send actions (ChangeTab t)) up hover down
+    in  if List.member t disabled
+        then disabledButton
+        else if t == active
+             then activeButton
+             else button
 
 
 --connectButton : Float -> Float -> Element
