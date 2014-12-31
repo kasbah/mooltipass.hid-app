@@ -13,21 +13,23 @@ main : Signal Element
 main = scene <~ Window.dimensions ~ (foldp update defaultState (subscribe actions))
 
 -- State
-type Tab = Log | Settings | Manage | Developer
+type Tab = Log | Settings | Manage | Develop
 type ConnectState = NotConnected | Connected | NoCard | NoPin
 
 {-| The entire application state -}
 type alias State =
-    { connected : ConnectState
-    , activeTab : Tab
-    , log       : String
+    { connected  : ConnectState
+    , activeTab  : Tab
+    , devEnabled : Bool
+    , log        : String
     }
 
 defaultState : State
 defaultState =
-    { connected = Connected
-    , activeTab = Log
-    , log       = "connecting ..."
+    { connected  = Connected
+    , activeTab  = Log
+    , devEnabled = True
+    , log        = "connecting ..."
     }
 
 {-| All actions that can be performed to change state -}
@@ -93,15 +95,16 @@ tabs : State -> Element
 tabs state =
     let disabled = case state.connected of
         Connected    -> []
-        NotConnected -> [Settings, Manage]
+        NotConnected -> [Settings, Manage, Develop]
         NoCard       -> [Settings, Manage]
         NoPin        -> [Manage]
-    in flow right [ tab Log      state.activeTab disabled
-                  , spacer 5 5
-                  , tab Settings state.activeTab disabled
-                  , spacer 5 5
-                  , tab Manage   state.activeTab disabled
-                  ]
+    in flow right <| [ tab Log      state.activeTab disabled
+                     , spacer 5 5
+                     , tab Settings state.activeTab disabled
+                     , spacer 5 5
+                     , tab Manage   state.activeTab disabled
+                     , spacer 5 5
+                     ] ++ if state.devEnabled then [tab Develop state.activeTab disabled] else []
 
 tab : Tab -> Tab -> (List Tab) -> Element
 tab t active disabled =
@@ -110,6 +113,7 @@ tab t active disabled =
             Log      -> "log"
             Settings -> "settings"
             Manage   -> "manage"
+            Develop  -> "develop"
         img t =
             image (round (toFloat heights.tab * aspect))
                 heights.tab
