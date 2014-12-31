@@ -49,11 +49,22 @@ scene dims state = layers [layer1 dims state]
 layer1 : (Int, Int) -> State -> Element
 layer1 dims state =
     flow down [ title dims state
-              , spacer 16 16
+              , spacer 42 heights.spacer1
               , navigation dims state
-              --, content dims state
+              , content dims state
               ]
 
+heights =
+    { logo    = 38
+    , title   = 64
+    , spacer1 = 16
+    , tab     = 32
+    , nav     = 38
+    , button  = 32
+    , bottom  = 16
+    }
+
+-- Title
 title : (Int, Int) -> State -> Element
 title (w,h) state =
     let logo' = case state.connected of
@@ -66,11 +77,12 @@ title (w,h) state =
 logo : String -> Element
 logo color =
     let aspect = 3.394144559879574
-    in  image (round (38 * aspect)) 38 ("images/logo-" ++ color ++ ".svg")
+    in  image (round (toFloat heights.logo * aspect)) heights.logo ("images/logo-" ++ color ++ ".svg")
 
+-- Navigation
 navigation : (Int, Int) -> State -> Element
 navigation (w,h) state =
-    container w 38 midLeft (flow right [spacer 32 38, tabs state])
+    container w heights.nav midLeft (flow right [spacer 32 38, tabs state])
 
 tabs : State -> Element
 tabs state =
@@ -93,11 +105,15 @@ tab t active disabled =
             Log      -> "log"
             Settings -> "settings"
             Manage   -> "manage"
-        up             = image (round (32 * aspect)) 32 ("images/tab_" ++ name ++ "-inactive.svg")
-        hover          = image (round (32 * aspect)) 32 ("images/tab_" ++ name ++ "-active.svg")
-        down           = image (round (32 * aspect)) 32 ("images/tab_" ++ name ++ "-active.svg")
-        disabledButton = image (round (32 * aspect)) 32 ("images/tab_" ++ name ++ "-disabled.svg")
-        activeButton   = image (round (32 * aspect)) 32 ("images/tab_" ++ name ++ "-active.svg")
+        img t =
+            image (round (toFloat heights.tab * aspect))
+                heights.tab
+                    ("images/tab_" ++ name ++ "-" ++ t ++ ".svg")
+        up             = img "inactive"
+        hover          = img "active"
+        down           = img "active"
+        disabledButton = img "inactive"
+        activeButton   = img "active"
         button         = customButton (send actions (ChangeTab t)) up hover down
     in  if List.member t disabled
         then disabledButton
@@ -105,6 +121,19 @@ tab t active disabled =
              then activeButton
              else button
 
+-- Content
+content : (Int, Int) -> State -> Element
+content (w,h) state =
+    let h' = h - heights.title - heights.spacer1 - heights.nav - heights.bottom
+        w' = w - (32 * 2)
+    in container w h' middle <| console (w',h')
+
+console : (Int, Int) -> Element
+console (w,h) = let (w',h') = (toFloat w, toFloat h)
+                in collage w h [filled grey <| roundedRect w' h' (max w' h'/80)]
+
+grey : Color.Color
+grey = Color.rgb 0x1A 0x1A 0x1A
 
 --connectButton : Float -> Float -> Element
 --connectButton w h =
@@ -130,8 +159,6 @@ tab t active disabled =
 --                                  ]
 --    in container (round w) 64 midLeft header'
 --
---console : Float -> Float -> Element
---console w h = collage (round w) (round h) [filled grey <| roundedRect w h (max w h/80)]
 --
 --
 --menuChannel : Channel ()
@@ -165,8 +192,6 @@ tab t active disabled =
 --blue : Color.Color
 --blue = Color.rgb 0x0C 0xFE 0xFF
 --
---grey : Color.Color
---grey = Color.rgb 0x1A 0x1A 0x1A
 --
 --spacer' : Float -> Element
 --spacer' x = spacer (round x) (round x)
