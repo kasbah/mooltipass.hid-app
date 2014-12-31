@@ -56,15 +56,15 @@ scene dims state = layers [layer1 dims state]
 
 layer1 : (Int, Int) -> State -> Element
 layer1 dims state =
-    flow down [ title dims state
+    flow down [ spacer 1 heights.marginTop
               , navigation dims state
               , content dims state
               ]
 
 heights =
-    { logo    = 42
-    , title   = 64
+    { marginTop  = 16
     , tab     = 32
+    , icon    = 32
     , nav     = 42
     , consoleButton  = 28
     , consoleToolbar = 48
@@ -72,24 +72,32 @@ heights =
     }
 
 -- Title
-title : (Int, Int) -> State -> Element
-title (w,h) state =
-    let logo' = case state.connected of
-        Connected    -> logo "blue"
-        NotConnected -> logo "red"
-        NoCard       -> logo "orange"
-        NoPin        -> logo "orange"
-    in container w 64 middle logo'
+--title : (Int, Int) -> State -> Element
+--title (w,h) state =
+--    let logo' = case state.connected of
+--        Connected    -> logo "blue"
+--        NotConnected -> logo "red"
+--        NoCard       -> logo "orange"
+--        NoPin        -> logo "orange"
+--    in container w 64 middle logo'
+--
+--logo : String -> Element
+--logo color =
+--    let aspect = 3.394144559879574
+--    in  image (round (toFloat heights.logo * aspect)) heights.logo ("images/logo-" ++ color ++ ".svg")
 
-logo : String -> Element
-logo color =
-    let aspect = 3.394144559879574
-    in  image (round (toFloat heights.logo * aspect)) heights.logo ("images/logo-" ++ color ++ ".svg")
+statusIcon : String -> Element
+statusIcon color =
+    let aspect = 1.3285316308250572
+    in  image (round (toFloat heights.icon * aspect)) heights.icon ("images/status_icon-" ++ color ++ ".svg")
 
 -- Navigation
 navigation : (Int, Int) -> State -> Element
 navigation (w,h) state =
-    container w heights.nav midLeft (flow right [spacer 32 38, tabs state])
+    flow right
+        [ container (round (toFloat w * 0.8)) heights.nav midLeft  (flow right [spacer 32 38, tabs state])
+        , container (round (toFloat w * 0.2)) heights.nav midRight (flow right [statusIcon "blue", spacer 32 38])
+        ]
 
 tabs : State -> Element
 tabs state =
@@ -98,7 +106,9 @@ tabs state =
         NotConnected -> [Settings, Manage, Develop]
         NoCard       -> [Settings, Manage]
         NoPin        -> [Manage]
-    in flow right <| [ tab Log      state.activeTab disabled
+    in flow right <| [
+                       spacer 5 5
+                     , tab Log      state.activeTab disabled
                      , spacer 5 5
                      , tab Settings state.activeTab disabled
                      , spacer 5 5
@@ -133,7 +143,7 @@ tab t active disabled =
 -- Content
 content : (Int, Int) -> State -> Element
 content (w,h) state =
-    let h' = h - heights.title - heights.nav - heights.marginBottom
+    let h' = h - heights.marginTop - heights.nav - heights.marginBottom
         w' = w - (32 * 2)
     in container w h' middle <| console (w',h')
 
