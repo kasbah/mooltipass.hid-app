@@ -64,7 +64,7 @@ heights =
     , title   = 64
     , tab     = 32
     , nav     = 38
-    , button  = 32
+    , consoleButton  = 24
     , consoleToolbar = 48
     , marginBottom   = 3
     }
@@ -145,9 +145,13 @@ console (w,h) =
 clearButton : Element
 clearButton =
     let aspect = 2.96658357613427
-        up     = image (round (24 * aspect)) 24 ("images/button_clear-up.svg")
-        hover  = image (round (24 * aspect)) 24 ("images/button_clear-hover.svg")
-        down   = image (round (24 * aspect)) 24 ("images/button_clear-down.svg")
+        img t =
+            image (round (toFloat heights.consoleButton * aspect))
+                heights.consoleButton
+                    ("images/button_clear" ++ "-" ++ t ++ ".svg")
+        up     = img "up"
+        hover  = img "hover"
+        down   = img "down"
     in  customButton (send actions ClearLog) up hover down
 
 grey : Color.Color
