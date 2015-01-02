@@ -78,7 +78,8 @@ layer1 dims state =
 heights =
     { marginTop      = 16
     , tab            = 32
-    , icon           = 32
+    , icon           = 27
+    , iconPadding    = 4
     , nav            = 42
     , consoleButton  = 28
     , consoleToolbar = 48
@@ -88,24 +89,29 @@ heights =
 statusIcon : ConnectState -> Element
 statusIcon c =
     let aspect          = 1.3285316308250572
-        icon color      = image (round (toFloat heights.icon * aspect)) heights.icon
+        width           = round (toFloat heights.icon * aspect)
+        img color       = image width heights.icon
                             ("images/status_icon-" ++ color ++ ".svg")
-        clickIcon color = clickable (send actions ClickIcon) (icon color)
-    in case c of
-        Connected    -> clickIcon "blue"
-        NotConnected -> clickIcon "red"
-        NoCard       -> clickIcon "orange"
-        NoPin        -> clickIcon "purple"
+        clickIcon color = clickable (send actions ClickIcon) (img color)
+        icon            = case c of
+            Connected    -> clickIcon "blue"
+            NotConnected -> clickIcon "red"
+            NoCard       -> clickIcon "orange"
+            NoPin        -> clickIcon "purple"
+    in flow down [icon, spacer 1 heights.iconPadding, navLine width]
 
 -- Navigation
 navigation : (Int, Int) -> State -> Element
 navigation (w,h) state =
     flow right
-        [ container (round (toFloat w * 0.85)) heights.nav midLeft
+        [ container (round (toFloat w * 0.75)) heights.nav midLeft
             (flow right [spacer 38 38, tabs state])
-        , container (round (toFloat w * 0.15)) heights.nav midRight
-            (flow right [statusIcon state.connect, spacer 32 38])
+        , container (round (toFloat w * 0.25)) heights.nav midRight
+            (flow left [spacer 32 38, statusIcon state.connect, navSpacer 9000])
         ]
+
+navSpacer w = container w heights.tab bottomLeft (navLine w)
+navLine w = tiledImage w 1 "images/tab_spacer_pixel.png"
 
 tabs : State -> Element
 tabs state =
@@ -113,19 +119,18 @@ tabs state =
             Connected    -> []
             NotConnected -> [Settings, Manage, Developer]
             NoCard       -> [Settings, Manage]
-            NoPin        -> [Manage]
-        spacer' = fittedImage 5 heights.tab ("images/tab_spacer.svg")
+            NoPin        -> [Settings, Manage]
     in flow right <| [ tab Log      state.activeTab disabled
-                     , spacer'
+                     , navSpacer 5
                      , tab Settings state.activeTab disabled
-                     , spacer'
+                     , navSpacer 5
                      , tab Manage   state.activeTab disabled
-                     ] ++ if state.devEnabled
-                          then [ spacer'
-                               , tab Developer state.activeTab disabled
-                               ]
-                          else []
-
+                     ] ++ ( if state.devEnabled
+                            then [ navSpacer 5
+                                 , tab Developer state.activeTab disabled
+                                 ]
+                            else [] )
+                     ++ [navSpacer 9000]
 
 tab : Tab -> Tab -> (List Tab) -> Element
 tab t active disabled =
@@ -145,11 +150,9 @@ tab t active disabled =
         disabledButton = img "disabled"
         activeButton   = img "active"
         button         = customButton (send actions (ChangeTab t)) up hover down
-    in  if List.member t disabled
-        then disabledButton
-        else if t == active
-             then activeButton
-             else button
+    in  if  | List.member t disabled -> disabledButton
+            | t == active            -> activeButton
+            | otherwise              -> button
 
 -- Content
 content : (Int, Int) -> State -> Element
