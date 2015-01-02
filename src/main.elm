@@ -28,7 +28,7 @@ type alias State =
 
 defaultState : State
 defaultState =
-    { connect     = NotConnected
+    { connect     = Connected
     , activeTab   = Log
     , iconClicked = 0
     , devEnabled  = True
@@ -102,7 +102,7 @@ navigation : (Int, Int) -> State -> Element
 navigation (w,h) state =
     flow right
         [ container (round (toFloat w * 0.85)) heights.nav midLeft
-            (flow right [spacer 32 38, tabs state])
+            (flow right [spacer 38 38, tabs state])
         , container (round (toFloat w * 0.15)) heights.nav midRight
             (flow right [statusIcon state.connect, spacer 32 38])
         ]
@@ -114,9 +114,7 @@ tabs state =
         NotConnected -> [Settings, Manage, Developer]
         NoCard       -> [Settings, Manage]
         NoPin        -> [Manage]
-    in flow right <| [
-                       spacer 5 5
-                     , tab Log      state.activeTab disabled
+    in flow right <| [ tab Log      state.activeTab disabled
                      , spacer 5 5
                      , tab Settings state.activeTab disabled
                      , spacer 5 5

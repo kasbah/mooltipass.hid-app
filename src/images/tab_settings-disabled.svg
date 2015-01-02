@@ -68,12 +68,12 @@
     <text
        sodipodi:linespacing="125%"
        id="text5655-6-1-4"
-       y="78.263878"
+       y="78.063316"
        x="71.692978"
-       style="font-style:normal;font-weight:normal;font-size:4.78144693px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#333333;fill-opacity:1;stroke:none"
+       style="font-size:4.78144693px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#333333;fill-opacity:1;stroke:none;font-family:Sans"
        xml:space="preserve"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.34701276px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#333333;fill-opacity:1"
-         y="78.263878"
+         style="font-size:3.07236743px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#333333;fill-opacity:1;font-family:DejaVu Sans Mono;-inkscape-font-specification:DejaVu Sans Mono"
+         y="78.063316"
          x="71.692978"
          id="tspan5657-9-17-0"
          sodipodi:role="line">settings</tspan></text>
@@ -84,7 +84,7 @@
        sodipodi:nodetypes="cccccscscccc"
        inkscape:connector-curvature="0"
        id="path4314-7-3"
-       d="m 65.628646,78.69947 0.621937,0.621934 1.658494,-1.65849 c 0,0 1.243866,0.414622 1.658484,-1.036556 l -0.310959,-0.310967 c 0,0 -0.319275,0.700972 -0.606909,0.636961 l -0.533307,-0.118684 -0.106303,-0.520923 c -0.05906,-0.289349 0.624582,-0.619289 0.624582,-0.619289 l -0.310969,-0.310967 c -1.451175,0.414623 -0.957525,1.65849 -0.957525,1.65849 z"
-       style="opacity:0.98814231;fill:none;stroke:#333333;stroke-width:0.4146226;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1" />
+       d="m 65.628646,78.54828 0.621937,0.621934 1.658494,-1.65849 c 0,0 1.243866,0.414622 1.658484,-1.036556 l -0.310959,-0.310967 c 0,0 -0.319275,0.700972 -0.606909,0.636961 l -0.533307,-0.118684 -0.106303,-0.520923 c -0.05906,-0.289349 0.624582,-0.619289 0.624582,-0.619289 l -0.310969,-0.310967 c -1.451175,0.414623 -0.957525,1.65849 -0.957525,1.65849 z"
+       style="opacity:0.98814231;fill:none;stroke:#333333;stroke-width:0.4146226;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:6.4000001" />
   </g>
 </svg>

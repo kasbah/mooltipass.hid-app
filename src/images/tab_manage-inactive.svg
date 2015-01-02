@@ -14,7 +14,7 @@
    viewBox="0 0 25.966965 8.3910713"
    id="svg7318"
    version="1.1"
-   inkscape:version="0.91+devel r"
+   inkscape:version="0.48.4 r9939"
    sodipodi:docname="tab_manage-inactive.svg">
   <defs
      id="defs7320" />
@@ -25,18 +25,18 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.98994949"
-     inkscape:cx="-79.553209"
-     inkscape:cy="44.623389"
+     inkscape:zoom="2.8"
+     inkscape:cx="42.065687"
+     inkscape:cy="59.00044"
      inkscape:document-units="mm"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="g5747-4"
      showgrid="false"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="1440"
-     inkscape:window-height="886"
+     inkscape:window-width="1280"
+     inkscape:window-height="786"
      inkscape:window-x="0"
      inkscape:window-y="14"
      inkscape:window-maximized="0" />
@@ -48,7 +48,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -71,12 +71,12 @@
       <text
          sodipodi:linespacing="125%"
          id="text5655-6-5"
-         y="77.243729"
+         y="77.0298"
          x="80.129868"
-         style="font-style:normal;font-weight:normal;font-size:5.10021019px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+         style="font-size:3.27719212px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
          xml:space="preserve"><tspan
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.57014704px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff"
-           y="77.243729"
+           style="font-size:3.27719212px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ffffff;font-family:DejaVu Sans Mono;-inkscape-font-specification:DejaVu Sans Mono"
+           y="77.0298"
            x="80.129868"
            id="tspan5657-9-6"
            sodipodi:role="line">manage</tspan></text>
