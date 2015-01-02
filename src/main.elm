@@ -1,11 +1,11 @@
 import Color
-import Graphics.Collage(..)
-import Graphics.Element(..)
-import Graphics.Input(..)
+import Graphics.Collage (..)
+import Graphics.Element (..)
+import Graphics.Input (..)
 import List
 import Mouse
-import Signal(..)
-import Text
+import Signal (..)
+import Text (..)
 import Window
 import CustomGraphics (roundedRect)
 
@@ -36,7 +36,8 @@ defaultState =
     }
 
 {-| All actions that can be performed to change state -}
-type Action = ChangeTab Tab
+type Action = AppendToLog String
+            | ChangeTab Tab
             | ClearLog
             | ClickIcon
             | NoOp
@@ -59,6 +60,7 @@ update action s =
                                  }
 
                             else {s | iconClicked <- s.iconClicked + 1}
+        (AppendToLog str) -> {s | log <- s.log ++ str}
         NoOp             -> s
 
 actions : Channel Action
@@ -66,7 +68,7 @@ actions = channel NoOp
 
 -- Scene
 scene : (Int,Int) -> State -> Element
-scene dims state = layers [layer1 dims state]
+scene dims state = clickable (send actions (AppendToLog ("\n> " ++ toString dims))) <| layers [layer1 dims state]
 
 layer1 : (Int, Int) -> State -> Element
 layer1 dims state =
@@ -104,9 +106,9 @@ statusIcon c =
 navigation : (Int, Int) -> State -> Element
 navigation (w,h) state =
     flow right
-        [ container (round (toFloat w * 0.75)) heights.nav midLeft
-            (flow right [spacer 38 38, tabs state])
-        , container (round (toFloat w * 0.25)) heights.nav midRight
+        [ container (round (toFloat w * 0.85)) heights.nav midLeft
+            (flow right [spacer 32 38, navSpacer 6, tabs state])
+        , container (round (toFloat w * 0.15)) heights.nav midRight
             (flow left [spacer 32 38, statusIcon state.connect, navSpacer 9000])
         ]
 
@@ -159,15 +161,17 @@ content : (Int, Int) -> State -> Element
 content (w,h) state =
     let h' = h - heights.marginTop - heights.nav - heights.marginBottom
         w' = w - (32 * 2)
-    in container w h' middle <| console (w',h')
+    in container w h' middle <| console (w',h') state.log
 
-console : (Int, Int) -> Element
-console (w,h) =
-    let (w',h')  = (toFloat w, toFloat h)
-        screenH  = h - heights.consoleToolbar
-        screenH' = toFloat screenH
-        screen   = collage w screenH [filled grey <| roundedRect w' screenH' (max w' h'/80)]
-        toolbar  = container w heights.consoleToolbar middle clearButton
+console : (Int, Int) -> String -> Element
+console (w,h) log =
+    let (w',h')          = (toFloat w, toFloat h)
+        screenH          = h - heights.consoleToolbar
+        screenH'         = toFloat screenH
+        screenBackground = collage w screenH [filled grey <| roundedRect w' screenH' (max w' h'/80)]
+        screenText       = leftAligned <| fromString log
+        screen           = layers [screenBackground, screenText]
+        toolbar          = container w heights.consoleToolbar middle clearButton
     in flow down [screen, toolbar]
 
 clearButton : Element

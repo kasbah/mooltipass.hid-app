@@ -1,6 +1,6 @@
 function launch()
 {
-    chrome.app.window.create('index.html', { 'bounds': { 'width': 500, 'height': 600 } });
+    chrome.app.window.create('index.html', {minWidth: 550, minHeight: 600});
 
     chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
     {
