@@ -110,17 +110,22 @@ navigation (w,h) state =
 tabs : State -> Element
 tabs state =
     let disabled = case state.connect of
-        Connected    -> []
-        NotConnected -> [Settings, Manage, Developer]
-        NoCard       -> [Settings, Manage]
-        NoPin        -> [Manage]
+            Connected    -> []
+            NotConnected -> [Settings, Manage, Developer]
+            NoCard       -> [Settings, Manage]
+            NoPin        -> [Manage]
+        spacer' = fittedImage 5 heights.tab ("images/tab_spacer.svg")
     in flow right <| [ tab Log      state.activeTab disabled
-                     , spacer 5 5
+                     , spacer'
                      , tab Settings state.activeTab disabled
-                     , spacer 5 5
+                     , spacer'
                      , tab Manage   state.activeTab disabled
-                     , spacer 5 5
-                     ] ++ if state.devEnabled then [tab Developer state.activeTab disabled] else []
+                     ] ++ if state.devEnabled
+                          then [ spacer'
+                               , tab Developer state.activeTab disabled
+                               ]
+                          else []
+
 
 tab : Tab -> Tab -> (List Tab) -> Element
 tab t active disabled =
@@ -135,8 +140,8 @@ tab t active disabled =
                 heights.tab
                     ("images/tab_" ++ name ++ "-" ++ t ++ ".svg")
         up             = img "inactive"
-        hover          = img "active"
-        down           = img "active"
+        hover          = img "hover"
+        down           = img "inactive"
         disabledButton = img "disabled"
         activeButton   = img "active"
         button         = customButton (send actions (ChangeTab t)) up hover down
