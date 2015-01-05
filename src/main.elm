@@ -176,7 +176,7 @@ console (w,h) log =
         screenBackground = collage w screenH
                             [filled grey
                                 <| roundedRect screenW' screenH'
-                                <| max screenH' screenH'/80
+                                <| (max screenW' screenH') / 80
                             ]
         screenText       = leftAligned <| fromString log
         screen           = layers [screenBackground, screenText]
