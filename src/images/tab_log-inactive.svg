@@ -14,7 +14,7 @@
    viewBox="0 0 25.966965 8.3910713"
    id="svg5978"
    version="1.1"
-   inkscape:version="0.91+devel r"
+   inkscape:version="0.48.4 r9939"
    sodipodi:docname="tab_log-inactive.svg">
   <defs
      id="defs5980" />
@@ -35,8 +35,8 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="1440"
-     inkscape:window-height="866"
+     inkscape:window-width="638"
+     inkscape:window-height="764"
      inkscape:window-x="0"
      inkscape:window-y="34"
      inkscape:window-maximized="0" />
@@ -48,7 +48,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -68,22 +68,18 @@
          x="44.526161"
          y="71.177338"
          rx="0.84666669" />
-      <g
-         style="font-style:normal;font-weight:normal;font-size:3.27719212px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-         id="text5655-6-2-1">
-        <path
-           d="m 54.287873,75.97694 q 0,0.198423 0.07201,0.299236 0.07361,0.100812 0.216026,0.100812 l 0.344041,0 0,0.249629 -0.372844,0 q -0.264032,0 -0.409649,-0.16962 -0.144018,-0.16962 -0.144018,-0.480057 l 0,-1.627395 -0.472056,0 0,-0.230428 0.766492,0 0,1.857823 z"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.27719212px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff"
-           id="path12771" />
-        <path
-           d="m 56.222504,75.040828 q -0.224027,0 -0.33924,0.174421 -0.115214,0.17442 -0.115214,0.516861 0,0.340841 0.115214,0.516862 0.115213,0.174421 0.33924,0.174421 0.225627,0 0.340841,-0.174421 0.115214,-0.176021 0.115214,-0.516862 0,-0.342441 -0.115214,-0.516861 -0.115214,-0.174421 -0.340841,-0.174421 z m 0,-0.24963 q 0.372845,0 0.569668,0.241629 0.198424,0.241629 0.198424,0.699283 0,0.459255 -0.196823,0.700884 -0.196824,0.240029 -0.571269,0.240029 -0.372844,0 -0.569668,-0.240029 -0.196824,-0.241629 -0.196824,-0.700884 0,-0.457654 0.196824,-0.699283 0.196824,-0.241629 0.569668,-0.241629 z"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.27719212px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff"
-           id="path12773" />
-        <path
-           d="m 58.581186,75.716108 q 0,-0.331239 -0.108813,-0.50246 -0.107212,-0.17282 -0.313637,-0.17282 -0.216026,0 -0.32964,0.17282 -0.113613,0.171221 -0.113613,0.50246 0,0.33124 0.113613,0.505661 0.115214,0.172821 0.33284,0.172821 0.203225,0 0.310437,-0.174421 0.108813,-0.174421 0.108813,-0.504061 z m 0.294436,0.795296 q 0,0.403248 -0.190423,0.611273 -0.190423,0.208025 -0.560067,0.208025 -0.121615,0 -0.254431,-0.0224 -0.132815,-0.0224 -0.265631,-0.06561 l 0,-0.291235 q 0.156818,0.07361 0.284834,0.108813 0.128015,0.0352 0.235228,0.0352 0.238428,0 0.347241,-0.129616 0.108813,-0.129615 0.108813,-0.411249 l 0,-0.0128 0,-0.200024 q -0.07041,0.150418 -0.192023,0.224027 -0.121614,0.07361 -0.296035,0.07361 -0.313637,0 -0.50086,-0.25123 -0.187222,-0.25123 -0.187222,-0.672081 0,-0.42245 0.187222,-0.67368 0.187223,-0.25123 0.50086,-0.25123 0.172821,0 0.292835,0.06881 0.120014,0.06881 0.195223,0.212826 l 0,-0.232028 0.294436,0 0,1.6706 z"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.27719212px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff"
-           id="path12775" />
-      </g>
+      <text
+         xml:space="preserve"
+         style="font-size:3.27719212px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+         x="53.26535"
+         y="76.626617"
+         id="text5655-6-2-1"
+         sodipodi:linespacing="125%"><tspan
+           sodipodi:role="line"
+           id="tspan5657-9-1-1"
+           x="53.26535"
+           y="76.626617"
+           style="font-size:3.27719212px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ffffff;font-family:DejaVu Sans Mono;-inkscape-font-specification:DejaVu Sans Mono">log</tspan></text>
       <text
          sodipodi:linespacing="125%"
          id="text5659-3-9"

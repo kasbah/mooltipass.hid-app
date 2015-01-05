@@ -68,7 +68,9 @@ actions = channel NoOp
 
 -- Scene
 scene : (Int,Int) -> State -> Element
-scene dims state = clickable (send actions (AppendToLog ("\n> " ++ toString dims))) <| layers [layer1 dims state]
+scene dims state =
+    clickable (send actions (AppendToLog ("\n> " ++ toString dims)))
+        <| layers [layer1 dims state]
 
 layer1 : (Int, Int) -> State -> Element
 layer1 dims state =
@@ -82,8 +84,8 @@ heights =
     , tab            = 32
     , icon           = 27
     , iconPadding    = 4
-    , nav            = 42
-    , consoleButton  = 28
+    , nav            = 32
+    , consoleButton  = 26
     , consoleToolbar = 48
     , marginBottom   = 3
     }
@@ -107,9 +109,9 @@ navigation : (Int, Int) -> State -> Element
 navigation (w,h) state =
     flow right
         [ container (round (toFloat w * 0.85)) heights.nav midLeft
-            (flow right [spacer 32 38, navSpacer 6, tabs state])
+            (flow right [navSpacer 38, tabs state])
         , container (round (toFloat w * 0.15)) heights.nav midRight
-            (flow left [spacer 32 38, statusIcon state.connect, navSpacer 9000])
+            (flow left [navSpacer 32, statusIcon state.connect, navSpacer 9000])
         ]
 
 navSpacer w = container w heights.tab bottomLeft (navLine w)
@@ -161,18 +163,25 @@ content : (Int, Int) -> State -> Element
 content (w,h) state =
     let h' = h - heights.marginTop - heights.nav - heights.marginBottom
         w' = w - (32 * 2)
-    in container w h' middle <| console (w',h') state.log
+        background = collage w h [filled darkGrey (rect (toFloat w) (toFloat h))]
+    in layers [background, console (w, h') state.log]
 
 console : (Int, Int) -> String -> Element
 console (w,h) log =
     let (w',h')          = (toFloat w, toFloat h)
-        screenH          = h - heights.consoleToolbar
+        screenH          = h - heights.consoleToolbar - 32
         screenH'         = toFloat screenH
-        screenBackground = collage w screenH [filled grey <| roundedRect w' screenH' (max w' h'/80)]
+        screenW          = w - 64
+        screenW'         = toFloat screenW
+        screenBackground = collage w screenH
+                            [filled grey
+                                <| roundedRect screenW' screenH'
+                                <| max screenH' screenH'/80
+                            ]
         screenText       = leftAligned <| fromString log
         screen           = layers [screenBackground, screenText]
         toolbar          = container w heights.consoleToolbar middle clearButton
-    in flow down [screen, toolbar]
+    in container w h middle <| flow down [screen, toolbar]
 
 clearButton : Element
 clearButton =
@@ -188,6 +197,9 @@ clearButton =
 
 grey : Color.Color
 grey = Color.rgb 0x1A 0x1A 0x1A
+
+darkGrey : Color.Color
+darkGrey = Color.rgb 0x10 0x10 0x10
 
 blue : Color.Color
 blue = Color.rgb 0x0C 0xFE 0xFF

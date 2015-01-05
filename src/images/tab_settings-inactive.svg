@@ -14,7 +14,7 @@
    viewBox="0 0 25.966965 8.3910713"
    id="svg6691"
    version="1.1"
-   inkscape:version="0.91+devel r"
+   inkscape:version="0.48.4 r9939"
    sodipodi:docname="tab_settings-inactive.svg">
   <defs
      id="defs6693" />
@@ -26,7 +26,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8"
-     inkscape:cx="4.0431163"
+     inkscape:cx="63.507402"
      inkscape:cy="-7.3182531"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -35,10 +35,10 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="1440"
-     inkscape:window-height="866"
+     inkscape:window-width="638"
+     inkscape:window-height="784"
      inkscape:window-x="0"
-     inkscape:window-y="34"
+     inkscape:window-y="14"
      inkscape:window-maximized="0" />
   <metadata
      id="metadata6696">
@@ -48,7 +48,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -66,50 +66,30 @@
        y="48.764137"
        rx="0.79375005" />
     <g
-       style="font-style:normal;font-weight:normal;font-size:3.07236767px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       id="text5655-6">
+       id="g5747"
+       transform="matrix(0.9375,0,0,0.9375,-167.47045,-18.342594)">
+      <text
+         sodipodi:linespacing="125%"
+         id="text5655-6"
+         y="77.029793"
+         x="80.129868"
+         style="font-size:3.27719212px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+         xml:space="preserve"><tspan
+           style="font-size:3.27719212px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ffffff;font-family:DejaVu Sans Mono;-inkscape-font-specification:DejaVu Sans Mono"
+           y="77.029793"
+           x="80.129868"
+           id="tspan5657-9"
+           sodipodi:role="line">settings</tspan></text>
       <path
-         d="m -90.889027,52.251143 0,0.270032 q -0.118514,-0.06901 -0.238528,-0.103512 -0.120015,-0.0345 -0.24453,-0.0345 -0.187522,0 -0.280533,0.06151 -0.09151,0.06001 -0.09151,0.184522 0,0.112514 0.06901,0.16802 0.06901,0.05551 0.343541,0.108013 l 0.111014,0.021 q 0.205524,0.039 0.310537,0.156018 0.106512,0.117014 0.106512,0.304537 0,0.24903 -0.177021,0.390047 -0.177021,0.139516 -0.492059,0.139516 -0.124515,0 -0.261031,-0.027 -0.136516,-0.0255 -0.295535,-0.07801 l 0,-0.285034 q 0.154518,0.07951 0.295535,0.120014 0.141017,0.03901 0.267032,0.03901 0.183022,0 0.283534,-0.07351 0.100512,-0.07501 0.100512,-0.208525 0,-0.192023 -0.367544,-0.265532 l -0.012,-0.003 -0.103513,-0.021 q -0.238528,-0.0465 -0.348041,-0.156018 -0.109514,-0.111014 -0.109514,-0.301537 0,-0.241528 0.16352,-0.372044 0.16352,-0.132016 0.466556,-0.132016 0.135016,0 0.259531,0.0255 0.124515,0.024 0.244529,0.07351 z"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.07236767px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff"
-         id="path12649" />
-      <path
-         d="m -88.832281,52.963728 0,0.135016 -1.195643,0 0,0.009 q 0,0.274532 0.142517,0.42455 0.144018,0.150018 0.405049,0.150018 0.132016,0 0.276033,-0.042 0.144017,-0.04201 0.307537,-0.127515 l 0,0.274533 q -0.157519,0.06451 -0.304537,0.09601 -0.145517,0.033 -0.282034,0.033 -0.391546,0 -0.612073,-0.234028 -0.220526,-0.235528 -0.220526,-0.648077 0,-0.402048 0.216026,-0.642077 0.216025,-0.240029 0.576069,-0.240029 0.321038,0 0.50556,0.217526 0.186022,0.217526 0.186022,0.594071 z m -0.276033,-0.08101 q -0.006,-0.24303 -0.115514,-0.369045 -0.108012,-0.127515 -0.312037,-0.127515 -0.199524,0 -0.328539,0.132016 -0.129016,0.132016 -0.153018,0.366044 l 0.909108,-0.0015 z"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.07236767px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff"
-         id="path12651" />
-      <path
-         d="m -87.731149,51.715579 0,0.477057 0.627075,0 0,0.214526 -0.627075,0 0,0.912109 q 0,0.186022 0.07051,0.259531 0.07051,0.07351 0.246029,0.07351 l 0.310537,0 0,0.220526 -0.33754,0 q -0.310537,0 -0.438053,-0.124515 -0.127515,-0.124515 -0.127515,-0.429051 l 0,-0.912109 -0.448554,0 0,-0.214526 0.448554,0 0,-0.477057 0.276033,0 z"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.07236767px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff"
-         id="path12653" />
-      <path
-         d="m -85.882928,51.715579 0,0.477057 0.627075,0 0,0.214526 -0.627075,0 0,0.912109 q 0,0.186022 0.07051,0.259531 0.07051,0.07351 0.246029,0.07351 l 0.310537,0 0,0.220526 -0.33754,0 q -0.310537,0 -0.438053,-0.124515 -0.127515,-0.124515 -0.127515,-0.429051 l 0,-0.912109 -0.448554,0 0,-0.214526 0.448554,0 0,-0.477057 0.276033,0 z"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.07236767px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff"
-         id="path12655" />
-      <path
-         d="m -84.571771,52.192636 0.706585,0 0,1.465675 0.547565,0 0,0.214526 -1.371164,0 0,-0.214526 0.547566,0 0,-1.251149 -0.430552,0 0,-0.214526 z m 0.430552,-0.654078 0.276033,0 0,0.349542 -0.276033,0 0,-0.349542 z"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.07236767px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff"
-         id="path12657" />
-      <path
-         d="m -81.530907,52.831712 0,1.041125 -0.277533,0 0,-1.041125 q 0,-0.226527 -0.07951,-0.333039 -0.07951,-0.106513 -0.24903,-0.106513 -0.193523,0 -0.298536,0.138016 -0.103512,0.136517 -0.103512,0.393047 l 0,0.949614 -0.276033,0 0,-1.680201 0.276033,0 0,0.25203 q 0.07351,-0.144017 0.199523,-0.217526 0.126016,-0.07501 0.298536,-0.07501 0.256531,0 0.382546,0.16952 0.127515,0.168021 0.127515,0.510061 z"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.07236767px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff"
-         id="path12659" />
-      <path
-         d="m -79.972221,53.019235 q 0,-0.310537 -0.102012,-0.471056 -0.100512,-0.16202 -0.294035,-0.16202 -0.202524,0 -0.309037,0.16202 -0.106513,0.160519 -0.106513,0.471056 0,0.310537 0.106513,0.474057 0.108013,0.162019 0.312037,0.162019 0.190523,0 0.291035,-0.16352 0.102012,-0.163519 0.102012,-0.472556 z m 0.276033,0.745589 q 0,0.378045 -0.178521,0.573069 -0.178521,0.195023 -0.525063,0.195023 -0.114013,0 -0.238528,-0.021 -0.124515,-0.021 -0.24903,-0.06151 l 0,-0.273032 q 0.147017,0.06901 0.267032,0.102012 0.120014,0.033 0.220526,0.033 0.223527,0 0.325539,-0.121515 0.102012,-0.121514 0.102012,-0.385546 l 0,-0.012 0,-0.187523 q -0.06601,0.141017 -0.180021,0.210025 -0.114014,0.06901 -0.277533,0.06901 -0.294036,0 -0.469557,-0.235529 -0.175521,-0.235528 -0.175521,-0.630075 0,-0.396047 0.175521,-0.631576 0.175521,-0.235528 0.469557,-0.235528 0.162019,0 0.274533,0.06451 0.112513,0.06451 0.183021,0.199524 l 0,-0.217526 0.276033,0 0,1.566187 z"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.07236767px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff"
-         id="path12661" />
-      <path
-         d="m -77.951478,52.251143 0,0.270032 q -0.118514,-0.06901 -0.238529,-0.103512 -0.120014,-0.0345 -0.244529,-0.0345 -0.187522,0 -0.280534,0.06151 -0.09151,0.06001 -0.09151,0.184522 0,0.112514 0.06901,0.16802 0.06901,0.05551 0.343541,0.108013 l 0.111013,0.021 q 0.205525,0.039 0.310537,0.156018 0.106513,0.117014 0.106513,0.304537 0,0.24903 -0.177021,0.390047 -0.177021,0.139516 -0.492059,0.139516 -0.124515,0 -0.261031,-0.027 -0.136517,-0.0255 -0.295536,-0.07801 l 0,-0.285034 q 0.154519,0.07951 0.295536,0.120014 0.141017,0.03901 0.267032,0.03901 0.183022,0 0.283534,-0.07351 0.100512,-0.07501 0.100512,-0.208525 0,-0.192023 -0.367544,-0.265532 l -0.012,-0.003 -0.103512,-0.021 q -0.238529,-0.0465 -0.348042,-0.156018 -0.109513,-0.111014 -0.109513,-0.301537 0,-0.241528 0.16352,-0.372044 0.163519,-0.132016 0.466556,-0.132016 0.135016,0 0.259531,0.0255 0.124514,0.024 0.244529,0.07351 z"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.07236767px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff"
-         id="path12663" />
+         inkscape:export-ydpi="90"
+         inkscape:export-xdpi="90"
+         inkscape:export-filename="/home/blmwielens/Mooltipass/ui/elements/wrench.png"
+         sodipodi:nodetypes="cccccscscccc"
+         inkscape:connector-curvature="0"
+         id="path4314"
+         d="m 73.661248,77.546951 0.663396,0.663396 1.769056,-1.769056 c 0,0 1.326793,0.442263 1.769056,-1.10566 l -0.331697,-0.331698 c 0,0 -0.340558,0.747704 -0.647366,0.679425 l -0.56886,-0.126596 -0.113388,-0.555651 c -0.06298,-0.308639 0.666217,-0.660575 0.666217,-0.660575 l -0.331698,-0.331698 c -1.547924,0.442264 -1.021365,1.769056 -1.021365,1.769056 z"
+         style="opacity:0.98814231;fill:none;stroke:#ffffff;stroke-width:0.44226411;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:6.4000001" />
     </g>
-    <path
-       style="opacity:0.98814231;fill:none;stroke:#ffffff;stroke-width:0.4146226;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
-       d="m -98.41303,54.357673 0.621934,0.621933 1.65849,-1.65849 c 0,0 1.243868,0.414622 1.65849,-1.036556 l -0.310966,-0.310967 c 0,0 -0.319273,0.700973 -0.606906,0.636961 l -0.533306,-0.118684 -0.106301,-0.520922 c -0.05904,-0.28935 0.624578,-0.61929 0.624578,-0.61929 l -0.310967,-0.310966 c -1.451178,0.414622 -0.957529,1.65849 -0.957529,1.65849 z"
-       id="path4314"
-       inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cccccscscccc"
-       inkscape:export-filename="/home/blmwielens/Mooltipass/ui/elements/wrench.png"
-       inkscape:export-xdpi="90"
-       inkscape:export-ydpi="90" />
     <g
        id="g6536">
       <rect
