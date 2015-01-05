@@ -4,9 +4,10 @@ import Graphics.Input (..)
 import Signal (..)
 import List
 
-import Layout (..)
+import Layout (heights)
 import State (..)
 
+{-| A tab navigation up top and a Mooltipass status icon on the top right. -}
 navigation : (Int, Int) -> State -> Element
 navigation (w,h) state =
     flow right
@@ -16,6 +17,8 @@ navigation (w,h) state =
             (flow left [navSpacer 32, statusIcon state.connect, navSpacer 9000])
         ]
 
+{-| An icon that indictes the connection status and can be clicked 7 times to
+    enable developer mode. -}
 statusIcon : ConnectState -> Element
 statusIcon c =
     let aspect          = 1.3285316308250572
@@ -30,9 +33,15 @@ statusIcon c =
             NoPin        -> clickIcon "purple"
     in flow down [icon, spacer 1 heights.iconPadding, navLine width]
 
+{-| A spacer that has a grey line at the bottom -}
+navSpacer : Int -> Element
 navSpacer w = container w heights.tab bottomLeft (navLine w)
+
+{-| A grey line -}
+navLine : Int -> Element
 navLine w = tiledImage w 1 "images/tab_spacer_pixel.png"
 
+{-| The tab navigation with an optional developer tab. -}
 tabs : State -> Element
 tabs state =
     let disabled = case state.connect of
@@ -52,6 +61,8 @@ tabs state =
                             else [] )
                      ++ [navSpacer 9000]
 
+{-| Tab button which is rendered appropriately to if it is active, inactive or
+    disabled. -}
 tab : Tab -> Tab -> (List Tab) -> Element
 tab t active disabled =
     let aspect         = 3.094594610699232

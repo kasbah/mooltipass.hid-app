@@ -1,5 +1,6 @@
 module Layout where
 
+{-| Widths are variable according to window size or image aspect ratio. We fix all heights except the main content ones. -}
 heights =
     { marginTop      = 16
     , tab            = 32

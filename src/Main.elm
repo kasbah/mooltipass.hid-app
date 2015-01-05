@@ -1,12 +1,14 @@
+-- Elm standard library
 import Graphics.Element (..)
 import Signal (..)
 import Window
 
-import CustomGraphics (roundedRect)
-import State (..)
-import Scene (..)
+-- local source
+import State
+import Scene
 
+{-| Our main function simply 'lifts' or 'maps' the scene to the window
+    dimensions and state signal. The scene converts a state and window
+    dimension into an Element. -}
 main : Signal Element
-main = scene <~ Window.dimensions
-             ~ (foldp update defaultState (subscribe actions))
-
+main = Scene.scene <~ Window.dimensions ~ State.state

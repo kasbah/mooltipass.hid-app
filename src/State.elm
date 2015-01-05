@@ -1,9 +1,11 @@
 module State where
 
+-- Elm standard library
 import Signal
 
-type Tab = Log | Settings | Manage | Developer
-type ConnectState = NotConnected | Connected | NoCard | NoPin
+{-| The state signal to map our main element to -}
+state : Signal State
+state = Signal.foldp update default (Signal.subscribe actions)
 
 {-| The entire application state -}
 type alias State =
@@ -14,14 +16,19 @@ type alias State =
     , log         : String
     }
 
-defaultState : State
-defaultState =
+{-| The initial state -}
+default : State
+default =
     { connect     = Connected
     , activeTab   = Log
     , iconClicked = 0
     , devEnabled  = True
     , log         = "connecting ..."
     }
+
+type Tab = Log | Settings | Manage | Developer
+
+type ConnectState = NotConnected | Connected | NoCard | NoPin
 
 {-| All actions that can be performed to change state -}
 type Action = AppendToLog String
@@ -51,5 +58,6 @@ update action s =
         (AppendToLog str) -> {s | log <- s.log ++ str}
         NoOp             -> s
 
+{-| The channel that user inputs can 'Signal.send' actions to -}
 actions : Signal.Channel Action
 actions = Signal.channel NoOp

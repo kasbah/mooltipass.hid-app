@@ -1,4 +1,5 @@
 module CustomGraphics where
+-- Elm standard library
 import List
 import Graphics.Collage (..)
 import Color
@@ -22,6 +23,7 @@ roundedRect w h r =
      (arc (hw-r, 0-hh+r) (r, r) (0 |> degrees, -90 |> degrees)) ++
      [(0-hw+r, 0-hh)]
 
+-- Basic colourscheme
 grey : Color.Color
 grey = Color.rgb 0x1A 0x1A 0x1A
 
