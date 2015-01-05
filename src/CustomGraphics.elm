@@ -1,6 +1,7 @@
 module CustomGraphics where
 import List
 import Graphics.Collage (..)
+import Color
 
 {-| An elliptical arc with the given center, radii and angle interval. -}
 arc : (Float, Float) -> (Float, Float) -> (Float, Float) -> Shape
@@ -20,3 +21,13 @@ roundedRect w h r =
      (arc (hw-r, hh-r) (r, r) (90 |> degrees, 0 |> degrees)) ++
      (arc (hw-r, 0-hh+r) (r, r) (0 |> degrees, -90 |> degrees)) ++
      [(0-hw+r, 0-hh)]
+
+grey : Color.Color
+grey = Color.rgb 0x1A 0x1A 0x1A
+
+darkGrey : Color.Color
+darkGrey = Color.rgb 0x10 0x10 0x10
+
+blue : Color.Color
+blue = Color.rgb 0x0C 0xFE 0xFF
+
