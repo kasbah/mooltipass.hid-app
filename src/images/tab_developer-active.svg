@@ -283,29 +283,7 @@
            id="tspan5657-9-1-1"
            x="52.570225"
            y="76.648888"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.27719212px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff">developer</tspan></text>
-      <text
-         xml:space="preserve"
-         style="font-style:normal;font-weight:normal;font-size:11.28888893px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         x="23.930031"
-         y="71.434074"
-         id="text13068"
-         sodipodi:linespacing="125%"><tspan
-           sodipodi:role="line"
-           id="tspan13070"
-           x="23.930031"
-           y="71.434074" /></text>
-      <text
-         xml:space="preserve"
-         style="font-style:normal;font-weight:normal;font-size:9.26316357px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         x="47.249672"
-         y="77.299965"
-         id="text13072"
-         sodipodi:linespacing="125%"><tspan
-           sodipodi:role="line"
-           id="tspan13074"
-           x="47.249672"
-           y="77.299965" /></text>
+           style="font-style:normal;font-variant:monospace;font-weight:normal;font-stretch:normal;font-size:3.27719212px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';fill:#ffffff">developer</tspan></text>
       <g
          style="stroke:#ffffff;stroke-width:1.46221029999999996;fill:#ffffff"
          transform="matrix(0.68423611,0,0,0.68355646,11.891049,28.431847)"
