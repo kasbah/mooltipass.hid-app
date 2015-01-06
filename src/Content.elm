@@ -1,11 +1,13 @@
 module Content where
 
 -- Elm standard library
-import Graphics.Element (..)
+import Color
 import Graphics.Collage (..)
+import Graphics.Element (..)
 import Graphics.Input (..)
-import Text (..)
 import Signal (..)
+import Text
+import Text (..)
 
 -- local source
 import Layout (..)
@@ -41,9 +43,8 @@ screen (w,h) log =
                                 <| roundedRect w' h'
                                 <| (max w' h') / 80
                             ]
-        txt        = leftAligned <| fromString log
+        txt        = leftAligned <| Text.color Color.white <| fromString log
     in layers [background, txt]
-
 
 {-| A button that says 'clear' and posts a 'State.ClearLog' action -}
 clearButton : Element
