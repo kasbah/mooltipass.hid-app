@@ -12,12 +12,26 @@
                 height:100%;
             }
             div {
+                /* prevents text from being selected if not 'auto' */
                 pointer-events: auto;
             }
-            ::selection { background: #999999;}
             @font-face {
               font-family: 'DejaVu Sans Mono';
-              src: url('/images/DejaVuSansMono.ttf')  format('truetype');
+              src: url('/images/DejaVuSansMono.ttf') format('truetype');
+            }
+            ::selection { background: #999999;}
+            ::-webkit-scrollbar {
+                width: 13px;
+            }
+            ::-webkit-scrollbar-track {
+                background-color: #333333;
+                border-left: 1px solid #333;
+            }
+            ::-webkit-scrollbar-thumb {
+                background-color: #666;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background-color: #777;
             }
         </style>
         <script type="text/javascript" src=elm.js></script>
