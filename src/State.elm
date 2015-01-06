@@ -23,7 +23,7 @@ default =
     , activeTab   = Log
     , iconClicked = 0
     , devEnabled  = True
-    , log         = "connecting ..."
+    , log         = "> connecting ...\n"
     }
 
 type Tab = Log | Settings | Manage | Developer
@@ -48,15 +48,15 @@ update action s =
         -- clicking the icon 7 times toggles developer tab visibility
         ClickIcon        -> if s.iconClicked >= 6
                             then { s | iconClicked <- 0
-                                     , devEnabled <- not s.devEnabled
-                                     , activeTab <- if s.activeTab == Developer
-                                                        && s.devEnabled
-                                                    then Log else s.activeTab
+                                     , devEnabled  <- not s.devEnabled
+                                     , activeTab   <-
+                                        if s.activeTab == Developer
+                                            && s.devEnabled
+                                        then Log else s.activeTab
                                  }
-
                             else {s | iconClicked <- s.iconClicked + 1}
         (AppendToLog str) -> {s | log <- s.log ++ str}
-        NoOp             -> s
+        NoOp              -> s
 
 {-| The channel that user inputs can 'Signal.send' actions to -}
 actions : Signal.Channel Action

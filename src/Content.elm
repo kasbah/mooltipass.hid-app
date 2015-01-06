@@ -6,8 +6,9 @@ import Graphics.Collage (..)
 import Graphics.Element (..)
 import Graphics.Input (..)
 import Signal (..)
-import Text
-import Text (..)
+import Html
+import Html.Attributes
+import Text -- needed even when unused because of Elm bug #864
 
 -- local source
 import Layout (..)
@@ -43,8 +44,20 @@ screen (w,h) log =
                                 <| roundedRect w' h'
                                 <| (max w' h') / 80
                             ]
-        txt        = leftAligned <| Text.color Color.white <| fromString log
-    in layers [background, txt]
+        style =
+            Html.Attributes.style
+                [ ("color", "white")
+                , ("font-family", "DejaVu Sans Mono")
+                , ("-webkit-user-select", "text")
+                , ("font-size", "13px")
+                , ("overflow-y", "visible")
+                , ("width", toString (w - 32))
+                , ("height", toString (h - 32))
+                ]
+        txt  = Html.span [style] [Html.text log]
+                |> Html.toElement (w - 32) (h - 32)
+        txt' = container w h middle txt
+    in layers [background, txt']
 
 {-| A button that says 'clear' and posts a 'State.ClearLog' action -}
 clearButton : Element
