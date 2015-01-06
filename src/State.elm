@@ -2,6 +2,7 @@ module State where
 
 -- Elm standard library
 import Signal
+import List
 
 {-| The state signal to map our main element to -}
 state : Signal State
@@ -13,17 +14,17 @@ type alias State =
     , activeTab   : Tab
     , iconClicked : Int
     , devEnabled  : Bool
-    , log         : String
+    , log         : List String
     }
 
 {-| The initial state -}
 default : State
 default =
-    { connect     = Connected
+    { connect     = NotConnected
     , activeTab   = Log
     , iconClicked = 0
-    , devEnabled  = True
-    , log         = "> connecting ...\n"
+    , devEnabled  = False
+    , log         = List.map toString [1..21]
     }
 
 type Tab = Log | Settings | Manage | Developer
@@ -44,7 +45,7 @@ update action s =
     case action of
         (ChangeTab t)    -> {s | activeTab   <- t}
         (SetConnected c) -> {s | connect     <- c}
-        ClearLog         -> {s | log         <- ""}
+        ClearLog         -> {s | log         <- []}
         -- clicking the icon 7 times toggles developer tab visibility
         ClickIcon        -> if s.iconClicked >= 6
                             then { s | iconClicked <- 0
@@ -55,7 +56,7 @@ update action s =
                                         then Log else s.activeTab
                                  }
                             else {s | iconClicked <- s.iconClicked + 1}
-        (AppendToLog str) -> {s | log <- s.log ++ str}
+        (AppendToLog str) -> {s | log <- s.log ++ [str]}
         NoOp              -> s
 
 {-| The channel that user inputs can 'Signal.send' actions to -}

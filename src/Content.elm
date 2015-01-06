@@ -9,6 +9,7 @@ import Signal (..)
 import Html
 import Html.Attributes
 import Text -- needed even when unused because of Elm bug #864
+import List
 
 -- local source
 import Layout (..)
@@ -21,12 +22,12 @@ content : (Int, Int) -> State -> Element
 content (w,h) state =
     let h' = h - heights.marginTop - heights.nav - heights.marginBottom
         background =
-            collage w h [filled darkGrey <| rect (toFloat w) (toFloat h)]
+            collage w h' [filled darkGrey <| rect (toFloat w) (toFloat h)]
     in layers [background, console (w, h') state.log]
 
 {-| Displays the log in a console screen with a clear button at the bottom in a
     'toolbar'. -}
-console : (Int, Int) -> String -> Element
+console : (Int, Int) -> List String -> Element
 console (w,h) log =
     let toolbar = container w heights.consoleToolbar middle clearButton
         screenH = h - heights.consoleToolbar - 32
@@ -36,7 +37,7 @@ console (w,h) log =
     in container w h middle <| flow down [screen', toolbar]
 
 {-| The console screen that displays the log string. -}
-screen : (Int, Int) -> String -> Element
+screen : (Int, Int) -> List String -> Element
 screen (w,h) log =
     let (w',h')    = (toFloat w, toFloat h)
         background = collage w h
@@ -50,11 +51,11 @@ screen (w,h) log =
                 , ("font-family", "DejaVu Sans Mono")
                 , ("-webkit-user-select", "text")
                 , ("font-size", "13px")
-                , ("overflow-y", "visible")
-                , ("width", toString (w - 32))
-                , ("height", toString (h - 32))
+                , ("overflow-y", "auto")
+                , ("width", toString (w - 32) ++ "px")
+                , ("height", toString (h - 32) ++ "px")
                 ]
-        txt  = Html.span [style] [Html.text log]
+        txt  = Html.div [style] (List.intersperse (Html.br [] []) (List.map Html.text log))
                 |> Html.toElement (w - 32) (h - 32)
         txt' = container w h middle txt
     in layers [background, txt']
