@@ -41,7 +41,7 @@
  * 7. extension fills in the input fields in the web page.
  */
 
-var device_info = { "vendorId": 0x16d0, "productId": 0x09a0 };      // Mooltipass
+var device_info = { "vendorId": 0x16d0, "productId": 0x09a0 };
 var debug = false;
 
 var packetSize = 64;    // number of bytes in an HID packet
@@ -120,10 +120,9 @@ var flashInfo = {
 
 var flashChipId = null;
 
-
-var clientId      = null;     // chrome extension address
-var connection    = null;   // connection to the mooltipass
-var connected     = false;   // current connection state
+var clientId      = null;      // chrome extension address
+var connection    = null;      // connection to the mooltipass
+var connected     = false;     // current connection state
 var version       = 'unknown'; // connected mooltipass version
 var authReq       = null;      // current authentication request
 var authReqQueue  = [];
@@ -169,7 +168,6 @@ var setFieldMap = {
     password:   CMD_SET_PASSWORD,
     login:      CMD_SET_LOGIN,
 };
-
 
 /**
  * convert a string to a uint8 array
@@ -559,20 +557,20 @@ function startAuthRequest(request)
  */
 function initWindow()
 {
-    var clearButton = document.getElementById("clear");
-    var clearDebugButton = document.getElementById("clearDebug");
-    var exportFlashButton = document.getElementById("exportFlash");
+    var clearButton        = document.getElementById("clear");
+    var clearDebugButton   = document.getElementById("clearDebug");
+    var exportFlashButton  = document.getElementById("exportFlash");
     var exportEepromButton = document.getElementById("exportEeprom");
-    var exportMediaButton = document.getElementById("exportMedia");
-    var importFlashButton = document.getElementById("importFlash");
+    var exportMediaButton  = document.getElementById("exportMedia");
+    var importFlashButton  = document.getElementById("importFlash");
     var importEepromButton = document.getElementById("importEeprom");
-    var importMediaButton = document.getElementById("importMedia");
-    var sendCMDButton = document.getElementById("sendCMD");
-    var jumpToBootloader = document.getElementById("jumpToBootloader");
-    var cloneSmartcard = document.getElementById("cloneSmartcard");
-    var drawBitmapButton = document.getElementById("drawBitmap");
-    var setFontButton = document.getElementById("setFont");
-    var fillButton = document.getElementById("fill");
+    var importMediaButton  = document.getElementById("importMedia");
+    var sendCMDButton      = document.getElementById("sendCMD");
+    var jumpToBootloader   = document.getElementById("jumpToBootloader");
+    var cloneSmartcard     = document.getElementById("cloneSmartcard");
+    var drawBitmapButton   = document.getElementById("drawBitmap");
+    var setFontButton      = document.getElementById("setFont");
+    var fillButton         = document.getElementById("fill");
 
     // clear contents of logs
     $('#messageLog').html('');
