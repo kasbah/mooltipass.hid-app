@@ -17,28 +17,33 @@ import CustomGraphics (..)
 content : (Int, Int) -> State -> Element
 content (w,h) state =
     let h' = h - heights.marginTop - heights.nav - heights.marginBottom
-        w' = w - (32 * 2)
-        background = collage w h [filled darkGrey (rect (toFloat w) (toFloat h))]
+        background =
+            collage w h [filled darkGrey <| rect (toFloat w) (toFloat h)]
     in layers [background, console (w, h') state.log]
 
 {-| Displays the log in a console screen with a clear button at the bottom in a
-    'toolbar' -}
+    'toolbar'. -}
 console : (Int, Int) -> String -> Element
 console (w,h) log =
-    let (w',h')          = (toFloat w, toFloat h)
-        screenH          = h - heights.consoleToolbar - 32
-        screenH'         = toFloat screenH
-        screenW          = w - 64
-        screenW'         = toFloat screenW
-        screenBackground = collage w screenH
+    let toolbar = container w heights.consoleToolbar middle clearButton
+        screenH = h - heights.consoleToolbar - 32
+        screenW = w - 64
+        screen' =
+            container w screenH middle <| screen (screenW, screenH) log
+    in container w h middle <| flow down [screen', toolbar]
+
+{-| The console screen that displays the log string. -}
+screen : (Int, Int) -> String -> Element
+screen (w,h) log =
+    let (w',h')    = (toFloat w, toFloat h)
+        background = collage w h
                             [filled grey
-                                <| roundedRect screenW' screenH'
-                                <| (max screenW' screenH') / 80
+                                <| roundedRect w' h'
+                                <| (max w' h') / 80
                             ]
-        screenText       = leftAligned <| fromString log
-        screen           = layers [screenBackground, screenText]
-        toolbar          = container w heights.consoleToolbar middle clearButton
-    in container w h middle <| flow down [screen, toolbar]
+        txt        = leftAligned <| fromString log
+    in layers [background, txt]
+
 
 {-| A button that says 'clear' and posts a 'State.ClearLog' action -}
 clearButton : Element
@@ -47,7 +52,7 @@ clearButton =
         img t =
             image (round (toFloat heights.consoleButton * aspect))
                 heights.consoleButton
-                    ("images/button_clear" ++ "-" ++ t ++ ".svg")
+                    ("images/button_clear-" ++ t ++ ".svg")
         up     = img "up"
         hover  = img "hover"
         down   = img "down"
