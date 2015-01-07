@@ -63,21 +63,8 @@ update action s =
 userActions : Channel Action
 userActions = channel NoOp
 
-port appendToLog : Signal String
-
---port setConnected : Signal Int
---
---setConnected' : Int -> Action
---setConnected' s =
---    SetConnected
---        <| case s of
---            0 -> NotConnected
---            1 -> Connected
---            2 -> NoCard
---            3 -> NoPin
 
 actions : Signal Action
 actions = mergeMany [ subscribe userActions
-                    , map AppendToLog appendToLog
                     ]
 

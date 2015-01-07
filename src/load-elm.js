@@ -1,5 +1,9 @@
-var gui = Elm.fullscreen(Elm.Main, {appendToLog: ""});
+var gui = Elm.fullscreen(Elm.Main, {toGUI: ""});
 
-function appendToLog(str) {
-    gui.ports.appendToLog.send(str);
-}
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+        if (request.type == 'toGUI') {
+            gui.ports.toGUI.send(request.data);
+        }
+    }
+);
