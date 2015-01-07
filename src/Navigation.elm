@@ -25,7 +25,7 @@ statusIcon c =
         width           = round (toFloat heights.icon * aspect)
         img color       = image width heights.icon
                             ("images/status_icon-" ++ color ++ ".svg")
-        clickIcon color = clickable (send actions ClickIcon) (img color)
+        clickIcon color = clickable (send userActions ClickIcon) (img color)
         icon            = case c of
             Connected    -> clickIcon "blue"
             NotConnected -> clickIcon "red"
@@ -80,7 +80,7 @@ tab t active disabled =
         down           = img "inactive"
         disabledButton = img "disabled"
         activeButton   = img "active"
-        button         = customButton (send actions (ChangeTab t)) up hover down
+        button         = customButton (send userActions (ChangeTab t)) up hover down
     in  if  | List.member t disabled -> disabledButton
             | t == active            -> activeButton
             | otherwise              -> button

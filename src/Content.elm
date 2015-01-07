@@ -71,4 +71,4 @@ clearButton =
         up     = img "up"
         hover  = img "hover"
         down   = img "down"
-    in  customButton (send actions ClearLog) up hover down
+    in  customButton (send userActions ClearLog) up hover down

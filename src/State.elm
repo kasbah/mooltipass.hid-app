@@ -1,12 +1,12 @@
 module State where
 
 -- Elm standard library
-import Signal
+import Signal (..)
 import List
 
 {-| The state signal to map our main element to -}
 state : Signal State
-state = Signal.foldp update default (Signal.subscribe actions)
+state = foldp update default actions
 
 {-| The entire application state -}
 type alias State =
@@ -60,5 +60,24 @@ update action s =
         NoOp              -> s
 
 {-| The channel that user inputs can 'Signal.send' actions to -}
-actions : Signal.Channel Action
-actions = Signal.channel NoOp
+userActions : Channel Action
+userActions = channel NoOp
+
+port appendToLog : Signal String
+
+--port setConnected : Signal Int
+--
+--setConnected' : Int -> Action
+--setConnected' s =
+--    SetConnected
+--        <| case s of
+--            0 -> NotConnected
+--            1 -> Connected
+--            2 -> NoCard
+--            3 -> NoPin
+
+actions : Signal Action
+actions = mergeMany [ subscribe userActions
+                    , map AppendToLog appendToLog
+                    ]
+

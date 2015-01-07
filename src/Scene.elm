@@ -15,7 +15,7 @@ import Content (..)
     'Element'-}
 scene : (Int,Int) -> State -> Element
 scene dims state =
-    clickable (send actions (AppendToLog ("\n> " ++ toString dims)))
+    clickable (send userActions (AppendToLog ("\n> " ++ toString dims)))
         <| layers [layer1 dims state]
 
 {-| This is currently the only layer, might be useful to easily add layers to
