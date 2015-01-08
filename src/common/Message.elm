@@ -1,4 +1,4 @@
-module Communication where
+module Message where
 
 -- Elm standard library
 import Maybe

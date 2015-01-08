@@ -8,17 +8,17 @@ import Graphics.Input -- needed because of elm bug
 -- local source
 import State
 import Scene
-import Communication
+import Message
 import Actions (..)
 
-port toGUI : Signal Communication.Message
+port toGUI : Signal Message.Message
 
-port toBackground : Signal Communication.Message
-port toBackground = Communication.encode <~ subscribe guiActions
+port toBackground : Signal Message.Message
+port toBackground = Message.encode <~ subscribe guiActions
 
 actions : Signal State.Action
 actions = mergeMany [ subscribe guiActions
-                    , map Communication.decode toGUI
+                    , map Message.decode toGUI
                     ]
 
 {-| Our main function simply maps the scene to the window dimensions and state
