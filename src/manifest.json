@@ -4,7 +4,8 @@
     "version": "0.7",
     "app": {
         "background": {
-            "scripts": ["background.js", "mooltipass.js"]
+            "scripts": [ "background/background.js"
+                       , "background/mooltipass.js"]
         }
     },
     "permissions": [
@@ -16,5 +17,5 @@
         },
 	{"fileSystem": ["write", "retainEntries"]}
     ],
-    "icons": {"128": "images/logo_square128.png" }
+    "icons": {"128": "gui/images/logo_square128.png" }
 }
