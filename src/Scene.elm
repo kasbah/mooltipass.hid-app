@@ -14,9 +14,7 @@ import Content (..)
 {-| The scene maps the window dimensions and an application state to the main
     'Element'-}
 scene : (Int,Int) -> State -> Element
-scene dims state =
-    clickable (send userActions (AppendToLog ("\n> " ++ toString dims)))
-        <| layers [layer1 dims state]
+scene dims state = layers [layer1 dims state]
 
 {-| This is currently the only layer, might be useful to easily add layers to
     the scene though -}

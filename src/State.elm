@@ -5,8 +5,8 @@ import Signal (..)
 import List
 
 {-| The state signal to map our main element to -}
-state : Signal State
-state = foldp update default actions
+state : Signal Action -> Signal State
+state = foldp update default
 
 {-| The entire application state -}
 type alias State =
@@ -24,7 +24,7 @@ default =
     , activeTab   = Log
     , iconClicked = 0
     , devEnabled  = False
-    , log         = List.map toString [1..21]
+    , log         = []
     }
 
 type Tab = Log | Settings | Manage | Developer
@@ -32,7 +32,7 @@ type Tab = Log | Settings | Manage | Developer
 type ConnectState = NotConnected | Connected | NoCard | NoPin
 
 {-| All actions that can be performed to change state -}
-type Action = AppendToLog String
+type Action = SetLog (List String)
             | ChangeTab Tab
             | ClearLog
             | ClickIcon
@@ -56,28 +56,6 @@ update action s =
                                         then Log else s.activeTab
                                  }
                             else {s | iconClicked <- s.iconClicked + 1}
-        (AppendToLog str) -> {s | log <- s.log ++ [str]}
+        (SetLog l)      -> {s | log <- l}
         NoOp              -> s
-
-{-| The channel that user inputs can 'Signal.send' actions to -}
-userActions : Channel Action
-userActions = channel NoOp
-
-port appendToLog : Signal String
-
---port setConnected : Signal Int
---
---setConnected' : Int -> Action
---setConnected' s =
---    SetConnected
---        <| case s of
---            0 -> NotConnected
---            1 -> Connected
---            2 -> NoCard
---            3 -> NoPin
-
-actions : Signal Action
-actions = mergeMany [ subscribe userActions
-                    , map AppendToLog appendToLog
-                    ]
 
