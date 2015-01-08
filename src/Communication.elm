@@ -20,15 +20,6 @@ emptyMessage = { appendToLog = Nothing
 
 port toGUI : Signal Message
 
-intToCon = Dict.fromList
-    [ (0, NotConnected)
-    , (1, Connected   )
-    , (2, NoCard      )
-    , (3, NoPin       )
-    ]
-
-conToInt = Dict.fromList <| List.foldr (\(x,y) z -> (y,x)::z) [] (Dict.toList intToCon)
-
 encode : Action -> Message
 encode action =
     case action of

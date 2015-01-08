@@ -4,7 +4,7 @@
     "version": "0.7",
     "app": {
         "background": {
-            "scripts": ["background.js"]
+            "scripts": ["background.js", "mooltipass.js"]
         }
     },
     "permissions": [
