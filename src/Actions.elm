@@ -1,4 +1,4 @@
-module UserActions where
+module Actions where
 
 -- Elm standard library
 import Signal (..)
@@ -7,5 +7,5 @@ import Signal (..)
 import State (..)
 
 {-| The channel that user inputs can 'Signal.send' actions to -}
-userActions : Channel Action
-userActions = channel NoOp
+guiActions : Channel Action
+guiActions = channel NoOp

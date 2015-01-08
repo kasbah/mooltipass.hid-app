@@ -1,11 +1,15 @@
 module Navigation where
+
+-- Elm standard library
 import Graphics.Element (..)
 import Graphics.Input (..)
 import Signal (..)
 import List
 
+-- local source
 import Layout (heights)
 import State (..)
+import Actions (guiActions)
 
 {-| A tab navigation up top and a Mooltipass status icon on the top right. -}
 navigation : (Int, Int) -> State -> Element
@@ -25,7 +29,7 @@ statusIcon c =
         width           = round (toFloat heights.icon * aspect)
         img color       = image width heights.icon
                             ("images/status_icon-" ++ color ++ ".svg")
-        clickIcon color = clickable (send userActions ClickIcon) (img color)
+        clickIcon color = clickable (send guiActions ClickIcon) (img color)
         icon            = case c of
             Connected    -> clickIcon "blue"
             NotConnected -> clickIcon "red"
@@ -80,7 +84,7 @@ tab t active disabled =
         down           = img "inactive"
         disabledButton = img "disabled"
         activeButton   = img "active"
-        button         = customButton (send userActions (ChangeTab t)) up hover down
+        button         = customButton (send guiActions (ChangeTab t)) up hover down
     in  if  | List.member t disabled -> disabledButton
             | t == active            -> activeButton
             | otherwise              -> button

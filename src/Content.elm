@@ -15,6 +15,7 @@ import List
 import Layout (..)
 import State (..)
 import CustomGraphics (..)
+import Actions (..)
 
 {-| Renders the window the window dimensions and application state to the
     element that is below the tab navigation. -}
@@ -71,4 +72,4 @@ clearButton =
         up     = img "up"
         hover  = img "hover"
         down   = img "down"
-    in  customButton (send userActions ClearLog) up hover down
+    in  customButton (send guiActions (SetLog [])) up hover down

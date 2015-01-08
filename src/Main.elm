@@ -3,17 +3,21 @@ import Graphics.Element (..)
 import Signal (..)
 import Time (..)
 import Window
+import Graphics.Input -- needed because of elm bug
 
 -- local source
 import State
 import Scene
 import Communication
-import UserActions (userActions)
+import Actions (..)
 
 port toGUI : Signal Communication.Message
 
+port toBackend : Signal Communication.Message
+port toBackend = Communication.encode <~ subscribe guiActions
+
 actions : Signal State.Action
-actions = mergeMany [ subscribe userActions
+actions = mergeMany [ subscribe guiActions
                     , map Communication.decode toGUI
                     ]
 
