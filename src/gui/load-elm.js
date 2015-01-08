@@ -1,3 +1,6 @@
+/* This file loads the Elm application and sets up communication with the
+   background through chrome.runtime. */
+
 var gui = Elm.fullscreen(Elm.Main, {toGUI: emptyMessage});
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
