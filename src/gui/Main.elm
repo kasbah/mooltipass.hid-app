@@ -1,3 +1,4 @@
+module GUI where
 -- Elm standard library
 import Graphics.Element (..)
 import Signal (..)
@@ -11,14 +12,14 @@ import Scene
 import Message
 import Actions (..)
 
-port toGUI : Signal Message.Message
+port fromBackground : Signal Message.Message
 
 port toBackground : Signal Message.Message
 port toBackground = Message.encode <~ subscribe guiActions
 
 actions : Signal State.Action
 actions = mergeMany [ subscribe guiActions
-                    , map Message.decode toGUI
+                    , map Message.decode fromBackground
                     ]
 
 {-| Our main function simply maps the scene to the window dimensions and state
