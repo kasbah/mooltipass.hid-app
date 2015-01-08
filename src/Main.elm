@@ -13,8 +13,8 @@ import Actions (..)
 
 port toGUI : Signal Communication.Message
 
-port toBackend : Signal Communication.Message
-port toBackend = Communication.encode <~ subscribe guiActions
+port toBackground : Signal Communication.Message
+port toBackground = Communication.encode <~ subscribe guiActions
 
 actions : Signal State.Action
 actions = mergeMany [ subscribe guiActions

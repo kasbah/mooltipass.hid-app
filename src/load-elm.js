@@ -7,7 +7,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         }
     });
 
-gui.ports.toBackend.subscribe(function(message) {
-        chrome.runtime.sendMessage({toBackend: message});
+gui.ports.toBackground.subscribe(function(message) {
+        chrome.runtime.sendMessage({toBackground: message});
     });
 
