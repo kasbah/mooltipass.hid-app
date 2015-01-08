@@ -169,6 +169,8 @@ var setFieldMap = {
     login:      CMD_SET_LOGIN,
 };
 
+var log = [];
+
 /**
  * convert a string to a uint8 array
  * @param str the string to convert
@@ -260,7 +262,7 @@ function sendRequest(type, content)
         body.set(content, 0);
         if (false && type != CMD_EXPORT_FLASH && type != CMD_EXPORT_EEPROM && type != CMD_IMPORT_FLASH)
         {
-            log('#messageLog','body '+JSON.stringify(body)+'\n');
+            appendToLog('#messageLog','body '+JSON.stringify(body)+'\n');
         }
     }
     else
@@ -299,11 +301,11 @@ function sendRequestArray(type, data)
     body = new Uint8Array(payload, 0);
     var offset = 0;
 
-    log('#messageLog', 'building request from array length '+data.length+'\n');
+    appendToLog('#messageLog', 'building request from array length '+data.length+'\n');
 
     for (var ind=0; ind<data.size; ind++)
     {
-        log('#messageLog', 'adding array length '+data[ind].length+' '+JSON.stringify(data[ind])+'\n');
+        appendToLog('#messageLog', 'adding array length '+data[ind].length+' '+JSON.stringify(data[ind])+'\n');
         body.set(data[ind], offset);
         offset += data[ind].length;
     }
@@ -327,13 +329,13 @@ function getNextField()
             // got all the credentials
             //console.log('getNextField(): got all fields '+JSON.stringify(authReq.inputs));
             chrome.runtime.sendMessage(authReq.senderId, {type: 'credentials', inputs: authReq.inputs});
-            log('#messageLog','sent credentials\n');
+            appendToLog('#messageLog','sent credentials\n');
             authReq = null;
         }
     }
     else
     {
-        log('#messageLog',  'getNextField(): no authReq\n');
+        appendToLog('#messageLog',  'getNextField(): no authReq\n');
     }
 }
 
@@ -365,20 +367,20 @@ function setNextField()
         } else {
             // no more input fields to set on mooltipass
             chrome.runtime.sendMessage(authReq.senderId, {type: 'updateComplete'});
-            log('#messageLog', 'update finished \n');
+            appendToLog('#messageLog', 'update finished \n');
             endAuthRequest();
         }
     }
     else
     {
-        log('#messageLog',  'setNextField: no authReq\n');
+        appendToLog('#messageLog',  'setNextField: no authReq\n');
     }
 }
 
 function setContext(create)
 {
     createContext = create;
-    log('#messageLog', 'Set context: "'+authReq.context+'" \n');
+    appendToLog('#messageLog', 'Set context: "'+authReq.context+'" \n');
     // get credentials from mooltipass
     contextGood = false;
     sendString(CMD_CONTEXT, authReq.context);
@@ -392,16 +394,16 @@ function saveToEntry(entry, data)
         {
             if (this.error)
             {
-                log('#exportLog', 'Error during write: ' + this.error.toString() + '\n');
+                appendToLog('#exportLog', 'Error during write: ' + this.error.toString() + '\n');
             }
             else
             {
                 if (fileWriter.length === 0) {
                     // truncate has finished
                     var blob = new Blob([data], {type: 'application/octet-binary'});
-                    log('#exportLog',  'writing '+data.length+' bytes\n');
+                    appendToLog('#exportLog',  'writing '+data.length+' bytes\n');
                     fileWriter.write(blob);
-                    log('#exportLog', 'Save complete\n');
+                    appendToLog('#exportLog', 'Save complete\n');
                 } else {
                 }
             }
@@ -410,12 +412,14 @@ function saveToEntry(entry, data)
     });
 }
 
-function log(logId, text)
+function appendToLog(logId, text)
 {
     console.log(logId, text);
+    log.push(logId + ":" + text);
+    chrome.runtime.sendMessage({toGUI:{setLog:log, setConnected:null}});
 }
 
-/**
+/**m
  * Return a sorted list of field keys
  */
 function getKeys(fields)
@@ -516,14 +520,14 @@ function startAuthRequest(request)
             authReq.context = match[2];
             console.log('auth context: '+authReq.context);
         }
-        log('#messageLog', 'update:\n');
+        appendToLog('#messageLog', 'update:\n');
         for (var key in request.inputs)
         {
             id = (request.inputs[key].id) ? request.inputs[key].id : request.inputs[key].name;
             if (key == 'password') {
-                log('#messageLog', '    set "'+id+'" = "'+request.inputs[key].value.replace(/./gi, '*')+'"\n');
+                appendToLog('#messageLog', '    set "'+id+'" = "'+request.inputs[key].value.replace(/./gi, '*')+'"\n');
             } else {
-                log('#messageLog', '    set "'+id+'" = "'+request.inputs[key].value+'"\n');
+                appendToLog('#messageLog', '    set "'+id+'" = "'+request.inputs[key].value+'"\n');
             }
         }
 
@@ -575,7 +579,7 @@ function sendNextPacket(cmd, importer)
     // debug
     if (false && importer.log && ((importer.offset * 100)/importer.data.byteLength) > 95)
     {
-        log(importer.log, 'import: offset '+importer.offset+' size '+size+' pageSpace '+importer.pageSpace+'\n');
+        appendToLog(importer.log, 'import: offset '+importer.offset+' size '+size+' pageSpace '+importer.pageSpace+'\n');
     }
 
     importer.pageSpace -= size;
@@ -653,18 +657,18 @@ function onDataReceived(reportId, data)
             {
                     msg += String.fromCharCode(bytes[i+2]);
             }
-            log('#debugLog', msg);
+            appendToLog('#debugLog', msg);
             break;
         }
         case CMD_PING:
-            log('#messageLog', 'command: ping\n');
+            appendToLog('#messageLog', 'command: ping\n');
             break;
         case CMD_VERSION:
         {
             version = arrayToStr(new Uint8Array(data.slice(3)));
             if (!connected) {
                 flashChipId = msg[0];
-                log('#messageLog', 'Connected to Mooltipass ' + version + ' flashId '+flashChipId+'\n');
+                appendToLog('#messageLog', 'Connected to Mooltipass ' + version + ' flashId '+flashChipId+'\n');
                 connected = true;
                 if (clientId) {
                     chrome.runtime.sendMessage(clientId, {type: 'connected', version: version});
@@ -676,11 +680,11 @@ function onDataReceived(reportId, data)
             contextGood = (bytes[2] == 1);
             if (!contextGood)
             {
-                log('#messageLog',  'failed to create context '+authReq.context+'\n');
+                appendToLog('#messageLog',  'failed to create context '+authReq.context+'\n');
                 endAuthRequest();
             } else {
-                log('#messageLog', 'created context "'+authReq.context+'" for '+authReq.type+'\n');
-                log('#messageLog', 'setting context "'+authReq.context+'" for '+authReq.type+'\n');
+                appendToLog('#messageLog', 'created context "'+authReq.context+'" for '+authReq.type+'\n');
+                appendToLog('#messageLog', 'setting context "'+authReq.context+'" for '+authReq.type+'\n');
                 console.log('Added context, now set context "'+authReq.context+'" for '+authReq.type);
                 sendString(CMD_CONTEXT, authReq.context);
             }
@@ -691,16 +695,16 @@ function onDataReceived(reportId, data)
             noCard = (bytes[2] == PLUGIN_BYTE_NOCARD);
 
             if (contextGood) {
-                log('#messageLog', 'Active: "'+authReq.context+'" for '+authReq.type+'\n');
+                appendToLog('#messageLog', 'Active: "'+authReq.context+'" for '+authReq.type+'\n');
                 console.log('Successfully set context "'+authReq.context+'" for '+authReq.type);
                 chrome.runtime.sendMessage(clientId, {type: 'cardPresent', state: true});
             } else if (noCard){
-                log('#messageLog', 'No card: "'+authReq.context+'" for '+authReq.type+'\n');
+                appendToLog('#messageLog', 'No card: "'+authReq.context+'" for '+authReq.type+'\n');
                 console.log('No card received when setting context: "'+authReq.context+'" for '+authReq.type);
                 chrome.runtime.sendMessage(clientId, {type: 'cardPresent', state: false});
             } else {
                 console.log('Failed to set context "'+authReq.context+'"');
-                log('#messageLog','Unknown context "'+authReq.context+'" for '+authReq.type+'\n');
+                appendToLog('#messageLog','Unknown context "'+authReq.context+'" for '+authReq.type+'\n');
 				chrome.runtime.sendMessage(clientId, {type: 'cardPresent', state: true});
             }
 
@@ -713,7 +717,7 @@ function onDataReceived(reportId, data)
                     }
                 } else if (createContext) {
                     createContext = false;
-                    log('#messageLog','add new context "'+authReq.context+'" for '+authReq.type+'\n');
+                    appendToLog('#messageLog','add new context "'+authReq.context+'" for '+authReq.type+'\n');
                     sendString(CMD_ADD_CONTEXT, authReq.context);
                 } else {
                     console.log('Failed to set up context "'+authReq.context+'"');
@@ -732,9 +736,9 @@ function onDataReceived(reportId, data)
                     var key = authReq.pending;
                     var value = arrayToStr(new Uint8Array(data.slice(2)));
                     if (key == 'password') {
-                        log('#messageLog',  'got '+key+' = "'+value.replace(/./gi, '*')+'"\n');
+                        appendToLog('#messageLog',  'got '+key+' = "'+value.replace(/./gi, '*')+'"\n');
                     } else {
-                        log('#messageLog',  'got '+key+' = "'+value+'"\n');
+                        appendToLog('#messageLog',  'got '+key+' = "'+value+'"\n');
                     }
                     authReq.inputs[key].value = value;
 
@@ -756,7 +760,7 @@ function onDataReceived(reportId, data)
                 if (bytes[2] == 1)
                 {
                     console.log('set '+authReq.pending+' for '+authReq.context);
-                    log('#messageLog', 'get '+authReq.pending+'\n');
+                    appendToLog('#messageLog', 'get '+authReq.pending+'\n');
                     // XXX is this still needed?
                     sendRequest(getFieldMap[authReq.pending]);
                     break;
@@ -769,12 +773,12 @@ function onDataReceived(reportId, data)
             if (bytes[2] == 1)
             {
                 // success
-                log('#messageLog', 'set '+type+' on mooltipass\n');
+                appendToLog('#messageLog', 'set '+type+' on mooltipass\n');
             }
             else
             {
                 // failed
-                log('#messageLog', 'set failed for '+type+'\n');
+                appendToLog('#messageLog', 'set failed for '+type+'\n');
             }
             setNextField();
 
@@ -868,17 +872,17 @@ function onDataReceived(reportId, data)
         case CMD_EXPORT_EEPROM_END:
             if (exportData && exportDataEntry)
             {
-                log('#exportLog', 'export: saving to file\n');
+                appendToLog('#exportLog', 'export: saving to file\n');
                 if (exportDataOffset < exportDataUint8.length)
                 {
                     console.log('WARNING: only received '+exportDataOffset+' of '+exportDataUint8.length+' bytes');
-                    log('#exportLog', 'WARNING: only received '+exportDataOffset+' of '+exportDataUint8.length+' bytes\n');
+                    appendToLog('#exportLog', 'WARNING: only received '+exportDataOffset+' of '+exportDataUint8.length+' bytes\n');
                 }
                 saveToEntry(exportDataEntry, exportDataUint8)
             }
             else
             {
-                log('#exportLog', 'Error received export end ('+cmd+') with no active export\n');
+                appendToLog('#exportLog', 'Error received export end ('+cmd+') with no active export\n');
             }
             exportData = null;
             exportDataUint8 = null;
@@ -888,11 +892,11 @@ function onDataReceived(reportId, data)
 
         case CMD_ERASE_EEPROM:
         case CMD_ERASE_FLASH:
-            log('#developerLog', (bytes[2] == 1) ? 'succeeded\n' : 'failed\n');
+            appendToLog('#developerLog', (bytes[2] == 1) ? 'succeeded\n' : 'failed\n');
             break;
 
         case CMD_RESET_CARD:
-            log('#developerLog', (bytes[2] == 1) ? 'succeeded\n' : 'failed\n');
+            appendToLog('#developerLog', (bytes[2] == 1) ? 'succeeded\n' : 'failed\n');
             break;
 
         case CMD_IMPORT_FLASH_BEGIN:
@@ -900,7 +904,7 @@ function onDataReceived(reportId, data)
         {
             var ok = bytes[2];
             if (ok == 0) {
-                log('#importLog', 'import denied\n');
+                appendToLog('#importLog', 'import denied\n');
             } else {
                 sendNextPacket(CMD_IMPORT_FLASH, importData);
             }
@@ -911,21 +915,21 @@ function onDataReceived(reportId, data)
         {
             var ok = bytes[2];
             if (ok == 0) {
-                log('#importLog', 'import denied\n');
+                appendToLog('#importLog', 'import denied\n');
             } else {
                 sendNextPacket(CMD_IMPORT_MEDIA, importData);
             }
             break;
         }
         case CMD_IMPORT_MEDIA_END:
-            log('#importLog', 'import completed\n');
+            appendToLog('#importLog', 'import completed\n');
             importData = null;
             break;
 
         case CMD_IMPORT_FLASH_END:
         case CMD_IMPORT_EEPROM_END:
             importData = null;
-            log('#importLog', 'import finished\n');
+            appendToLog('#importLog', 'import finished\n');
             break;
 
         case CMD_IMPORT_EEPROM_BEGIN:
@@ -935,9 +939,9 @@ function onDataReceived(reportId, data)
             if (ok == 0) {
                 remainder = importData.data.byteLength - importData.offset;
                 if (remainder > 0) {
-                    log('#importLog', 'import halted, '+remainder+' bytes left\n');
+                    appendToLog('#importLog', 'import halted, '+remainder+' bytes left\n');
                 } else {
-                    log('#importLog', 'import finished\n');
+                    appendToLog('#importLog', 'import finished\n');
                 }
                 importData = null;
             } else {
@@ -947,7 +951,7 @@ function onDataReceived(reportId, data)
         }
 
         default:
-            log('#messageLog', 'unknown command '+cmd+'\n');
+            appendToLog('#messageLog', 'unknown command '+cmd+'\n');
             break;
     }
     if (connection) {
@@ -977,7 +981,7 @@ function sendMsg(msg)
                 if (debug) {
                     console.log('Failed to send to device: '+chrome.runtime.lastError.message);
                 }
-                log('#messageLog', 'Disconnected from mooltipass\n');
+                appendToLog('#messageLog', 'Disconnected from mooltipass\n');
                 if (clientId) {
                     chrome.runtime.sendMessage(clientId, {type: 'disconnected'});
                 }
@@ -1018,7 +1022,7 @@ function onDeviceFound(devices)
     var devId = devices[ind].deviceId;
 
     console.log('Connecting to device '+devId);
-    log('#messageLog', 'Connecting to device...\n');
+    appendToLog('#messageLog', 'Connecting to device...\n');
     chrome.hid.connect(devId, function(connectInfo)
     {
         if (!chrome.runtime.lastError)
