@@ -17,11 +17,10 @@ type alias BgState =
     , log       : List String
     }
 
+{-| Updating the GuiState with a background state completely replaces the
+    existing background state -}
 fromBgState : BgState -> GuiState -> GuiState
 fromBgState bg gui = { gui | bgState <- bg }
-
-toBgState : GuiState -> BgState
-toBgState gui = gui.bgState
 
 {-| The initial state -}
 default : GuiState
