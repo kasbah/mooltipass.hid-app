@@ -18,7 +18,7 @@ navigation (w,h) state =
         [ container (round (toFloat w * 0.85)) heights.nav midLeft
             (flow right [navSpacer 38, tabs state])
         , container (round (toFloat w * 0.15)) heights.nav midRight
-            (flow left [navSpacer 32, statusIcon state.bgState.connect, navSpacer 9000])
+            (flow left [navSpacer 32, statusIcon state.bgState.connected, navSpacer 9000])
         ]
 
 {-| An icon that indictes the connection status and can be clicked 7 times to

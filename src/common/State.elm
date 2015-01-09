@@ -1,12 +1,7 @@
 module State where
 
 -- Elm standard library
-import Signal (..)
 import List
-
-{-| The state signal to map our main element to -}
-state : Signal Action -> Signal GuiState
-state = foldp update default
 
 {-| The entire application state including gui components -}
 type alias GuiState =
