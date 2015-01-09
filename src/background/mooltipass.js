@@ -126,8 +126,6 @@ var setFieldMap = {
     login:      CMD_SET_LOGIN,
 };
 
-var log = [];
-
 /**
  * convert a string to a uint8 array
  * @param str the string to convert
@@ -372,8 +370,7 @@ function saveToEntry(entry, data)
 function appendToLog(logId, text)
 {
     console.log(logId, text);
-    log.push(logId + ":" + text);
-    chrome.runtime.sendMessage({toGUI:{setLog:log, setConnected:null}});
+    elm.ports.fromMP.send({appendToLog:logId + ":" + text});
 }
 
 /**m
