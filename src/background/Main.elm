@@ -8,7 +8,7 @@ import List
 
 -- local source
 import Message
-import State (..)
+import CommonState (..)
 
 type alias MpMessage = {appendToLog : String}
 
@@ -16,11 +16,11 @@ port fromGUI : Signal Message.Message
 
 port fromMP  : Signal MpMessage
 
-mpDecode : MpMessage -> BgState -> BgState
+mpDecode : MpMessage -> CommonState -> CommonState
 mpDecode msg s =  {s | log <- s.log `List.append` [msg.appendToLog]}
 
-state : Signal BgState
-state = foldp mpDecode defaultBgState fromMP
+state : Signal CommonState
+state = foldp mpDecode default fromMP
 
 port toGUI : Signal Message.Message
 port toGUI = Message.encode <~ merge state (Message.decode <~ fromGUI)

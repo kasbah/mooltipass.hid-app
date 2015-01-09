@@ -4,7 +4,7 @@ module Actions where
 import Signal (..)
 
 -- local source
-import State (..)
+import GuiState (..)
 
 {-| The channel that user inputs can 'Signal.send' actions to -}
 guiActions : Channel Action

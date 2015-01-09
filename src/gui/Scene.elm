@@ -6,7 +6,7 @@ import Graphics.Element (..)
 import Signal (..)
 
 -- local source
-import State (..)
+import GuiState (..)
 import Navigation (..)
 import Layout (..)
 import Content (..)

@@ -13,7 +13,8 @@ import List
 
 -- local source
 import Layout (..)
-import State (..)
+import GuiState (..)
+import CommonState as Common
 import CustomGraphics (..)
 import Actions (..)
 
@@ -24,7 +25,7 @@ content (w,h) state =
     let h' = h - heights.marginTop - heights.nav - heights.marginBottom
         background =
             collage w h' [filled darkGrey <| rect (toFloat w) (toFloat h)]
-    in layers [background, console (w, h') state.bgState.log]
+    in layers [background, console (w, h') state.common.log]
 
 {-| Displays the log in a console screen with a clear button at the bottom in a
     'toolbar'. -}
@@ -72,4 +73,4 @@ clearButton =
         up     = img "up"
         hover  = img "hover"
         down   = img "down"
-    in  customButton (send guiActions (SetLog [])) up hover down
+    in  customButton (send guiActions (CommonAction (Common.SetLog []))) up hover down

@@ -1,13 +1,13 @@
 module Message where
 
 -- local source
-import State (..)
+import CommonState (..)
 
 type alias Message = { setLog : (List String)
                      , setConnected : Int
                      }
 
-encode : BgState -> Message
+encode : CommonState -> Message
 encode bg =
     { setLog = bg.log
     , setConnected = case bg.connected of
@@ -17,7 +17,7 @@ encode bg =
                     NoPin        -> 3
     }
 
-decode : Message -> BgState
+decode : Message -> CommonState
 decode msg =
     { log = msg.setLog
     , connected = case msg.setConnected of
