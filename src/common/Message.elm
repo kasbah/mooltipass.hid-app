@@ -10,7 +10,7 @@ type alias Message = { setLog : (List String)
 encode : BgState -> Message
 encode bg =
     { setLog = bg.log
-    , setConnected = case bg.connect of
+    , setConnected = case bg.connected of
                     NotConnected -> 0
                     Connected    -> 1
                     NoCard       -> 2
@@ -20,7 +20,7 @@ encode bg =
 decode : Message -> BgState
 decode msg =
     { log = msg.setLog
-    , connect = case msg.setConnected of
+    , connected = case msg.setConnected of
                     0 -> NotConnected
                     1 -> Connected
                     2 -> NoCard

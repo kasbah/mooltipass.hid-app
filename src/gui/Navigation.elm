@@ -48,7 +48,7 @@ navLine w = tiledImage w 1 "images/tab_spacer_pixel.png"
 {-| The tab navigation with an optional developer tab. -}
 tabs : GuiState -> Element
 tabs state =
-    let disabled = case state.bgState.connect of
+    let disabled = case state.bgState.connected of
             Connected    -> []
             NotConnected -> [Settings, Manage, Developer]
             NoCard       -> [Settings, Manage]

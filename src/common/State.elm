@@ -18,8 +18,8 @@ type alias GuiState =
 
 {-| The background state excluding gui components -}
 type alias BgState =
-    { connect     : ConnectState
-    , log         : List String
+    { connected : ConnectState
+    , log       : List String
     }
 
 fromBgState : BgState -> GuiState -> GuiState
@@ -39,8 +39,8 @@ default =
 
 defaultBgState : BgState
 defaultBgState =
-    { connect     = NotConnected
-    , log         = []
+    { connected = NotConnected
+    , log       = []
     }
 
 type Tab = Log | Settings | Manage | Developer
