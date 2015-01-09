@@ -1,46 +1,3 @@
-/* CDDL HEADER START
- *
- * The contents of this file are subject to the terms of the
- * Common Development and Distribution License (the "License").
- * You may not use this file except in compliance with the License.
- *
- * You can obtain a copy of the license at src/license_cddl-1.0.txt
- * or http://www.opensolaris.org/os/licensing.
- * See the License for the specific language governing permissions
- * and limitations under the License.
- *
- * When distributing Covered Code, include this CDDL HEADER in each
- * file and include the License file at src/license_cddl-1.0.txt
- * If applicable, add the following below this CDDL HEADER, with the
- * fields enclosed by brackets "[]" replaced with your own identifying
- * information: Portions Copyright [yyyy] [name of copyright owner]
- *
- * CDDL HEADER END
- */
-
-/* Copyright (c) 2014 Darran Hunt. All rights reserved. */
-
-/*!      \file mooltipass.js
-*        \brief        Mooltipass Chrome HID App plugin
-*        Created: 30/5/2014
-*        Author: Darran Hunt
-*
-*  	Modified: 12/09/2014 by Bjorn Wielens
-* 	- Implemented card presence detection.
-*/
-
-
-/*
- * The Basic sequence is:
- * 1. extension detects credential input fields in a web page.
- * 2. extension sends request for credential values to this app
- * 3. app connects to mooltipass
- * 4. app sets context based on the URL of the web page
- * 5. app requests each of the credentials from the mooltipass
- * 6. app sends all of the credentials to the extension
- * 7. extension fills in the input fields in the web page.
- */
-
 var device_info = { "vendorId": 0x16d0, "productId": 0x09a0 };
 var debug = false;
 
@@ -143,14 +100,14 @@ var exportDataUint8 = null;   // uint8 view of exportData
 var exportDataEntry = null;   // File entry for flash export
 var exportDataOffset = 0;     // current data offset in arraybuffer
 
-var importData = {};        // arraybuffer holding data to import exported data
+var importData = {};          // arraybuffer holding data to import exported data
 var importDataOffset = 0;     // current data offset in import arraybuffer
 var importDataPageOffset = 0; // current write page offset
 
-var mediaData = null;        // arraybuffer of media file data for slot storage
-var mediaDataOffset = 0;     // current data offset in mediaData array
+var mediaData = null;         // arraybuffer of media file data for slot storage
+var mediaDataOffset = 0;      // current data offset in mediaData array
 
-var media = {};             // media file info from mooltipass
+var media = {};               // media file info from mooltipass
 
 var importProgressBar = null;
 var exportProgressBar = null;
