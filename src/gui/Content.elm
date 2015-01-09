@@ -14,7 +14,7 @@ import List
 -- local source
 import Layout (..)
 import GuiState (..)
-import CommonState as Common
+import CommonState (..)
 import CustomGraphics (..)
 import Actions (..)
 
@@ -73,4 +73,4 @@ clearButton =
         up     = img "up"
         hover  = img "hover"
         down   = img "down"
-    in  customButton (send guiActions (CommonAction (Common.SetLog []))) up hover down
+    in  customButton (send guiActions (CommonAction (SetLog []))) up hover down

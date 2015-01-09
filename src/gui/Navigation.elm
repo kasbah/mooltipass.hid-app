@@ -9,7 +9,7 @@ import List
 -- local source
 import Layout (heights)
 import GuiState (..)
-import CommonState as Common
+import CommonState (..)
 import Actions (guiActions)
 
 {-| A tab navigation up top and a Mooltipass status icon on the top right. -}
@@ -24,7 +24,7 @@ navigation (w,h) state =
 
 {-| An icon that indictes the connection status and can be clicked 7 times to
     enable developer mode. -}
-statusIcon : Common.ConnectState -> Element
+statusIcon : ConnectState -> Element
 statusIcon c =
     let aspect          = 1.3285316308250572
         width           = round (toFloat heights.icon * aspect)
@@ -32,10 +32,10 @@ statusIcon c =
                             ("images/status_icon-" ++ color ++ ".svg")
         clickIcon color = clickable (send guiActions ClickIcon) (img color)
         icon            = case c of
-            Common.Connected    -> clickIcon "blue"
-            Common.NotConnected -> clickIcon "red"
-            Common.NoCard       -> clickIcon "orange"
-            Common.NoPin        -> clickIcon "purple"
+            Connected    -> clickIcon "blue"
+            NotConnected -> clickIcon "red"
+            NoCard       -> clickIcon "orange"
+            NoPin        -> clickIcon "purple"
     in flow down [icon, spacer 1 heights.iconPadding, navLine width]
 
 {-| A spacer that has a grey line at the bottom -}
@@ -50,10 +50,10 @@ navLine w = tiledImage w 1 "images/tab_spacer_pixel.png"
 tabs : GuiState -> Element
 tabs state =
     let disabled = case state.common.connected of
-            Common.Connected    -> []
-            Common.NotConnected -> [Settings, Manage, Developer]
-            Common.NoCard       -> [Settings, Manage]
-            Common.NoPin        -> [Settings, Manage]
+            Connected    -> []
+            NotConnected -> [Settings, Manage, Developer]
+            NoCard       -> [Settings, Manage]
+            NoPin        -> [Settings, Manage]
     in flow right <| [ tab Log      state.activeTab disabled
                      , navSpacer 5
                      , tab Settings state.activeTab disabled
