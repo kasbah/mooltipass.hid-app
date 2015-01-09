@@ -34,7 +34,6 @@ type ConnectState = NotConnected | Connected | NoCard | NoPin
 {-| All actions that can be performed to change state -}
 type Action = SetLog (List String)
             | ChangeTab Tab
-            | ClearLog
             | ClickIcon
             | NoOp
             | SetConnected ConnectState
@@ -45,7 +44,6 @@ update action s =
     case action of
         (ChangeTab t)    -> {s | activeTab   <- t}
         (SetConnected c) -> {s | connect     <- c}
-        ClearLog         -> {s | log         <- []}
         -- clicking the icon 7 times toggles developer tab visibility
         ClickIcon        -> if s.iconClicked >= 6
                             then { s | iconClicked <- 0
@@ -57,5 +55,5 @@ update action s =
                                  }
                             else {s | iconClicked <- s.iconClicked + 1}
         (SetLog l)      -> {s | log <- l}
-        NoOp              -> s
+        NoOp            -> s
 

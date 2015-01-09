@@ -2,14 +2,16 @@ module Background where
 -- Elm standard library
 import Signal (..)
 import Graphics.Element (..)
+import Time (every, second)
 
 -- local source
+
 import Message
 
 port fromGUI : Signal Message.Message
 
 port toGUI : Signal Message.Message
-port toGUI = constant Message.emptyMessage
+port toGUI = (\_ -> {setLog = Just ["yoyoyoyo"], setConnected = Nothing}) <~ every second
 
 main : Signal Element
 main = constant empty

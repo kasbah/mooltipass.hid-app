@@ -13,17 +13,17 @@ type alias Message = { setLog : Maybe (List String)
                      , setConnected : Maybe Int
                      }
 
-emptyMessage : Message
-emptyMessage = { setLog = Nothing
+empty : Message
+empty = { setLog = Nothing
                , setConnected = Nothing
                }
 
 encode : Action -> Message
 encode action =
     case action of
-        SetLog log     -> {emptyMessage | setLog <- Just log}
+        SetLog log     -> {empty | setLog <- Just log}
         SetConnected c ->
-            {emptyMessage | setConnected <-
+            {empty | setConnected <-
                 case c of
                     NotConnected -> Just 0
                     Connected    -> Just 1
@@ -31,10 +31,9 @@ encode action =
                     NoPin        -> Just 3
                     _            -> Nothing
             }
-        (ChangeTab t)    -> emptyMessage
-        ClearLog         -> emptyMessage
-        ClickIcon        -> emptyMessage
-        NoOp             -> emptyMessage
+        (ChangeTab t)    -> empty
+        ClickIcon        -> empty
+        NoOp             -> empty
 
 decode : Message -> Action
 decode message =

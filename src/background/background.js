@@ -4,4 +4,4 @@ function launch()
 }
 
 chrome.runtime.onInstalled.addListener(launch);
-chrome.runtime.onStartup.addListener(launch);
+chrome.app.runtime.onLaunched.addListener(launch);
