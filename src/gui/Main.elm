@@ -4,7 +4,6 @@ import Graphics.Element (..)
 import Signal (..)
 import Time (..)
 import Window
-import Graphics.Input -- needed because of elm bug
 
 -- local source
 import State

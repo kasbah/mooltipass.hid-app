@@ -11,12 +11,12 @@ DIRS 			 = $(sort $(dir $(call wildc_recursive, src/, *)))
 
 all: images elm js json html
 
-dirs: $(patsubst src%, build%/.dirstamp, $(DIRS))
-elm: dirs build/background/elm-background.js build/gui/elm-gui.js
-js: dirs $(patsubst src/%, build/%, $(JS_FILES))
-html: dirs $(patsubst src/%, build/%, $(HTML_FILES))
-json: dirs $(patsubst src/%, build/%, $(JSON_FILES))
-images: dirs $(patsubst src/%, build/%, $(IMAGE_FILES))
+dirs   : $(patsubst src%, build%/.dirstamp, $(DIRS))
+elm    : dirs build/background/elm-background.js build/gui/elm-gui.js
+js     : dirs $(patsubst src/%, build/%, $(JS_FILES))
+html   : dirs $(patsubst src/%, build/%, $(HTML_FILES))
+json   : dirs $(patsubst src/%, build/%, $(JSON_FILES))
+images : dirs $(patsubst src/%, build/%, $(IMAGE_FILES))
 
 %/.dirstamp:
 	mkdir $*
@@ -25,7 +25,7 @@ images: dirs $(patsubst src/%, build/%, $(IMAGE_FILES))
 build/gui/elm-gui.js: $(GUI_ELM_FILES) $(COMMON_ELM_FILES)
 	elm-make $(COMMON_ELM_FILES) $(GUI_ELM_FILES) --output $@
 
-build/background/elm-background.js: $(BG_ELM_FILES)
+build/background/elm-background.js: $(BG_ELM_FILES) $(COMMON_ELM_FILES)
 	elm-make $(COMMON_ELM_FILES) $(BG_ELM_FILES) --output $@
 
 build/%: src/%
