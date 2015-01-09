@@ -57,7 +57,7 @@ screen (w,h) log =
                 , ("width", toString (w - 32) ++ "px")
                 , ("height", toString (h - 32) ++ "px")
                 ]
-        txt  = Html.div [style] (List.intersperse (Html.br [] []) (List.map Html.text log))
+        txt  = Html.div [style] (List.intersperse (Html.br [] []) (List.map Html.text (List.reverse log)))
                 |> Html.toElement (w - 32) (h - 32)
         txt' = container w h middle txt
     in layers [background, txt']

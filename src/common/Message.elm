@@ -18,11 +18,14 @@ encode bg =
     }
 
 decode : Message -> CommonState
-decode msg =
-    { log = msg.setLog
-    , connected = case msg.setConnected of
-                    0 -> NotConnected
-                    1 -> Connected
-                    2 -> NoCard
-                    3 -> NoPin
-    }
+decode msg = apply (decode' msg) default
+
+decode' : Message -> List CommonAction
+decode' msg=
+    let setConnected =
+        case msg.setConnected of
+            0 -> NotConnected
+            1 -> Connected
+            2 -> NoCard
+            3 -> NoPin
+    in  [SetLog msg.setLog, SetConnected setConnected]

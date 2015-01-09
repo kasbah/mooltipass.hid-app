@@ -5,6 +5,7 @@ import Signal (..)
 import Graphics.Element (..)
 import Time (every, second)
 import List
+import List ((::))
 
 -- local source
 import Message
@@ -16,14 +17,14 @@ port fromGUI : Signal Message.Message
 
 port fromMP  : Signal MpMessage
 
-mpDecode : MpMessage -> CommonState -> CommonState
-mpDecode msg s =  {s | log <- s.log `List.append` [msg.appendToLog]}
+mpDecode : MpMessage -> List CommonAction
+mpDecode {appendToLog} = [AppendToLog appendToLog]
 
 state : Signal CommonState
-state = foldp mpDecode default fromMP
+state = foldp apply default (merge (mpDecode <~ fromMP) (Message.decode' <~ fromGUI))
 
 port toGUI : Signal Message.Message
-port toGUI = Message.encode <~ merge state (Message.decode <~ fromGUI)
+port toGUI = Message.encode <~ state
 
 main : Signal Element
 main = constant empty
