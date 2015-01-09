@@ -11,7 +11,7 @@ import Message
 port fromGUI : Signal Message.Message
 
 port toGUI : Signal Message.Message
-port toGUI = (\_ -> {setLog = Just ["yoyoyoyo"], setConnected = Nothing}) <~ every second
+port toGUI = (\_ -> {setLog = ["yoyoyoyo"], setConnected = 0}) <~ every second
 
 main : Signal Element
 main = constant empty

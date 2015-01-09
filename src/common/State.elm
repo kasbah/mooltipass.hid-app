@@ -5,11 +5,11 @@ import Signal (..)
 import List
 
 {-| The state signal to map our main element to -}
-state : Signal Action -> Signal State
+state : Signal Action -> Signal GuiState
 state = foldp update default
 
-{-| The entire application state -}
-type alias State =
+{-| The entire application state including gui components -}
+type alias GuiState =
     { connect     : ConnectState
     , activeTab   : Tab
     , iconClicked : Int
@@ -17,8 +17,24 @@ type alias State =
     , log         : List String
     }
 
+{-| The background state excluding gui components. It is a subset of 'GuiState'.-}
+type alias BgState =
+    { connect     : ConnectState
+    , log         : List String
+    }
+
+fromBgState : BgState -> GuiState -> GuiState
+fromBgState bg gui = { gui | connect <- bg.connect
+                           , log     <- bg.log
+                     }
+
+toBgState : GuiState -> BgState
+toBgState gui = { connect = gui.connect
+                , log     = gui.log
+                }
+
 {-| The initial state -}
-default : State
+default : GuiState
 default =
     { connect     = NotConnected
     , activeTab   = Log
@@ -39,7 +55,7 @@ type Action = SetLog (List String)
             | SetConnected ConnectState
 
 {-| Transform the state to a new state according to an action -}
-update : Action -> State -> State
+update : Action -> GuiState -> GuiState
 update action s =
     case action of
         (ChangeTab t)    -> {s | activeTab   <- t}

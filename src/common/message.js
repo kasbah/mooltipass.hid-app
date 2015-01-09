@@ -1,1 +1,1 @@
-var emptyMessage = {setLog:null, setConnected:null};
+var emptyMessage = {setLog:[], setConnected:0};
