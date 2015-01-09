@@ -12,13 +12,13 @@ import State (..)
 import Actions (guiActions)
 
 {-| A tab navigation up top and a Mooltipass status icon on the top right. -}
-navigation : (Int, Int) -> State -> Element
+navigation : (Int, Int) -> GuiState -> Element
 navigation (w,h) state =
     flow right
         [ container (round (toFloat w * 0.85)) heights.nav midLeft
             (flow right [navSpacer 38, tabs state])
         , container (round (toFloat w * 0.15)) heights.nav midRight
-            (flow left [navSpacer 32, statusIcon state.connect, navSpacer 9000])
+            (flow left [navSpacer 32, statusIcon state.bgState.connect, navSpacer 9000])
         ]
 
 {-| An icon that indictes the connection status and can be clicked 7 times to
@@ -46,9 +46,9 @@ navLine : Int -> Element
 navLine w = tiledImage w 1 "images/tab_spacer_pixel.png"
 
 {-| The tab navigation with an optional developer tab. -}
-tabs : State -> Element
+tabs : GuiState -> Element
 tabs state =
-    let disabled = case state.connect of
+    let disabled = case state.bgState.connect of
             Connected    -> []
             NotConnected -> [Settings, Manage, Developer]
             NoCard       -> [Settings, Manage]
@@ -65,8 +65,8 @@ tabs state =
                             else [] )
                      ++ [navSpacer 9000]
 
-{-| Tab button which is rendered appropriately to if it is active, inactive or
-    disabled. -}
+{-| Tab button which is rendered appropriately depending on if it is active,
+    inactive or disabled. -}
 tab : Tab -> Tab -> (List Tab) -> Element
 tab t active disabled =
     let aspect         = 3.094594610699232

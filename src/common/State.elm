@@ -10,36 +10,36 @@ state = foldp update default
 
 {-| The entire application state including gui components -}
 type alias GuiState =
-    { connect     : ConnectState
-    , activeTab   : Tab
+    { activeTab   : Tab
     , iconClicked : Int
     , devEnabled  : Bool
-    , log         : List String
+    , bgState     : BgState
     }
 
-{-| The background state excluding gui components. It is a subset of 'GuiState'.-}
+{-| The background state excluding gui components -}
 type alias BgState =
     { connect     : ConnectState
     , log         : List String
     }
 
 fromBgState : BgState -> GuiState -> GuiState
-fromBgState bg gui = { gui | connect <- bg.connect
-                           , log     <- bg.log
-                     }
+fromBgState bg gui = { gui | bgState <- bg }
 
 toBgState : GuiState -> BgState
-toBgState gui = { connect = gui.connect
-                , log     = gui.log
-                }
+toBgState gui = gui.bgState
 
 {-| The initial state -}
 default : GuiState
 default =
-    { connect     = NotConnected
-    , activeTab   = Log
+    { activeTab   = Log
     , iconClicked = 0
     , devEnabled  = False
+    , bgState     = defaultBgState
+    }
+
+defaultBgState : BgState
+defaultBgState =
+    { connect     = NotConnected
     , log         = []
     }
 
@@ -52,14 +52,13 @@ type Action = SetLog (List String)
             | ChangeTab Tab
             | ClickIcon
             | NoOp
-            | SetConnected ConnectState
 
 {-| Transform the state to a new state according to an action -}
 update : Action -> GuiState -> GuiState
 update action s =
-    case action of
+    let bgState' = s.bgState
+    in case action of
         (ChangeTab t)    -> {s | activeTab   <- t}
-        (SetConnected c) -> {s | connect     <- c}
         -- clicking the icon 7 times toggles developer tab visibility
         ClickIcon        -> if s.iconClicked >= 6
                             then { s | iconClicked <- 0
@@ -70,6 +69,6 @@ update action s =
                                         then Log else s.activeTab
                                  }
                             else {s | iconClicked <- s.iconClicked + 1}
-        (SetLog l)      -> {s | log <- l}
+        (SetLog l)      ->{s | bgState <-  {bgState' | log <- l} }
         NoOp            -> s
 

@@ -1,11 +1,5 @@
 module Message where
 
--- Elm standard library
-import Maybe
-import Dict
-import List ((::))
-import List
-
 -- local source
 import State (..)
 

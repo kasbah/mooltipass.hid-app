@@ -19,12 +19,12 @@ import Actions (..)
 
 {-| Renders the window the window dimensions and application state to the
     element that is below the tab navigation. -}
-content : (Int, Int) -> State -> Element
+content : (Int, Int) -> GuiState -> Element
 content (w,h) state =
     let h' = h - heights.marginTop - heights.nav - heights.marginBottom
         background =
             collage w h' [filled darkGrey <| rect (toFloat w) (toFloat h)]
-    in layers [background, console (w, h') state.log]
+    in layers [background, console (w, h') state.bgState.log]
 
 {-| Displays the log in a console screen with a clear button at the bottom in a
     'toolbar'. -}
@@ -61,7 +61,7 @@ screen (w,h) log =
         txt' = container w h middle txt
     in layers [background, txt']
 
-{-| A button that says 'clear' and posts a 'State.ClearLog' action -}
+{-| A button that says 'clear' and clears the log -}
 clearButton : Element
 clearButton =
     let aspect = 2.96658357613427
