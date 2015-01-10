@@ -18,9 +18,6 @@ import CommonState (..)
 import CustomGraphics (..)
 import Actions (..)
 
-import String
-asWhiteText x = Text.leftAligned (Text.color Color.white (Text.fromString (toString x)))
-
 {-| Renders the window the window dimensions and application state to the
     element that is below the tab navigation. -}
 content : (Int, Int) -> GuiState -> Element
@@ -77,3 +74,5 @@ clearButton =
         hover  = img "hover"
         down   = img "down"
     in  customButton (send guiActions (CommonAction (SetLog []))) up hover down
+
+asWhiteText x = Text.leftAligned (Text.color Color.white (Text.fromString (toString x)))

@@ -42,7 +42,7 @@ state =
         <| Message.decode <~ fromGUI
 
 port toGUI : Signal Message.Message
-port toGUI = Message.encode <~ state
+port toGUI = Message.encode <~ (dropRepeats state)
 
 main : Signal Element
 main = constant empty

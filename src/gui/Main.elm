@@ -17,18 +17,15 @@ port fromBackground : Signal Message.Message
 
 {-| Any updates to guiState.common are passed to the background -}
 port toBackground : Signal Message.Message
-port toBackground = (Message.encode << .common) <~ state
-
-{-| The state signal of the GUI. This is only dependant on user interaction. -}
-guiState : Signal GuiState
-guiState = foldp update default (subscribe guiActions)
+port toBackground = (Message.encode << .common) <~ (dropRepeats state)
 
 {-| The complete application state signal to map our main element to. It is the
     gui-state updated by any state updates from the background. -}
 state : Signal GuiState
-state = dropRepeats <|
-    (\comActions gui -> apply (List.map CommonAction comActions) gui)
-        <~ (Message.decode <~ fromBackground) ~ guiState
+state =
+    foldp apply default
+        <| merge ((\m -> [m]) <~ (subscribe guiActions))
+        <| (List.map CommonAction) <~ (Message.decode <~ fromBackground)
 
 {-| Our main function simply maps the scene to the window dimensions and state
     signals. The scene converts a state and window dimension into an Element. -}
