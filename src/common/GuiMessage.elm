@@ -1,13 +1,13 @@
-module Message where
+module GuiMessage where
 
 -- local source
 import CommonState (..)
 
-type alias Message = { setLog : (List String)
-                     , setConnected : Int
-                     }
+type alias GuiMessage = { setLog : (List String)
+                        , setConnected : Int
+                        }
 
-encode : CommonState -> Message
+encode : CommonState -> GuiMessage
 encode bg =
     { setLog = bg.log
     , setConnected = case bg.connected of
@@ -17,7 +17,7 @@ encode bg =
                     NoPin        -> 3
     }
 
-decode : Message -> List CommonAction
+decode : GuiMessage -> List CommonAction
 decode msg=
     let setConnected =
         case msg.setConnected of

@@ -8,16 +8,17 @@ import List
 
 -- local source
 import Scene
-import Message
+import GuiMessage
+import GuiMessage (GuiMessage)
 import Actions (..)
 import GuiState (..)
 
 {-| Any state updates from the background are received through this port -}
-port fromBackground : Signal Message.Message
+port fromBackground : Signal GuiMessage
 
 {-| Any updates to guiState.common are passed to the background -}
-port toBackground : Signal Message.Message
-port toBackground = (Message.encode << .common) <~ (dropRepeats state)
+port toBackground : Signal GuiMessage
+port toBackground = GuiMessage.encode <~ dropRepeats ((.common) <~ state)
 
 {-| The complete application state signal to map our main element to. It is the
     gui-state updated by any state updates from the background. -}
@@ -25,7 +26,7 @@ state : Signal GuiState
 state =
     foldp apply default
         <| merge ((\m -> [m]) <~ (subscribe guiActions))
-        <| (List.map CommonAction) <~ (Message.decode <~ fromBackground)
+        <| (List.map CommonAction) <~ (GuiMessage.decode <~ fromBackground)
 
 {-| Our main function simply maps the scene to the window dimensions and state
     signals. The scene converts a state and window dimension into an Element. -}
