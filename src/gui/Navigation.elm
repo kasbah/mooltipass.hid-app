@@ -8,8 +8,8 @@ import List
 
 -- local source
 import Layout (heights)
-import GuiState (..)
 import CommonState (..)
+import GuiState (..)
 import Actions (guiActions)
 
 {-| A tab navigation up top and a Mooltipass status icon on the top right. -}
@@ -46,14 +46,11 @@ navSpacer w = container w heights.tab bottomLeft (navLine w)
 navLine : Int -> Element
 navLine w = tiledImage w 1 "images/tab_spacer_pixel.png"
 
+
 {-| The tab navigation with an optional developer tab. -}
 tabs : GuiState -> Element
 tabs state =
-    let disabled = case state.common.connected of
-            Connected    -> []
-            NotConnected -> [Settings, Manage, Developer]
-            NoCard       -> [Settings, Manage]
-            NoPin        -> [Settings, Manage]
+    let disabled = disabledTabs state.common.connected
     in flow right <| [ tab Log      state.activeTab disabled
                      , navSpacer 5
                      , tab Settings state.activeTab disabled

@@ -7,6 +7,8 @@ import List
 import CommonState as Common
 import CommonState (CommonState, CommonAction)
 
+type Tab = Log | Settings | Manage | Developer
+
 {-| The entire application state including gui components -}
 type alias GuiState =
     { activeTab   : Tab
@@ -14,6 +16,12 @@ type alias GuiState =
     , devEnabled  : Bool
     , common : CommonState
     }
+
+{-| All actions that can be performed to change state -}
+type Action = ChangeTab Tab
+            | ClickIcon
+            | CommonAction CommonAction
+            | NoOp
 
 {-| Updating the gui state with a common state completely replaces the
     existing background state -}
@@ -29,20 +37,22 @@ default =
     , common = Common.default
     }
 
-type Tab = Log | Settings | Manage | Developer
-
-{-| All actions that can be performed to change state -}
-type Action = ChangeTab Tab
-            | ClickIcon
-            | CommonAction CommonAction
-            | NoOp
+disabledTabs : Common.ConnectState -> List Tab
+disabledTabs s =
+    case s of
+        Common.Connected    -> []
+        Common.NotConnected -> [Settings, Manage, Developer]
+        Common.NoCard       -> [Settings, Manage]
+        Common.NoPin        -> [Settings, Manage]
 
 {-| Transform the state to a new state according to an action -}
 update : Action -> GuiState -> GuiState
 update action s =
-    case action of
+    let updateCommon a = Common.update a s.common
+        activeTab = s.activeTab
+    in case action of
+        (ChangeTab t) -> {s | activeTab <- t}
         -- clicking the icon 7 times toggles developer tab visibility
-        (ChangeTab t) -> {s | activeTab   <- t}
         ClickIcon     -> if s.iconClicked >= 6
                          then { s | iconClicked <- 0
                                   , devEnabled  <- not s.devEnabled
@@ -52,6 +62,16 @@ update action s =
                                      then Log else s.activeTab
                               }
                          else {s | iconClicked <- s.iconClicked + 1}
-        (CommonAction a) -> fromCommonState (Common.update a s.common) s
+        (CommonAction a) -> case a of
+                (Common.SetConnected c) ->
+                    { s | activeTab <-
+                            if activeTab `List.member` (disabledTabs c)
+                            then Log else activeTab
+                        , common <- updateCommon a
+                    }
+                _ -> {s | common <- updateCommon a}
         NoOp          -> s
 
+
+apply : List Action -> GuiState -> GuiState
+apply actions state = List.foldr update state actions

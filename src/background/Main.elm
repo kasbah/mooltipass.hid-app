@@ -13,7 +13,7 @@ import Message
 import CommonState (..)
 
 type alias MpMessage = { appendToLog  : Maybe String
-                       , setConnected : Maybe Int
+                       , setConnected : Maybe String
                        }
 
 mpDecode : MpMessage -> CommonAction
@@ -24,11 +24,11 @@ mpDecode message =
                     ]
         connectedFromInt s =
             case s of
-                0 -> SetConnected NotConnected
-                1 -> SetConnected Connected
-                2 -> SetConnected NoCard
-                3 -> SetConnected NoPin
-                _ -> CommonNoOp
+                "NotConnected" -> SetConnected NotConnected
+                "Connected"    -> SetConnected Connected
+                "NoCard"       -> SetConnected NoCard
+                "NoPin"        -> SetConnected NoPin
+                _              -> CommonNoOp
     in Maybe.withDefault CommonNoOp (decode' message)
 
 port fromGUI : Signal Message.Message
