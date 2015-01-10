@@ -370,7 +370,7 @@ function saveToEntry(entry, data)
 function appendToLog(logId, text)
 {
     console.log(logId, text);
-    elm.ports.fromMP.send({appendToLog:logId + ":" + text});
+    sendToElm({appendToLog:logId + ":" + text});
 }
 
 /**m
@@ -627,6 +627,7 @@ function onDataReceived(reportId, data)
                 if (clientId) {
                     chrome.runtime.sendMessage(clientId, {type: 'connected', version: version});
                 }
+                sendToElm({setConnected:1});
             }
             break;
         }
