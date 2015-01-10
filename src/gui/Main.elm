@@ -28,7 +28,7 @@ guiState = foldp update default (subscribe guiActions)
 state : Signal GuiState
 state = dropRepeats <|
     (\comActions gui -> apply (List.map CommonAction comActions) gui)
-        <~ (Message.decode' <~ fromBackground) ~ guiState
+        <~ (Message.decode <~ fromBackground) ~ guiState
 
 {-| Our main function simply maps the scene to the window dimensions and state
     signals. The scene converts a state and window dimension into an Element. -}

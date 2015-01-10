@@ -62,16 +62,18 @@ update action s =
                                      then Log else s.activeTab
                               }
                          else {s | iconClicked <- s.iconClicked + 1}
+        -- An action on the common state can have an affect on the gui-only
+        -- state as well. The activeTab may become disabled due to setting the
+        -- connected state for instance.
         (CommonAction a) -> case a of
-                (Common.SetConnected c) ->
-                    { s | activeTab <-
-                            if activeTab `List.member` (disabledTabs c)
-                            then Log else activeTab
-                        , common <- updateCommon a
-                    }
-                _ -> {s | common <- updateCommon a}
-        NoOp          -> s
-
+                            (Common.SetConnected c) ->
+                                { s | activeTab <-
+                                        if activeTab `List.member` (disabledTabs c)
+                                        then Log else activeTab
+                                    , common <- updateCommon a
+                                }
+                            _ -> {s | common <- updateCommon a}
+        NoOp -> s
 
 apply : List Action -> GuiState -> GuiState
 apply actions state = List.foldr update state actions

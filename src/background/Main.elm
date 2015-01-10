@@ -18,7 +18,7 @@ type alias MpMessage = { appendToLog  : Maybe String
 
 mpDecode : MpMessage -> CommonAction
 mpDecode message =
-    let decode' {appendToLog, setConnected} =
+    let decode {appendToLog, setConnected} =
         Maybe.oneOf [ Maybe.map AppendToLog appendToLog
                     , Maybe.map connectedFromInt setConnected
                     ]
@@ -29,7 +29,7 @@ mpDecode message =
                 "NoCard"       -> SetConnected NoCard
                 "NoPin"        -> SetConnected NoPin
                 _              -> CommonNoOp
-    in Maybe.withDefault CommonNoOp (decode' message)
+    in Maybe.withDefault CommonNoOp (decode message)
 
 port fromGUI : Signal Message.Message
 
@@ -39,7 +39,7 @@ state : Signal CommonState
 state =
     foldp apply default
         <| merge ((\m -> [m]) <~ (mpDecode <~ fromMP))
-        <| Message.decode' <~ fromGUI
+        <| Message.decode <~ fromGUI
 
 port toGUI : Signal Message.Message
 port toGUI = Message.encode <~ state

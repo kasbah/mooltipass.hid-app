@@ -17,11 +17,8 @@ encode bg =
                     NoPin        -> 3
     }
 
-decode : Message -> CommonState
-decode msg = apply (decode' msg) default
-
-decode' : Message -> List CommonAction
-decode' msg=
+decode : Message -> List CommonAction
+decode msg=
     let setConnected =
         case msg.setConnected of
             0 -> NotConnected
