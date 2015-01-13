@@ -5,3 +5,15 @@ function launch()
 
 //chrome.runtime.onInstalled.addListener(launch);
 chrome.app.runtime.onLaunched.addListener(launch);
+
+chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse)
+{
+    request.senderId = sender.id;
+    console.log('received request '+request.type);
+
+    if (authReq == null) {
+        startAuthRequest(request)
+    } else {
+        authReqQueue.push(request);
+    }
+});

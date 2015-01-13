@@ -78,6 +78,6 @@ clearButton =
         up     = img "up"
         hover  = img "hover"
         down   = img "down"
-    in  customButton (send guiActions (CommonAction (SetLog []))) up hover down
+    in  customButton (send commonActions (SetLog [])) up hover down
 
 asWhiteText x = Text.leftAligned (Text.color Color.white (Text.fromString (toString x)))

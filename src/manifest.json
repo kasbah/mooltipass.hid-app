@@ -14,8 +14,7 @@
                 { "vendorId": 5840, "productId": 2464 }
             ]
         },
-	    {"fileSystem": ["write", "retainEntries"]},
-        "background"
+	    {"fileSystem": ["write", "retainEntries"]}
     ],
     "icons": {"128": "gui/images/logo_square128.png" }
 }
