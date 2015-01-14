@@ -5,49 +5,50 @@ import List ((::))
 import Maybe
 import String
 import Char
-type AppMessage = AppDebug ByteString
-                | AppPing (Byte, Byte, Byte, Byte)
+type AppMessage = AppDebug              ByteString
+                | AppPing               (Byte,Byte,Byte,Byte)
                 | AppGetVersion
-                | AppSetContext ByteString
+                | AppSetContext         ByteString
                 | AppGetLogin
                 | AppGetPassword
-                | AppSetLogin ByteString
-                | AppSetPassword ByteString
+                | AppSetLogin           ByteString
+                | AppSetPassword        ByteString
                 | AppCheckPassword
-                | AppAddContext ByteString
+                | AppAddContext         ByteString
                 | AppExportFlashStart
                 | AppExportFlash
                 | AppExportFlashEnd
-                | AppImportFlashStart FlashSpace
-                | AppImportFlash ByteString
+                | AppImportFlashStart   FlashSpace
+                | AppImportFlash        ByteString
                 | AppImportFlashEnd
                 | AppExportEepromStart
                 | AppExportEeprom
                 | AppExportEepromEnd
                 | AppImportEepromStart
-                | AppImportEeprom ByteString
+                | AppImportEeprom       ByteString
                 | AppImportEepromEnd
                 | AppGetRandomNumber
                 | AppMemoryManageModeStart
                 | AppMemoryManageModeEnd
                 | AppImportMediaStart
-                | AppImportMedia ByteString
+                | AppImportMedia        ByteString
                 | AppImportMediaEnd
-                | AppReadFlashNode (Byte, Byte)
-                | AppSetFavorite (Byte, Byte, Byte, Byte, Byte)
-                | AppSetStartingParent (Byte, Byte)
-                | AppSetCtrValue (Byte, Byte, Byte)
-                | AppAddCpzCtrValue ByteString ByteString
+                | AppReadFlashNode      (Byte,Byte)
+                | AppSetFavorite        (Byte,Byte,Byte,Byte,Byte)
+                | AppSetStartingParent  (Byte,Byte)
+                | AppSetCtrValue        (Byte,Byte,Byte)
+                | AppAddCpzCtrValue     ByteString  ByteString
                 | AppGetCpzCtrValues
+
                 | AppCpzCtrPacketExport
-                | AppSetParameter Parameter Byte
-                | AppGetParameter Parameter
-                | AppGetFavorite Byte
-                | AppResetCard (Byte, Byte)
+                | AppSetParameter       Parameter Byte
+                | AppGetParameter       Parameter
+                | AppGetFavorite        Byte
+                | AppResetCard          (Byte,Byte)
                 | AppGetCardLogin
                 | AppGetCardPassword
-                | AppSetCardLogin ByteString
-                | AppSetCardPassword ByteString
+                | AppSetCardLogin       ByteString
+                | AppSetCardPassword    ByteString
                 | AppGetFreeSlotAddress
                 | AppGetStartingParent
                 | AppGetCtrValue
