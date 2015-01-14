@@ -14,12 +14,11 @@ import FromGuiMessage
 import FromGuiMessage (FromGuiMessage)
 import Actions (..)
 import GuiState (..)
-import CommonState as Common
 
 {-| Any state updates from the background are received through this port -}
 port fromBackground : Signal ToGuiMessage
 
-{-| Any updates to guiState.common are passed to the background -}
+{-| Any actions to the common state are first passed to the background. They should bubble back up throught the 'port fromBackground'. -}
 port toBackground : Signal FromGuiMessage
 port toBackground = FromGuiMessage.encode <~ (subscribe commonActions)
 
