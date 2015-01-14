@@ -6,7 +6,8 @@ import Maybe
 import String
 import Char
 
-type AppPacket = AppDebug               ByteString
+{-| The type of packets we send from the app to the device -}
+type AppPacket = AppDebug              ByteString
                | AppPing
                | AppGetVersion
                | AppSetContext         ByteString
@@ -68,7 +69,8 @@ type AppPacket = AppDebug               ByteString
     --AppUsbKeyboardPress -> 0x69
 
 
-type DevicePacket = DeviceDebug              ByteString
+{-| The type of packets we receive from the device -}
+type DevicePacket =  DeviceDebug             ByteString
                    | DevicePing              ByteString
                    | DeviceGetVersion        MpVersion
                    | DeviceSetContext        SetContextReturn
@@ -102,7 +104,7 @@ type DevicePacket = DeviceDebug              ByteString
                    | DeviceSetStartingParent ReturnCode
                    | DeviceSetCtrValue       ReturnCode
                    | DeviceAddCpzCtr         ReturnCode
-                   | DeviceGetCpzCtrValues  (Maybe ByteString)
+                   | DeviceGetCpzCtrValues   (Maybe ByteString)
                    | DeviceCpzCtrPacketExport CpzCtrLutEntry
                    | DeviceSetParameter      ReturnCode
                    | DeviceGetParameter      (Maybe ByteString)
@@ -117,19 +119,29 @@ type DevicePacket = DeviceDebug              ByteString
                    | DeviceGetCtrValue       (Maybe ByteString)
                    | DeviceAddNewCard        ReturnCode
 
+{-| Carries firmware version and flash memory size -}
 type alias MpVersion = { flashMemSize : Byte
                        , version : ByteString
                        }
 
+{-| Code protected zone look-up-table entry -}
 type alias CpzCtrLutEntry = { cpz : ByteString
                             , ctrNonce : ByteString
                             }
 
+{-| Return for 'DeviceCheckPassword' -}
 type CheckPasswordReturn = Incorrect | Correct | RequestBlocked
+
+{-| Return for 'DeviceSetContext' -}
 type SetContextReturn = UnknownContext | ContextSet | NoCardForContext
+
+{-| This is (LSB, MSB) -}
 type alias FlashAddress = (Byte, Byte)
+
+{-| You dun it? -}
 type ReturnCode = Done | NotDone
 
+{-| Set-able parameters. Only some of these will be exposed to the user -}
 type Parameter = UserInitKey
                | KeyboardLayout
                | UserInterTimeout
@@ -140,10 +152,14 @@ type Parameter = UserInitKey
                | TouchProxOs
                | OfflineMode
 
+{-| The flash space is divided into these two regions -}
 type FlashSpace = FlashUserSpace | FlashGraphicsSpace
 
+{-| Convert a packet generated in our application to a list of Ints to send out
+    a port for chrome.hid.send -}
 toInts : AppPacket -> List Int
 toInts msg =
+    -- the packet format is [payload-size, message-type, payload ... ]
     let byteString msgType s = String.length s::msgType::stringToInts s
         zeroSize msgType     = [0, msgType]
         stringToInts s       = List.map Char.toCode (String.toList s)
@@ -198,7 +214,7 @@ toInts msg =
             (String.length s + 5)::0x57::id::p1::p2::c1::c2::stringToInts s
         AppSetStartingParent (a1,a2)    -> [2, 0x58, a1, a2]
         AppSetCtrValue (ctr1,ctr2,ctr3) -> [3, 0x59, ctr1, ctr2, ctr3]
-        AppAddCpzCtr c        -> 24::0x5A::stringToInts c.cpz ++ stringToInts c.ctrNonce
+        AppAddCpzCtr c -> 24::0x5A::stringToInts c.cpz ++ stringToInts c.ctrNonce
         AppGetCpzCtrValues    -> zeroSize 0x5B
         AppSetParameter p b   -> [2, 0x5D, param p, b]
         AppGetParameter p     -> [1, 0x5E, param p]
@@ -213,6 +229,8 @@ toInts msg =
         AppGetCtrValue        -> zeroSize 0x67
         AppAddNewCard         -> zeroSize 0x68
 
+{-| Convert a list of ints received through a port from chrome.hid.receive into
+    a packet we can interpret -}
 fromInts : List Int -> Result Error DevicePacket
 fromInts (size::messageType::payload) =
     let doneOrNotDone constructor name =
@@ -227,7 +245,8 @@ fromInts (size::messageType::payload) =
             then Err <| "Zero data returned for '" ++ name ++ "'"
             else if size == 1 && List.head payload == 0x00
                  then Ok <| constructor Maybe.Nothing
-                 else Result.map (constructor << Maybe.Just) (toByteString size payload)
+                 else Result.map (constructor << Maybe.Just)
+                        (toByteString size payload)
     in
         if size > List.length payload
         then Err "Invalid size"
@@ -250,10 +269,10 @@ fromInts (size::messageType::payload) =
                         0x01 -> Ok <| DeviceSetContext ContextSet
                         0x03 -> Ok <| DeviceSetContext NoCardForContext
                         _    -> Err "Invalid data for 'set context'"
-            0x05 -> maybeByteString DeviceGetLogin "get login"
+            0x05 -> maybeByteString DeviceGetLogin    "get login"
             0x06 -> maybeByteString DeviceGetPassword "get password"
-            0x07 -> doneOrNotDone DeviceSetLogin "set login"
-            0x08 -> doneOrNotDone DeviceSetPassword "set password"
+            0x07 -> doneOrNotDone DeviceSetLogin      "set login"
+            0x08 -> doneOrNotDone DeviceSetPassword   "set password"
             0x09 -> if size /= 1
                     then Err "Invalid data size for 'check password'"
                     else case List.head payload of
@@ -319,21 +338,28 @@ fromInts (size::messageType::payload) =
             _    -> Err <| "Got unknown message: " ++ toString messageType
 
 
+{-| A byte is just an Int really. -}
 type alias Byte = Int
 
+{-| We make sure values are between 0 and 255 when we convert to a byte. -}
 toByte : Int -> Result Error Byte
-toByte x = if (x > 0) && (x < 256)
+toByte x = if (x >= 0) && (x < 256)
            then Ok x
            else Err "Invalid int given to byte conversion"
 
+{-| A bytestring is just a string really -}
 type alias ByteString = String
 
+{-| We make sure the length (size) is right and values are between 0 and 255
+    when we convert to a bytestring. -}
 toByteString : Int -> List Int -> Result Error ByteString
 toByteString size payload =
     if size > List.length payload || size <= 0
     then Err "Invalid size to convert to bytestring"
-    else if List.foldr (\int b -> b && int > 0 && int < 256) True (List.take size payload)
+    else if List.foldr (\int b -> b && int >= 0 && int < 256) True
+                (List.take size payload)
          then Ok <| String.fromList (List.map Char.fromCode (List.take size payload))
          else Err "Invalid char given to byte conversion (unicode?)"
 
+{-| Our error type is just a string that explains the error. -}
 type alias Error = String
