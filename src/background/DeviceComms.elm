@@ -142,7 +142,7 @@ fromBytes (size::messageType::payload) =
             0x01 -> Result.map DeviceDebug (toByteString size payload)
             0x02 -> if size == 4
                     then Result.map DevicePing (toByteString 4 payload)
-                    else Err "Invalid size for 'ping request' return."
+                    else Err "Invalid data size for 'ping request'"
             0x03 -> let flashSize =
                             Result.map (\b -> {defaultMpVersion | flashMemSize <- b})
                                 <| toByte (List.head payload)
@@ -179,17 +179,17 @@ fromBytes (size::messageType::payload) =
             0x37 -> doneOrNotDone DeviceImportEepromStart "import eeprom start"
             0x38 -> doneOrNotDone DeviceImportEeprom      "import eeprom"
             0x39 -> doneOrNotDone DeviceImportEepromEnd   "import eeprom end"
-            0x40 -> Err "got DeviceEraseEeprom"
-            0x41 -> Err "got DeviceEraseFlash"
-            0x42 -> Err "got DeviceEraseSmc"
-            0x43 -> Err "got DeviceDrawBitmap"
-            0x44 -> Err "got DeviceSetFont"
+            0x40 -> Err "Got DeviceEraseEeprom"
+            0x41 -> Err "Got DeviceEraseFlash"
+            0x42 -> Err "Got DeviceEraseSmc"
+            0x43 -> Err "Got DeviceDrawBitmap"
+            0x44 -> Err "Got DeviceSetFont"
             0x45 -> doneOrNotDone DeviceExportFlashStart  "export flash start"
             0x46 -> doneOrNotDone DeviceExportEepromStart "export eeprom start"
-            0x47 -> Err "got DeviceSetBootloaderPwd"
-            0x48 -> Err "got DeviceJumpToBootloader"
-            0x49 -> Err "got DeviceCloneSmartcard"
-            0x4A -> Err "got DeviceStackFree"
+            0x47 -> Err "Got DeviceSetBootloaderPwd"
+            0x48 -> Err "Got DeviceJumpToBootloader"
+            0x49 -> Err "Got DeviceCloneSmartcard"
+            0x4A -> Err "Got DeviceStackFree"
             0x4B -> Result.map DeviceGetRandomNumber (toByteString size payload)
             0x50 -> doneOrNotDone DeviceManageModeStart  "start memory management mode"
             0x51 -> doneOrNotDone DeviceManageModeEnd    "end memory management mode"
@@ -202,11 +202,7 @@ fromBytes (size::messageType::payload) =
             0x58 -> doneOrNotDone DeviceSetStartingParent "set starting parent"
             0x59 -> doneOrNotDone DeviceSetCtrValue       "set CTR value"
             0x5A -> doneOrNotDone DeviceAddCpzCtrValue    "set CPZ CTR value"
-            0x5B -> if size <= 0
-                    then Err "Zero data returned for 'get CPZ CTR value'"
-                    else if size == 1 && List.head payload == 0x00
-                         then Ok <| DeviceGetCpzCtrValue Maybe.Nothing
-                         else Result.map (DeviceGetCpzCtrValue << Maybe.Just) (toByteString size payload)
+            0x5B -> maybeByteString DeviceGetCpzCtrValue  "get CPZ CTR value"
             0x5C -> let cpz  =
                             Result.map (\c -> {defaultCpzCtrLutEntryPacket | cpz <- c})
                                 <| toByteString 8 payload
@@ -226,8 +222,8 @@ fromBytes (size::messageType::payload) =
             0x66 -> maybeByteString DeviceGetStartingParent "get starting parent address"
             0x67 -> maybeByteString DeviceGetCtrValue       "get CTR value"
             0x68 -> doneOrNotDone DeviceAddNewCard "add unknown smartcard"
-            0x69 -> Err "got DeviceUsbKeyboardPress"
-            _    -> Err <| "got unknown message: " ++ toString messageType
+            0x69 -> Err "Got DeviceUsbKeyboardPress"
+            _    -> Err <| "Got unknown message: " ++ toString messageType
 
 type Parameter = UserInitKey
                | KeyboardLayout
