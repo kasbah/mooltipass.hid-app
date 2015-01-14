@@ -38,13 +38,15 @@ type AppPacket = AppDebug               ByteString
                | AppWriteFlashNode     FlashAddress Byte ByteString
                | AppSetFavorite        Byte FlashAddress FlashAddress ByteString
                | AppSetStartingParent  FlashAddress
-               | AppSetCtrValue        (Byte,Byte,Byte)
+               -- CPZ = code protected zone
+               -- CTR = counter value for Eeprom
+               | AppSetCtrValue        (Byte, Byte, Byte)
                | AppAddCpzCtr          CpzCtrLutEntry
                | AppGetCpzCtrValues
                | AppSetParameter       Parameter Byte
                | AppGetParameter       Parameter
                | AppGetFavorite        Byte
-               | AppResetCard          (Byte,Byte)
+               | AppResetCard          (Byte, Byte)
                | AppGetCardLogin
                | AppGetCardPassword
                | AppSetCardLogin       ByteString
@@ -53,9 +55,6 @@ type AppPacket = AppDebug               ByteString
                | AppGetStartingParent
                | AppGetCtrValue
                | AppAddNewCard
-
-type alias FlashAddress = (Byte,Byte)
-
 -- disabled developer types:
     --AppEraseEeprom      -> 0x40
     --AppEraseFlash       -> 0x41
@@ -67,6 +66,81 @@ type alias FlashAddress = (Byte,Byte)
     --AppCloneSmartcard   -> 0x49
     --AppStackFree        -> 0x4A
     --AppUsbKeyboardPress -> 0x69
+
+
+type DevicePacket = DeviceDebug              ByteString
+                   | DevicePing              ByteString
+                   | DeviceGetVersion        MpVersion
+                   | DeviceSetContext        SetContextReturn
+                   | DeviceGetLogin          (Maybe ByteString)
+                   | DeviceGetPassword       (Maybe ByteString)
+                   | DeviceSetLogin          ReturnCode
+                   | DeviceSetPassword       ReturnCode
+                   | DeviceCheckPassword     CheckPasswordReturn
+                   | DeviceAddContext        ReturnCode
+                   | DeviceExportFlashStart  ReturnCode
+                   | DeviceExportFlash       ByteString
+                   | DeviceExportFlashEnd
+                   | DeviceImportFlashStart  ReturnCode
+                   | DeviceImportFlash       ReturnCode
+                   | DeviceImportFlashEnd    ReturnCode
+                   | DeviceExportEepromStart ReturnCode
+                   | DeviceExportEeprom      ByteString
+                   | DeviceExportEepromEnd
+                   | DeviceImportEepromStart ReturnCode
+                   | DeviceImportEeprom      ReturnCode
+                   | DeviceImportEepromEnd   ReturnCode
+                   | DeviceGetRandomNumber   ByteString
+                   | DeviceManageModeStart   ReturnCode
+                   | DeviceManageModeEnd     ReturnCode
+                   | DeviceImportMediaStart  ReturnCode
+                   | DeviceImportMediaEnd    ReturnCode
+                   | DeviceImportMedia       ReturnCode
+                   | DeviceReadFlashNode     ByteString
+                   | DeviceWriteFlashNode    ReturnCode
+                   | DeviceSetFavorite       ReturnCode
+                   | DeviceSetStartingParent ReturnCode
+                   | DeviceSetCtrValue       ReturnCode
+                   | DeviceAddCpzCtr         ReturnCode
+                   | DeviceGetCpzCtrValues  (Maybe ByteString)
+                   | DeviceCpzCtrPacketExport CpzCtrLutEntry
+                   | DeviceSetParameter      ReturnCode
+                   | DeviceGetParameter      (Maybe ByteString)
+                   | DeviceGetFavorite       (Maybe ByteString)
+                   | DeviceResetCard         ReturnCode
+                   | DeviceGetCardLogin      (Maybe ByteString)
+                   | DeviceGetCardPassword   (Maybe ByteString)
+                   | DeviceSetCardLogin      ReturnCode
+                   | DeviceSetCardPassword   ReturnCode
+                   | DeviceGetFreeSlotAddr   (Maybe ByteString)
+                   | DeviceGetStartingParent (Maybe ByteString)
+                   | DeviceGetCtrValue       (Maybe ByteString)
+                   | DeviceAddNewCard        ReturnCode
+
+type alias MpVersion = { flashMemSize : Byte
+                       , version : ByteString
+                       }
+
+type alias CpzCtrLutEntry = { cpz : ByteString
+                            , ctrNonce : ByteString
+                            }
+
+type CheckPasswordReturn = Incorrect | Correct | RequestBlocked
+type SetContextReturn = UnknownContext | ContextSet | NoCardForContext
+type alias FlashAddress = (Byte, Byte)
+type ReturnCode = Done | NotDone
+
+type Parameter = UserInitKey
+               | KeyboardLayout
+               | UserInterTimeout
+               | LockTimeoutEnable
+               | LockTimeout
+               | TouchDi
+               | TouchWheelOs
+               | TouchProxOs
+               | OfflineMode
+
+type FlashSpace = FlashUserSpace | FlashGraphicsSpace
 
 toInts : AppPacket -> List Int
 toInts msg =
@@ -138,70 +212,6 @@ toInts msg =
         AppGetStartingParent  -> zeroSize 0x66
         AppGetCtrValue        -> zeroSize 0x67
         AppAddNewCard         -> zeroSize 0x68
-
-
-type ReturnCode = Done | NotDone
-
-type DevicePacket = DeviceDebug             ByteString
-                   | DevicePing              ByteString
-                   | DeviceGetVersion        MpVersion
-                   | DeviceSetContext        SetContextReturn
-                   | DeviceGetLogin          (Maybe ByteString)
-                   | DeviceGetPassword       (Maybe ByteString)
-                   | DeviceSetLogin          ReturnCode
-                   | DeviceSetPassword       ReturnCode
-                   | DeviceCheckPassword     CheckPasswordReturn
-                   | DeviceAddContext        ReturnCode
-                   | DeviceExportFlashStart  ReturnCode
-                   | DeviceExportFlash       ByteString
-                   | DeviceExportFlashEnd
-                   | DeviceImportFlashStart  ReturnCode
-                   | DeviceImportFlash       ReturnCode
-                   | DeviceImportFlashEnd    ReturnCode
-                   | DeviceExportEepromStart ReturnCode
-                   | DeviceExportEeprom      ByteString
-                   | DeviceExportEepromEnd
-                   | DeviceImportEepromStart ReturnCode
-                   | DeviceImportEeprom      ReturnCode
-                   | DeviceImportEepromEnd   ReturnCode
-                   | DeviceGetRandomNumber   ByteString
-                   | DeviceManageModeStart   ReturnCode
-                   | DeviceManageModeEnd     ReturnCode
-                   | DeviceImportMediaStart  ReturnCode
-                   | DeviceImportMediaEnd    ReturnCode
-                   | DeviceImportMedia       ReturnCode
-                   | DeviceReadFlashNode     ByteString
-                   | DeviceWriteFlashNode    ReturnCode
-                   | DeviceSetFavorite       ReturnCode
-                   | DeviceSetStartingParent ReturnCode
-                   | DeviceSetCtrValue       ReturnCode
-                   | DeviceAddCpzCtr         ReturnCode
-                   | DeviceGetCpzCtrValues  (Maybe ByteString)
-                   | DeviceCpzCtrPacketExport CpzCtrLutEntry
-                   | DeviceSetParameter      ReturnCode
-                   | DeviceGetParameter      (Maybe ByteString)
-                   | DeviceGetFavorite       (Maybe ByteString)
-                   | DeviceResetCard         ReturnCode
-                   | DeviceGetCardLogin      (Maybe ByteString)
-                   | DeviceGetCardPassword   (Maybe ByteString)
-                   | DeviceSetCardLogin      ReturnCode
-                   | DeviceSetCardPassword   ReturnCode
-                   | DeviceGetFreeSlotAddr   (Maybe ByteString)
-                   | DeviceGetStartingParent (Maybe ByteString)
-                   | DeviceGetCtrValue       (Maybe ByteString)
-                   | DeviceAddNewCard        ReturnCode
-
-type alias MpVersion = { flashMemSize : Byte
-                       , version : ByteString
-                       }
-type alias CpzCtrLutEntry = { cpz : ByteString
-                            , ctrNonce : ByteString
-                            }
-defaultCpzCtrLutEntry = {cpz = "", ctrNonce = ""}
-
-
-type CheckPasswordReturn = Incorrect | Correct | RequestBlocked
-type SetContextReturn = UnknownContext | ContextSet | NoCardForContext
 
 fromInts : List Int -> Result Error DevicePacket
 fromInts (size::messageType::payload) =
@@ -287,10 +297,10 @@ fromInts (size::messageType::payload) =
             0x5A -> doneOrNotDone DeviceAddCpzCtr         "set CPZ CTR value"
             0x5B -> maybeByteString DeviceGetCpzCtrValues "get CPZ CTR value"
             0x5C -> let cpz  =
-                            Result.map (\c -> {defaultCpzCtrLutEntry | cpz <- c})
+                            Result.map (\c -> {cpz = c})
                                 <| toByteString 8 payload
                         ctrNonce d =
-                            Result.map (\s -> {d | ctrNonce <- s})
+                            Result.map (\s -> {d | ctrNonce = s})
                                 <| toByteString 16 (List.drop 8 payload)
                     in Result.map DeviceCpzCtrPacketExport (cpz `andThen` ctrNonce)
             0x5D -> doneOrNotDone DeviceSetParameter "set Mooltipass parameter"
@@ -308,27 +318,13 @@ fromInts (size::messageType::payload) =
             0x69 -> Err "Got DeviceUsbKeyboardPress"
             _    -> Err <| "Got unknown message: " ++ toString messageType
 
-type Parameter = UserInitKey
-               | KeyboardLayout
-               | UserInterTimeout
-               | LockTimeoutEnable
-               | LockTimeout
-               | TouchDi
-               | TouchWheelOs
-               | TouchProxOs
-               | OfflineMode
-
-type FlashSpace = FlashUserSpace | FlashGraphicsSpace
-
--- CPZ = code protected zone
--- CTR = counter value for Eeprom
 
 type alias Byte = Int
 
 toByte : Int -> Result Error Byte
 toByte x = if (x > 0) && (x < 256)
            then Ok x
-           else Err "Invalid char given to byte conversion (unicode?)"
+           else Err "Invalid int given to byte conversion"
 
 type alias ByteString = String
 
