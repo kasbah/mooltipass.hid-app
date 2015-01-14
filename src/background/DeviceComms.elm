@@ -92,7 +92,7 @@ type DeviceMessage = DeviceDebug             ByteString
                    | DeviceGetCpzCtrValue    (Maybe ByteString)
                    | DeviceCpzCtrPacketExport CpzCtrLutEntryPacket
                    | DeviceSetParameter      ReturnCode
-                   | DeviceGetParameter      ByteString
+                   | DeviceGetParameter      (Maybe ByteString)
                    | DeviceGetFavorite       (Maybe ByteString)
                    | DeviceResetCard         ReturnCode
                    | DeviceGetCardLogin      (Maybe ByteString)
@@ -211,7 +211,7 @@ fromBytes (size::messageType::payload) =
                                 <| toByteString 16 (List.drop 8 payload)
                     in Result.map DeviceCpzCtrPacketExport (cpz `andThen` ctrNonce)
             0x5D -> doneOrNotDone DeviceSetParameter "set Mooltipass parameter"
-            0x5E -> Result.map DeviceGetParameter (toByteString size payload)
+            0x5E -> maybeByteString DeviceGetParameter    "get parameter"
             0x5F -> maybeByteString DeviceGetFavorite     "get favorite"
             0x60 -> doneOrNotDone DeviceResetCard         "reset card"
             0x61 -> maybeByteString DeviceGetCardLogin    "get card login"
@@ -251,7 +251,7 @@ type alias ByteString = String
 
 toByteString : Int -> List Int -> Result Error ByteString
 toByteString size payload =
-    if size > List.length payload && size > 0
+    if size > List.length payload || size <= 0
     then Err "Invalid size to convert to bytestring"
     else if (List.foldr (\int b -> b && int > 0 && int < 256) True (List.take size payload))
          then Ok <| String.fromList (List.map Char.fromCode (List.take size payload))
