@@ -9,8 +9,10 @@ import List ((::))
 import Maybe
 
 -- local source
-import GuiMessage
-import GuiMessage (GuiMessage)
+import ToGuiMessage
+import ToGuiMessage (ToGuiMessage)
+import FromGuiMessage
+import FromGuiMessage (FromGuiMessage)
 import CommonState (..)
 
 type alias MpMessage = { appendToLog  : Maybe String
@@ -32,24 +34,24 @@ mpDecode message =
                 _              -> CommonNoOp
     in Maybe.withDefault CommonNoOp (decode message)
 
-port fromGUI : Signal GuiMessage
+port fromGUI : Signal FromGuiMessage
 
 port fromMP  : Signal MpMessage
 
 state : Signal CommonState
 state =
-    foldp apply default
-        <| merge ((\m -> [m]) <~ (mpDecode <~ fromMP))
-        <| GuiMessage.decode <~ fromGUI
+    foldp update default
+        <| merge (mpDecode <~ fromMP)
+        <| FromGuiMessage.decode <~ fromGUI
 
-port toGUI : Signal GuiMessage
-port toGUI = GuiMessage.encode <~ (dropRepeats state)
+port toGUI : Signal ToGuiMessage
+port toGUI = ToGuiMessage.encode <~ (dropRepeats state)
 
-deviceActions : Channel (List Int)
-deviceActions = channel []
-
-port toDevice : Signal (List Int)
-port toDevice = subscribe deviceActions
+--deviceActions : Channel (List Int)
+--deviceActions = channel []
+--
+--port toDevice : Signal (List Int)
+--port toDevice = subscribe deviceActions
 
 main : Signal Element
 main = constant empty

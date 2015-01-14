@@ -1,23 +1,23 @@
-module GuiMessage where
+module ToGuiMessage where
 
 -- local source
 import CommonState (..)
 
-type alias GuiMessage = { setLog : (List String)
-                        , setConnected : Int
-                        }
+type alias ToGuiMessage = { setLog : (List String)
+                          , setConnected : Int
+                          }
 
-encode : CommonState -> GuiMessage
-encode bg =
-    { setLog = bg.log
-    , setConnected = case bg.connected of
+encode : CommonState -> ToGuiMessage
+encode com =
+    { setLog = com.log
+    , setConnected = case com.connected of
                     NotConnected -> 0
                     Connected    -> 1
                     NoCard       -> 2
                     NoPin        -> 3
     }
 
-decode : GuiMessage -> List CommonAction
+decode : ToGuiMessage -> List CommonAction
 decode msg=
     let setConnected =
         case msg.setConnected of
