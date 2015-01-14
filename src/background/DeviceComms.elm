@@ -5,54 +5,54 @@ import List ((::))
 import Maybe
 import String
 import Char
-type AppMessage = AppDebug              ByteString
-                | AppPing
-                | AppGetVersion
-                | AppSetContext         ByteString
-                | AppGetLogin
-                | AppGetPassword
-                | AppSetLogin           ByteString
-                | AppSetPassword        ByteString
-                | AppCheckPassword
-                | AppAddContext         ByteString
-                | AppExportFlashStart
-                | AppExportFlash
-                | AppExportFlashEnd
-                | AppImportFlashStart   FlashSpace
-                | AppImportFlash        ByteString
-                | AppImportFlashEnd
-                | AppExportEepromStart
-                | AppExportEeprom
-                | AppExportEepromEnd
-                | AppImportEepromStart
-                | AppImportEeprom       ByteString
-                | AppImportEepromEnd
-                | AppGetRandomNumber
-                | AppMemoryManageModeStart
-                | AppMemoryManageModeEnd
-                | AppImportMediaStart
-                | AppImportMedia        ByteString
-                | AppImportMediaEnd
-                | AppReadFlashNode      FlashAddress
-                | AppWriteFlashNode     FlashAddress Byte ByteString
-                | AppSetFavorite        Byte FlashAddress FlashAddress ByteString
-                | AppSetStartingParent  FlashAddress
-                | AppSetCtrValue        (Byte,Byte,Byte)
-                | AppAddCpzCtrValue     ByteString  ByteString
-                | AppGetCpzCtrValues
-                | AppCpzCtrPacketExport
-                | AppSetParameter       Parameter Byte
-                | AppGetParameter       Parameter
-                | AppGetFavorite        Byte
-                | AppResetCard          (Byte,Byte)
-                | AppGetCardLogin
-                | AppGetCardPassword
-                | AppSetCardLogin       ByteString
-                | AppSetCardPassword    ByteString
-                | AppGetFreeSlotAddress
-                | AppGetStartingParent
-                | AppGetCtrValue
-                | AppAddNewCard
+
+type AppPacket = AppDebug               ByteString
+               | AppPing
+               | AppGetVersion
+               | AppSetContext         ByteString
+               | AppGetLogin
+               | AppGetPassword
+               | AppSetLogin           ByteString
+               | AppSetPassword        ByteString
+               | AppCheckPassword
+               | AppAddContext         ByteString
+               | AppExportFlashStart
+               | AppExportFlash
+               | AppExportFlashEnd
+               | AppImportFlashStart   FlashSpace
+               | AppImportFlash        ByteString
+               | AppImportFlashEnd
+               | AppExportEepromStart
+               | AppExportEeprom
+               | AppExportEepromEnd
+               | AppImportEepromStart
+               | AppImportEeprom       ByteString
+               | AppImportEepromEnd
+               | AppGetRandomNumber
+               | AppMemoryManageModeStart
+               | AppMemoryManageModeEnd
+               | AppImportMediaStart
+               | AppImportMedia        ByteString
+               | AppImportMediaEnd
+               | AppReadFlashNode      FlashAddress
+               | AppWriteFlashNode     FlashAddress Byte ByteString
+               | AppSetFavorite        Byte FlashAddress FlashAddress ByteString
+               | AppSetStartingParent  FlashAddress
+               | AppSetCtrValue        (Byte,Byte,Byte)
+               | AppAddCpzCtr          CpzCtrLutEntry
+               | AppGetCpzCtrValues
+               | AppSetParameter       Parameter Byte
+               | AppGetParameter       Parameter
+               | AppGetFavorite        Byte
+               | AppResetCard          (Byte,Byte)
+               | AppGetCardLogin
+               | AppGetCardPassword
+               | AppSetCardLogin       ByteString
+               | AppSetCardPassword    ByteString
+               | AppGetFreeSlotAddress
+               | AppGetStartingParent
+               | AppGetCtrValue
+               | AppAddNewCard
 
 type alias FlashAddress = (Byte,Byte)
 
@@ -66,12 +66,23 @@ type alias FlashAddress = (Byte,Byte)
     --AppJumpToBootloader -> 0x48
     --AppCloneSmartcard   -> 0x49
     --AppStackFree        -> 0x4A
+    --AppUsbKeyboardPress -> 0x69
 
-toBytes : AppMessage -> List Int
-toBytes msg =
+toInts : AppPacket -> List Int
+toInts msg =
     let byteString msgType s = String.length s::msgType::stringToInts s
-        zeroSize msgType     = [0x00, msgType]
+        zeroSize msgType     = [0, msgType]
         stringToInts s       = List.map Char.toCode (String.toList s)
+        param p              = case p of
+            UserInitKey        -> 0x00
+            KeyboardLayout     -> 0x01
+            UserInterTimeout   -> 0x02
+            LockTimeoutEnable  -> 0x03
+            LockTimeout        -> 0x04
+            TouchDi            -> 0x05
+            TouchWheelOs       -> 0x06
+            TouchProxOs        -> 0x07
+            OfflineMode        -> 0x08
     in case msg of
         AppDebug       s  -> byteString 0x01 s
         AppPing           -> zeroSize 0x02
@@ -85,7 +96,7 @@ toBytes msg =
         AppAddContext  s  -> byteString 0x0A s
         AppExportFlash    -> zeroSize 0x30
         AppExportFlashEnd -> zeroSize 0x31
-        AppImportFlashStart space -> [ 0x01
+        AppImportFlashStart space -> [ 1
                                      , 0x32
                                      , case space of
                                          FlashUserSpace     -> 0x00
@@ -106,34 +117,32 @@ toBytes msg =
         AppImportMediaStart      -> zeroSize 0x52
         AppImportMedia  s        -> byteString 0x53 s
         AppImportMediaEnd        -> zeroSize 0x54
-        AppReadFlashNode (a1,a2) -> [0x02, 0x55, a1, a2]
-        AppWriteFlashNode (a1,a2) n s  ->
+        AppReadFlashNode (a1,a2) -> [2, 0x55, a1, a2]
+        AppWriteFlashNode (a1,a2) n s       ->
             (String.length s + 3)::0x56::a1::a2::n::stringToInts s
         AppSetFavorite id (p1,p2) (c1,c2) s ->
             (String.length s + 5)::0x57::id::p1::p2::c1::c2::stringToInts s
-     -- AppSetStartingparent (a1,a2) -> 0x58
-    --AppSetCtrvalue      -> 0x59
-    --AppAddCardCpzCtr    -> 0x5A
-    --AppGetCardCpzCtr    -> 0x5B
-    --AppCardCpzCtrPacket -> 0x5C
-    --AppSetMooltipassParm-> 0x5D
-    --AppGetMooltipassParm-> 0x5E
-    --AppGetFavorite      -> 0x5F
-    --AppResetCard        -> 0x60
-    --AppReadCardLogin    -> 0x61
-    --AppReadCardPass     -> 0x62
-    --AppSetCardLogin     -> 0x63
-    --AppSetCardPass      -> 0x64
-    --AppGetFreeSlotAddr  -> 0x65
-    --AppGetStartingParent-> 0x66
-    --AppGetCtrvalue      -> 0x67
-    --AppAddUnknownCard   -> 0x68
-    --AppUsbKeyboardPress -> 0x69
+        AppSetStartingParent (a1,a2)    -> [2, 0x58, a1, a2]
+        AppSetCtrValue (ctr1,ctr2,ctr3) -> [3, 0x59, ctr1, ctr2, ctr3]
+        AppAddCpzCtr c        -> 24::0x5A::stringToInts c.cpz ++ stringToInts c.ctrNonce
+        AppGetCpzCtrValues    -> zeroSize 0x5B
+        AppSetParameter p b   -> [2, 0x5D, param p, b]
+        AppGetParameter p     -> [1, 0x5E, param p]
+        AppGetFavorite  b     -> [1, 0x5F, b]
+        AppResetCard (b1,b2)  -> [2, 0x60, b1, b2]
+        AppGetCardLogin       -> zeroSize 0x61
+        AppGetCardPassword    -> zeroSize 0x62
+        AppSetCardLogin s     -> byteString 0x63 s
+        AppSetCardPassword s  -> byteString 0x64 s
+        AppGetFreeSlotAddress -> zeroSize 0x65
+        AppGetStartingParent  -> zeroSize 0x66
+        AppGetCtrValue        -> zeroSize 0x67
+        AppAddNewCard         -> zeroSize 0x68
 
 
 type ReturnCode = Done | NotDone
 
-type DeviceMessage = DeviceDebug             ByteString
+type DevicePacket = DeviceDebug             ByteString
                    | DevicePing              ByteString
                    | DeviceGetVersion        MpVersion
                    | DeviceSetContext        SetContextReturn
@@ -166,9 +175,9 @@ type DeviceMessage = DeviceDebug             ByteString
                    | DeviceSetFavorite       ReturnCode
                    | DeviceSetStartingParent ReturnCode
                    | DeviceSetCtrValue       ReturnCode
-                   | DeviceAddCpzCtrValue    ReturnCode
-                   | DeviceGetCpzCtrValue    (Maybe ByteString)
-                   | DeviceCpzCtrPacketExport CpzCtrLutEntryPacket
+                   | DeviceAddCpzCtr         ReturnCode
+                   | DeviceGetCpzCtrValues  (Maybe ByteString)
+                   | DeviceCpzCtrPacketExport CpzCtrLutEntry
                    | DeviceSetParameter      ReturnCode
                    | DeviceGetParameter      (Maybe ByteString)
                    | DeviceGetFavorite       (Maybe ByteString)
@@ -185,17 +194,17 @@ type DeviceMessage = DeviceDebug             ByteString
 type alias MpVersion = { flashMemSize : Byte
                        , version : ByteString
                        }
-type alias CpzCtrLutEntryPacket = { cpz : ByteString
-                                  , ctrNonce : ByteString
-                                  }
-defaultCpzCtrLutEntryPacket = {cpz = "", ctrNonce = ""}
+type alias CpzCtrLutEntry = { cpz : ByteString
+                            , ctrNonce : ByteString
+                            }
+defaultCpzCtrLutEntry = {cpz = "", ctrNonce = ""}
 
 
 type CheckPasswordReturn = Incorrect | Correct | RequestBlocked
 type SetContextReturn = UnknownContext | ContextSet | NoCardForContext
 
-fromBytes : List Int -> Result Error DeviceMessage
-fromBytes (size::messageType::payload) =
+fromInts : List Int -> Result Error DevicePacket
+fromInts (size::messageType::payload) =
     let doneOrNotDone constructor name =
             if size /= 1
             then Err <| "Invalid data size for '" ++ name ++ "'"
@@ -275,10 +284,10 @@ fromBytes (size::messageType::payload) =
             0x57 -> doneOrNotDone DeviceSetFavorite       "set favorite"
             0x58 -> doneOrNotDone DeviceSetStartingParent "set starting parent"
             0x59 -> doneOrNotDone DeviceSetCtrValue       "set CTR value"
-            0x5A -> doneOrNotDone DeviceAddCpzCtrValue    "set CPZ CTR value"
-            0x5B -> maybeByteString DeviceGetCpzCtrValue  "get CPZ CTR value"
+            0x5A -> doneOrNotDone DeviceAddCpzCtr         "set CPZ CTR value"
+            0x5B -> maybeByteString DeviceGetCpzCtrValues "get CPZ CTR value"
             0x5C -> let cpz  =
-                            Result.map (\c -> {defaultCpzCtrLutEntryPacket | cpz <- c})
+                            Result.map (\c -> {defaultCpzCtrLutEntry | cpz <- c})
                                 <| toByteString 8 payload
                         ctrNonce d =
                             Result.map (\s -> {d | ctrNonce <- s})
@@ -327,7 +336,7 @@ toByteString : Int -> List Int -> Result Error ByteString
 toByteString size payload =
     if size > List.length payload || size <= 0
     then Err "Invalid size to convert to bytestring"
-    else if (List.foldr (\int b -> b && int > 0 && int < 256) True (List.take size payload))
+    else if List.foldr (\int b -> b && int > 0 && int < 256) True (List.take size payload)
          then Ok <| String.fromList (List.map Char.fromCode (List.take size payload))
          else Err "Invalid char given to byte conversion (unicode?)"
 
