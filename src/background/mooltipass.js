@@ -191,11 +191,7 @@ function reset()
  */
 function connect(msg)
 {
-    reset();
-    if (msg)
-    {
-        connectMsg = msg;
-    }
+    connection = null;
     chrome.hid.getDevices(device_info, onDeviceFound);
 }
 

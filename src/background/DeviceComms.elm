@@ -6,7 +6,7 @@ import Maybe
 import String
 import Char
 type AppMessage = AppDebug              ByteString
-                | AppPing               (Byte,Byte,Byte,Byte)
+                | AppPing
                 | AppGetVersion
                 | AppSetContext         ByteString
                 | AppGetLogin
@@ -33,13 +33,13 @@ type AppMessage = AppDebug              ByteString
                 | AppImportMediaStart
                 | AppImportMedia        ByteString
                 | AppImportMediaEnd
-                | AppReadFlashNode      (Byte,Byte)
-                | AppSetFavorite        (Byte,Byte,Byte,Byte,Byte)
-                | AppSetStartingParent  (Byte,Byte)
+                | AppReadFlashNode      FlashAddress
+                | AppWriteFlashNode     FlashAddress Byte ByteString
+                | AppSetFavorite        Byte FlashAddress FlashAddress ByteString
+                | AppSetStartingParent  FlashAddress
                 | AppSetCtrValue        (Byte,Byte,Byte)
                 | AppAddCpzCtrValue     ByteString  ByteString
                 | AppGetCpzCtrValues
-
                 | AppCpzCtrPacketExport
                 | AppSetParameter       Parameter Byte
                 | AppGetParameter       Parameter
@@ -53,6 +53,83 @@ type AppMessage = AppDebug              ByteString
                 | AppGetStartingParent
                 | AppGetCtrValue
                 | AppAddNewCard
+
+type alias FlashAddress = (Byte,Byte)
+
+-- disabled developer types:
+    --AppEraseEeprom      -> 0x40
+    --AppEraseFlash       -> 0x41
+    --AppEraseSmc         -> 0x42
+    --AppDrawBitmap       -> 0x43
+    --AppSetFont          -> 0x44
+    --AppSetBootloaderPwd -> 0x47
+    --AppJumpToBootloader -> 0x48
+    --AppCloneSmartcard   -> 0x49
+    --AppStackFree        -> 0x4A
+
+toBytes : AppMessage -> List Int
+toBytes msg =
+    let byteString msgType s = String.length s::msgType::stringToInts s
+        zeroSize msgType     = [0x00, msgType]
+        stringToInts s       = List.map Char.toCode (String.toList s)
+    in case msg of
+        AppDebug       s  -> byteString 0x01 s
+        AppPing           -> zeroSize 0x02
+        AppGetVersion     -> zeroSize 0x03
+        AppSetContext  s  -> byteString 0x04 s
+        AppGetLogin       -> zeroSize 0x05
+        AppGetPassword    -> zeroSize 0x06
+        AppSetLogin    s  -> byteString 0x07 s
+        AppSetPassword s  -> byteString 0x08 s
+        AppCheckPassword  -> zeroSize 0x09
+        AppAddContext  s  -> byteString 0x0A s
+        AppExportFlash    -> zeroSize 0x30
+        AppExportFlashEnd -> zeroSize 0x31
+        AppImportFlashStart space -> [ 0x01
+                                     , 0x32
+                                     , case space of
+                                         FlashUserSpace     -> 0x00
+                                         FlashGraphicsSpace -> 0x01
+                                     ]
+        AppImportFlash  s        -> byteString 0x33 s
+        AppImportFlashEnd        -> zeroSize 0x34
+        AppExportEeprom          -> zeroSize 0x35
+        AppExportEepromEnd       -> zeroSize 0x36
+        AppImportEepromStart     -> zeroSize 0x37
+        AppImportEeprom s        -> byteString 0x38 s
+        AppImportEepromEnd       -> zeroSize 0x39
+        AppExportFlashStart      -> zeroSize 0x45
+        AppExportEepromStart     -> zeroSize 0x46
+        AppGetRandomNumber       -> zeroSize 0x4B
+        AppMemoryManageModeStart -> zeroSize 0x50
+        AppMemoryManageModeEnd   -> zeroSize 0x51
+        AppImportMediaStart      -> zeroSize 0x52
+        AppImportMedia  s        -> byteString 0x53 s
+        AppImportMediaEnd        -> zeroSize 0x54
+        AppReadFlashNode (a1,a2) -> [0x02, 0x55, a1, a2]
+        AppWriteFlashNode (a1,a2) n s  ->
+            (String.length s + 3)::0x56::a1::a2::n::stringToInts s
+        AppSetFavorite id (p1,p2) (c1,c2) s ->
+            (String.length s + 5)::0x57::id::p1::p2::c1::c2::stringToInts s
+     -- AppSetStartingparent (a1,a2) -> 0x58
+    --AppSetCtrvalue      -> 0x59
+    --AppAddCardCpzCtr    -> 0x5A
+    --AppGetCardCpzCtr    -> 0x5B
+    --AppCardCpzCtrPacket -> 0x5C
+    --AppSetMooltipassParm-> 0x5D
+    --AppGetMooltipassParm-> 0x5E
+    --AppGetFavorite      -> 0x5F
+    --AppResetCard        -> 0x60
+    --AppReadCardLogin    -> 0x61
+    --AppReadCardPass     -> 0x62
+    --AppSetCardLogin     -> 0x63
+    --AppSetCardPass      -> 0x64
+    --AppGetFreeSlotAddr  -> 0x65
+    --AppGetStartingParent-> 0x66
+    --AppGetCtrvalue      -> 0x67
+    --AppAddUnknownCard   -> 0x68
+    --AppUsbKeyboardPress -> 0x69
+
 
 type ReturnCode = Done | NotDone
 
@@ -108,10 +185,6 @@ type DeviceMessage = DeviceDebug             ByteString
 type alias MpVersion = { flashMemSize : Byte
                        , version : ByteString
                        }
-defaultMpVersion = { flashMemSize = '\0'
-                   , version = "???"
-                   }
-
 type alias CpzCtrLutEntryPacket = { cpz : ByteString
                                   , ctrNonce : ByteString
                                   }
@@ -145,10 +218,10 @@ fromBytes (size::messageType::payload) =
                     then Result.map DevicePing (toByteString 4 payload)
                     else Err "Invalid data size for 'ping request'"
             0x03 -> let flashSize =
-                            Result.map (\b -> {defaultMpVersion | flashMemSize <- b})
+                            Result.map (\b -> {flashMemSize = b})
                                 <| toByte (List.head payload)
                         mpVersion mpv =
-                            Result.map (\s -> {mpv | version <- s})
+                            Result.map (\s -> {mpv | version = s})
                                 <| toByteString (size - 1) (List.tail payload)
                     in Result.map DeviceGetVersion (flashSize `andThen` mpVersion)
             0x04 -> if size /= 1
@@ -241,11 +314,11 @@ type FlashSpace = FlashUserSpace | FlashGraphicsSpace
 -- CPZ = code protected zone
 -- CTR = counter value for Eeprom
 
-type alias Byte = Char
+type alias Byte = Int
 
 toByte : Int -> Result Error Byte
 toByte x = if (x > 0) && (x < 256)
-           then Ok (Char.fromCode x)
+           then Ok x
            else Err "Invalid char given to byte conversion (unicode?)"
 
 type alias ByteString = String

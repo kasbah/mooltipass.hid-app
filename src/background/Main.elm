@@ -45,5 +45,11 @@ state =
 port toGUI : Signal GuiMessage
 port toGUI = GuiMessage.encode <~ (dropRepeats state)
 
+deviceActions : Channel (List Int)
+deviceActions = channel []
+
+port toDevice : Signal (List Int)
+port toDevice = subscribe deviceActions
+
 main : Signal Element
 main = constant empty
