@@ -7,55 +7,56 @@ import String
 import Char
 
 {-| The type of packets we send from the app to the device -}
-type AppPacket = AppDebug              ByteString
-               | AppPing
-               | AppGetVersion
-               | AppSetContext         ByteString
-               | AppGetLogin
-               | AppGetPassword
-               | AppSetLogin           ByteString
-               | AppSetPassword        ByteString
-               | AppCheckPassword
-               | AppAddContext         ByteString
-               | AppExportFlashStart
-               | AppExportFlash
-               | AppExportFlashEnd
-               | AppImportFlashStart   FlashSpace
-               | AppImportFlash        ByteString
-               | AppImportFlashEnd
-               | AppExportEepromStart
-               | AppExportEeprom
-               | AppExportEepromEnd
-               | AppImportEepromStart
-               | AppImportEeprom       ByteString
-               | AppImportEepromEnd
-               | AppGetRandomNumber
-               | AppMemoryManageModeStart
-               | AppMemoryManageModeEnd
-               | AppImportMediaStart
-               | AppImportMedia        ByteString
-               | AppImportMediaEnd
-               | AppReadFlashNode      FlashAddress
-               | AppWriteFlashNode     FlashAddress Byte ByteString
-               | AppSetFavorite        Byte FlashAddress FlashAddress ByteString
-               | AppSetStartingParent  FlashAddress
-               -- CPZ = code protected zone
-               -- CTR = counter value for Eeprom
-               | AppSetCtrValue        (Byte, Byte, Byte)
-               | AppAddCpzCtr          CpzCtrLutEntry
-               | AppGetCpzCtrValues
-               | AppSetParameter       Parameter Byte
-               | AppGetParameter       Parameter
-               | AppGetFavorite        Byte
-               | AppResetCard          (Byte, Byte)
-               | AppGetCardLogin
-               | AppGetCardPassword
-               | AppSetCardLogin       ByteString
-               | AppSetCardPassword    ByteString
-               | AppGetFreeSlotAddress
-               | AppGetStartingParent
-               | AppGetCtrValue
-               | AppAddNewCard
+type AppPacket =
+     AppDebug              ByteString
+   | AppPing
+   | AppGetVersion
+   | AppSetContext         ByteString
+   | AppGetLogin
+   | AppGetPassword
+   | AppSetLogin           ByteString
+   | AppSetPassword        ByteString
+   | AppCheckPassword
+   | AppAddContext         ByteString
+   | AppExportFlashStart
+   | AppExportFlash
+   | AppExportFlashEnd
+   | AppImportFlashStart   FlashSpace
+   | AppImportFlash        ByteString
+   | AppImportFlashEnd
+   | AppExportEepromStart
+   | AppExportEeprom
+   | AppExportEepromEnd
+   | AppImportEepromStart
+   | AppImportEeprom       ByteString
+   | AppImportEepromEnd
+   | AppGetRandomNumber
+   | AppMemoryManageModeStart
+   | AppMemoryManageModeEnd
+   | AppImportMediaStart
+   | AppImportMedia        ByteString
+   | AppImportMediaEnd
+   | AppReadFlashNode      FlashAddress
+   | AppWriteFlashNode     FlashAddress Byte ByteString
+   | AppSetFavorite        Byte FlashAddress FlashAddress ByteString
+   | AppSetStartingParent  FlashAddress
+   -- CPZ = code protected zone
+   -- CTR = counter value for Eeprom
+   | AppSetCtrValue        (Byte, Byte, Byte)
+   | AppAddCpzCtr          CpzCtrLutEntry
+   | AppGetCpzCtrValues
+   | AppSetParameter       Parameter Byte
+   | AppGetParameter       Parameter
+   | AppGetFavorite        Byte
+   | AppResetCard          (Byte, Byte)
+   | AppGetCardLogin
+   | AppGetCardPassword
+   | AppSetCardLogin       ByteString
+   | AppSetCardPassword    ByteString
+   | AppGetFreeSlotAddress
+   | AppGetStartingParent
+   | AppGetCtrValue
+   | AppAddNewCard
 -- disabled developer types:
     --AppEraseEeprom      -> 0x40
     --AppEraseFlash       -> 0x41
@@ -70,54 +71,55 @@ type AppPacket = AppDebug              ByteString
 
 
 {-| The type of packets we receive from the device -}
-type DevicePacket =  DeviceDebug             ByteString
-                   | DevicePing              ByteString
-                   | DeviceGetVersion        MpVersion
-                   | DeviceSetContext        SetContextReturn
-                   | DeviceGetLogin          (Maybe ByteString)
-                   | DeviceGetPassword       (Maybe ByteString)
-                   | DeviceSetLogin          ReturnCode
-                   | DeviceSetPassword       ReturnCode
-                   | DeviceCheckPassword     CheckPasswordReturn
-                   | DeviceAddContext        ReturnCode
-                   | DeviceExportFlashStart  ReturnCode
-                   | DeviceExportFlash       ByteString
-                   | DeviceExportFlashEnd
-                   | DeviceImportFlashStart  ReturnCode
-                   | DeviceImportFlash       ReturnCode
-                   | DeviceImportFlashEnd    ReturnCode
-                   | DeviceExportEepromStart ReturnCode
-                   | DeviceExportEeprom      ByteString
-                   | DeviceExportEepromEnd
-                   | DeviceImportEepromStart ReturnCode
-                   | DeviceImportEeprom      ReturnCode
-                   | DeviceImportEepromEnd   ReturnCode
-                   | DeviceGetRandomNumber   ByteString
-                   | DeviceManageModeStart   ReturnCode
-                   | DeviceManageModeEnd     ReturnCode
-                   | DeviceImportMediaStart  ReturnCode
-                   | DeviceImportMediaEnd    ReturnCode
-                   | DeviceImportMedia       ReturnCode
-                   | DeviceReadFlashNode     ByteString
-                   | DeviceWriteFlashNode    ReturnCode
-                   | DeviceSetFavorite       ReturnCode
-                   | DeviceSetStartingParent ReturnCode
-                   | DeviceSetCtrValue       ReturnCode
-                   | DeviceAddCpzCtr         ReturnCode
-                   | DeviceGetCpzCtrValues   (Maybe ByteString)
-                   | DeviceCpzCtrPacketExport CpzCtrLutEntry
-                   | DeviceSetParameter      ReturnCode
-                   | DeviceGetParameter      (Maybe ByteString)
-                   | DeviceGetFavorite       (Maybe ByteString)
-                   | DeviceResetCard         ReturnCode
-                   | DeviceGetCardLogin      (Maybe ByteString)
-                   | DeviceGetCardPassword   (Maybe ByteString)
-                   | DeviceSetCardLogin      ReturnCode
-                   | DeviceSetCardPassword   ReturnCode
-                   | DeviceGetFreeSlotAddr   (Maybe ByteString)
-                   | DeviceGetStartingParent (Maybe ByteString)
-                   | DeviceGetCtrValue       (Maybe ByteString)
-                   | DeviceAddNewCard        ReturnCode
+type DevicePacket =
+      DeviceDebug             ByteString
+    | DevicePing              ByteString
+    | DeviceGetVersion        MpVersion
+    | DeviceSetContext        SetContextReturn
+    | DeviceGetLogin          (Maybe ByteString)
+    | DeviceGetPassword       (Maybe ByteString)
+    | DeviceSetLogin          ReturnCode
+    | DeviceSetPassword       ReturnCode
+    | DeviceCheckPassword     CheckPasswordReturn
+    | DeviceAddContext        ReturnCode
+    | DeviceExportFlashStart  ReturnCode
+    | DeviceExportFlash       ByteString
+    | DeviceExportFlashEnd
+    | DeviceImportFlashStart  ReturnCode
+    | DeviceImportFlash       ReturnCode
+    | DeviceImportFlashEnd    ReturnCode
+    | DeviceExportEepromStart ReturnCode
+    | DeviceExportEeprom      ByteString
+    | DeviceExportEepromEnd
+    | DeviceImportEepromStart ReturnCode
+    | DeviceImportEeprom      ReturnCode
+    | DeviceImportEepromEnd   ReturnCode
+    | DeviceGetRandomNumber   ByteString
+    | DeviceManageModeStart   ReturnCode
+    | DeviceManageModeEnd     ReturnCode
+    | DeviceImportMediaStart  ReturnCode
+    | DeviceImportMediaEnd    ReturnCode
+    | DeviceImportMedia       ReturnCode
+    | DeviceReadFlashNode     ByteString
+    | DeviceWriteFlashNode    ReturnCode
+    | DeviceSetFavorite       ReturnCode
+    | DeviceSetStartingParent ReturnCode
+    | DeviceSetCtrValue       ReturnCode
+    | DeviceAddCpzCtr         ReturnCode
+    | DeviceGetCpzCtrValues   (Maybe ByteString)
+    | DeviceCpzCtrPacketExport CpzCtrLutEntry
+    | DeviceSetParameter      ReturnCode
+    | DeviceGetParameter      (Maybe ByteString)
+    | DeviceGetFavorite       (Maybe ByteString)
+    | DeviceResetCard         ReturnCode
+    | DeviceGetCardLogin      (Maybe ByteString)
+    | DeviceGetCardPassword   (Maybe ByteString)
+    | DeviceSetCardLogin      ReturnCode
+    | DeviceSetCardPassword   ReturnCode
+    | DeviceGetFreeSlotAddr   (Maybe ByteString)
+    | DeviceGetStartingParent (Maybe ByteString)
+    | DeviceGetCtrValue       (Maybe ByteString)
+    | DeviceAddNewCard        ReturnCode
 
 {-| Carries firmware version and flash memory size -}
 type alias MpVersion = { flashMemSize : Byte
