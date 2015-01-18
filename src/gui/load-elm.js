@@ -4,7 +4,7 @@
 var gui = Elm.fullscreen(Elm.GUI, {fromBackground: emptyToGuiMessage});
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-        if (request.toGUI != null) {
+        if (request.toGUI !== undefined) {
             gui.ports.fromBackground.send(request.toGUI);
         }
     });

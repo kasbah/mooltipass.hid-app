@@ -4,7 +4,7 @@ var emptyDeviceMessage = {setConnected: null};
 var elm = Elm.worker(Elm.Background, {fromGUI: emptyFromGuiMessage, fromDevice: emptyDeviceMessage});
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-        if (request.toBackground != null) {
+        if (request.toBackground !== undefined) {
             elm.ports.fromGUI.send(request.toBackground);
         }
     });
