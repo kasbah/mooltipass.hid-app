@@ -4,14 +4,14 @@ var emptyDeviceMessage = {setConnected: null};
 var elm = Elm.worker(Elm.Background, {fromGUI: emptyFromGuiMessage, fromDevice: emptyDeviceMessage});
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-        if (request.toBackground !== undefined) {
-            elm.ports.fromGUI.send(request.toBackground);
-        }
-    });
+    if (request.toBackground !== undefined) {
+        elm.ports.fromGUI.send(request.toBackground);
+    }
+});
 
 elm.ports.toGUI.subscribe(function(message) {
-        chrome.runtime.sendMessage({toGUI: message});
-    });
+    chrome.runtime.sendMessage({toGUI: message});
+});
 
 elm.ports.toDevice.subscribe(function(connected) {
     if (connected) {
