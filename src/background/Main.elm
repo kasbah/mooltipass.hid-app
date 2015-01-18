@@ -15,17 +15,15 @@ import FromGuiMessage
 import FromGuiMessage (FromGuiMessage)
 import CommonState (..)
 
-type alias MpMessage = { appendToLog  : Maybe String
-                       , setConnected : Maybe String
-                       }
+type alias DeviceMessage = { setConnected : Maybe String
+                           }
 
-mpDecode : MpMessage -> CommonAction
+mpDecode : DeviceMessage -> CommonAction
 mpDecode message =
-    let decode {appendToLog, setConnected} =
-        Maybe.oneOf [ Maybe.map AppendToLog appendToLog
-                    , Maybe.map connectedFromInt setConnected
+    let decode {setConnected} =
+        Maybe.oneOf [ Maybe.map connectedFromString setConnected
                     ]
-        connectedFromInt s =
+        connectedFromString s =
             case s of
                 "NotConnected" -> SetConnected NotConnected
                 "Connected"    -> SetConnected Connected
@@ -36,19 +34,19 @@ mpDecode message =
 
 port fromGUI : Signal FromGuiMessage
 
-port fromMP  : Signal MpMessage
+port fromDevice : Signal DeviceMessage
 
 port toDevice : Signal Bool
 port toDevice =
     let toDevice' s = case s.connected of
-        NotConnected -> True
-        _            -> False
+        NotConnected -> False
+        _            -> True
     in toDevice' <~ state
 
 state : Signal CommonState
 state =
     foldp update default
-        <| merge (mpDecode <~ fromMP)
+        <| merge (mpDecode <~ fromDevice)
         <| FromGuiMessage.decode <~ fromGUI
 
 port toGUI : Signal ToGuiMessage

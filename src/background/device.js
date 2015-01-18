@@ -17,21 +17,16 @@ function onDeviceFound(devices)
     }
 
     var ind = devices.length - 1;
-    console.log('Found ' + devices.length + ' devices.');
-    console.log('Device ' + devices[ind].deviceId + ' vendor' + devices[ind].vendorId + ' product ' + devices[ind].productId);
     var devId = devices[ind].deviceId;
 
-    console.log('Connecting to device '+devId);
-    appendToLog('#messageLog', 'Connecting to device...\n');
     chrome.hid.connect(devId, function(connectInfo)
     {
         if (!chrome.runtime.lastError)
 		{
             device.connection = connectInfo.connectionId;
         }
-        else
-        {
-          console.log('Failed to connect to device: '+chrome.runtime.lastError.message);
+        if (device.connection !== null) {
+            sendToElm({setConnected:"Connected"});
         }
     });
 }
@@ -39,7 +34,7 @@ function onDeviceFound(devices)
 /**
  * Connect to the mooltipass
  */
-function connect(msg)
+function connect()
 {
     device.connection = null;
     chrome.hid.getDevices(device_info, onDeviceFound);
