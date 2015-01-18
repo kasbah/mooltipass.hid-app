@@ -45,7 +45,7 @@ state =
         <| FromGuiMessage.decode <~ fromGUI
 
 port toGUI : Signal ToGuiMessage
-port toGUI = ToGuiMessage.encode <~ (dropRepeats state)
+port toGUI = ToGuiMessage.encode <~ state
 
 --deviceActions : Channel (List Int)
 --deviceActions = channel []

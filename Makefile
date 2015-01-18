@@ -6,7 +6,7 @@ COMMON_ELM_FILES = $(wildcard src/common/*.elm)
 JS_FILES         = $(call wildc_recursive, src/, *.js)
 HTML_FILES       = $(call wildc_recursive, src/, *.html)
 JSON_FILES       = $(call wildc_recursive, src/, *.json)
-IMAGE_FILES      = $(call wildc_recursive, src/gui/images/, *)
+IMAGE_FILES      = $(wildcard src/gui/images/*)
 DIRS 			 = $(sort $(dir $(call wildc_recursive, src/, *)))
 
 all: images elm js json html

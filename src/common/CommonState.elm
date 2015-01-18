@@ -22,6 +22,7 @@ type ConnectState = NotConnected | Connected | NoCard | NoPin
 type CommonAction = SetLog (List String)
                   | SetConnected ConnectState
                   | AppendToLog String
+                  | GetState
                   | CommonNoOp
 
 {-| Transform the state to a new state according to an action -}
@@ -31,6 +32,7 @@ update action s =
         (SetLog l)        -> {s | log <- l}
         (AppendToLog str) -> {s | log <- str::s.log}
         (SetConnected c)  -> {s | connected <- c}
+        GetState          -> s
         CommonNoOp        -> s
 
 apply : List CommonAction -> CommonState -> CommonState

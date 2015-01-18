@@ -1,7 +1,7 @@
 /* This file loads the Elm application and sets up communication with the
    gui through chrome.runtime. */
 var emptyMpMessage = {appendToLog: null, setConnected: null};
-var elm = Elm.worker(Elm.Background, {fromGUI: emptyGuiMessage, fromMP: emptyMpMessage});
+var elm = Elm.worker(Elm.Background, {fromGUI: emptyFromGuiMessage, fromMP: emptyMpMessage});
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         if (request.toBackground != null) {
