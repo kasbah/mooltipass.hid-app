@@ -38,6 +38,13 @@ port fromGUI : Signal FromGuiMessage
 
 port fromMP  : Signal MpMessage
 
+port toDevice : Signal Bool
+port toDevice =
+    let toDevice' s = case s.connected of
+        NotConnected -> True
+        _            -> False
+    in toDevice' <~ state
+
 state : Signal CommonState
 state =
     foldp update default

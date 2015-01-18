@@ -1,4 +1,3 @@
-
 var device = {connection: null};
 var device_info = {vendorId: 0x16d0, productId: 0x09a0};
 
