@@ -1,4 +1,4 @@
-var device = {connection: null};
+var device = {connection: null, connecting: false};
 var device_info = {vendorId: 0x16d0, productId: 0x09a0};
 
 /**
@@ -18,25 +18,43 @@ function onDeviceFound(devices)
 
     var ind = devices.length - 1;
     var devId = devices[ind].deviceId;
+    console.log("devId", devId);
 
     chrome.hid.connect(devId, function(connectInfo)
     {
+        console.log("connectInfo", connectInfo);
         if (!chrome.runtime.lastError)
 		{
             device.connection = connectInfo.connectionId;
         }
+        console.log(device.connection)
         if (device.connection !== null) {
             sendToElm({setConnected:"Connected"});
+        } else {
+            sendToElm({setConnected:"NotConnected"});
         }
+        device.connecting = false;
+        clearTimeout(this.timeoutId);
     });
 }
 
 /**
  * Connect to the mooltipass
  */
-function connect()
+device.checkConnection = function()
 {
+    if (device.connecting) {
+        return;
+    }
+    device.connecting = true;
     device.connection = null;
-    chrome.hid.getDevices(device_info, onDeviceFound);
+    sendToElm({appendToLog:"> connecting to device"});
+    this.timeoutId = setTimeout(function () {
+        if (device.connecting) {
+            sendToElm({appendToLog:"connection attempt timed out"});
+            device.connecting = false;
+        }
+    }, 5000)
+    chrome.hid.getDevices({}, onDeviceFound.bind());
 }
 

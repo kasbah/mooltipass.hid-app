@@ -1,7 +1,15 @@
 /* This file loads the Elm application and sets up communication with the
    gui through chrome.runtime. */
-var emptyDeviceMessage = {setConnected: null};
-var elm = Elm.worker(Elm.Background, {fromGUI: emptyFromGuiMessage, fromDevice: emptyDeviceMessage});
+var emptyFromDeviceMessage = { setConnected   : null
+                             , receiveCommand : null
+                             , appendToLog    : null
+                             };
+var elm = Elm.worker(
+    Elm.Background,
+    { fromGUI    : emptyFromGuiMessage
+    , fromDevice : emptyFromDeviceMessage
+    }
+);
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.toBackground !== undefined) {
@@ -13,26 +21,29 @@ elm.ports.toGUI.subscribe(function(message) {
     chrome.runtime.sendMessage({toGUI: message});
 });
 
-elm.ports.toDevice.subscribe(function(connected) {
-    if (connected) {
-        return;
-    } else {
-        connect();
+elm.ports.toDevice.subscribe(function(message) {
+    if (message.checkConnection != null) {
+        device.checkConnection();
     }
 });
 
-sendToElm = function (obj) {
-    var msg = {};
+sendToElm = function (message) {
+    var messageWithNulls = {};
     //replace undefined with null so it becomes 'Nothing' in Elm
-    for (var prop in emptyDeviceMessage) {
-        if(obj.hasOwnProperty(prop)){
-            msg[prop] = obj[prop];
+    for (var prop in emptyFromDeviceMessage) {
+        if(message.hasOwnProperty(prop)){
+            messageWithNulls[prop] = message[prop];
         } else {
-            msg[prop] = emptyDeviceMessage[prop];
+            messageWithNulls[prop] = emptyFromDeviceMessage[prop];
         }
     }
-    elm.ports.fromDevice.send(msg);
+    elm.ports.fromDevice.send(messageWithNulls);
 };
+
+chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse)
+{
+    console.log('received request '+request.type);
+});
 
 function launch()
 {
@@ -42,14 +53,4 @@ function launch()
 //chrome.runtime.onInstalled.addListener(launch);
 chrome.app.runtime.onLaunched.addListener(launch);
 
-//chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse)
-//{
-//    request.senderId = sender.id;
-//    console.log('received request '+request.type);
-//
-//    if (authReq == null) {
-//        startAuthRequest(request)
-//    } else {
-//        authReqQueue.push(request);
-//    }
-//});
+sendToElm({setConnected:"NotConnected"});

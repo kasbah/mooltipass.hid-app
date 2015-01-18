@@ -15,13 +15,21 @@ import FromGuiMessage
 import FromGuiMessage (FromGuiMessage)
 import CommonState (..)
 
-type alias DeviceMessage = { setConnected : Maybe String
-                           }
+type alias FromDeviceMessage = { setConnected    : Maybe String
+                               , receiveCommand  : Maybe (List Int)
+                               , appendToLog     : Maybe String
+                               }
 
-mpDecode : DeviceMessage -> CommonAction
+type alias ToDeviceMessage   = { checkConnection : Maybe ()
+                               , sendCommand     : Maybe (List Int)
+                               }
+emptyToDeviceMessage = {checkConnection = Nothing, sendCommand = Nothing}
+
+mpDecode : FromDeviceMessage -> CommonAction
 mpDecode message =
-    let decode {setConnected} =
-        Maybe.oneOf [ Maybe.map connectedFromString setConnected
+    let decode {setConnected, receiveCommand, appendToLog} =
+        Maybe.oneOf [ Maybe.map AppendToLog appendToLog
+                    , Maybe.map connectedFromString setConnected
                     ]
         connectedFromString s =
             case s of
@@ -34,14 +42,11 @@ mpDecode message =
 
 port fromGUI : Signal FromGuiMessage
 
-port fromDevice : Signal DeviceMessage
+port fromDevice : Signal FromDeviceMessage
 
-port toDevice : Signal Bool
+port toDevice : Signal ToDeviceMessage
 port toDevice =
-    let toDevice' s = case s.connected of
-        NotConnected -> False
-        _            -> True
-    in toDevice' <~ state
+    (\_ -> {emptyToDeviceMessage | checkConnection <- Just ()}) <~ every (2*second)
 
 state : Signal CommonState
 state =
