@@ -36,21 +36,6 @@ device.onDeviceFound = function (devices)
     });
 }
 
-/**
- * Connect to the mooltipass
- */
-device.checkConnection = function()
-{
-    if (!device.connecting) {
-        if (device.connection !== null) {
-            sendMsg((new Uint8Array([2,0x04,0x02])).buffer)
-        }
-        if (device.connection === null) {
-            device.connect()
-        }
-    }
-}
-
 device.connect = function ()
 {
     sendToElm({appendToLog:"> connecting to device"});

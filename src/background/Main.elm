@@ -13,55 +13,57 @@ import ToGuiMessage
 import ToGuiMessage (ToGuiMessage)
 import FromGuiMessage
 import FromGuiMessage (FromGuiMessage)
-import CommonState (..)
+import CommonState as Common
+import CommonState (CommonAction,CommonState)
 
-type alias FromDeviceMessage = { setConnected    : Maybe String
+type alias FromDeviceMessage = { setHidConnected : Maybe Bool
                                , receiveCommand  : Maybe (List Int)
                                , appendToLog     : Maybe String
                                }
 
-type alias ToDeviceMessage   = { checkConnection : Maybe ()
-                               , sendCommand     : Maybe (List Int)
+type alias ToDeviceMessage   = { connect     : Maybe ()
+                               , sendCommand : Maybe (List Int)
                                }
-emptyToDeviceMessage = {checkConnection = Nothing, sendCommand = Nothing}
+emptyToDeviceMessage = {connect = Nothing, sendCommand = Nothing}
 
-mpDecode : FromDeviceMessage -> CommonAction
-mpDecode message =
-    let decode {setConnected, receiveCommand, appendToLog} =
-        Maybe.oneOf [ Maybe.map AppendToLog appendToLog
-                    , Maybe.map connectedFromString setConnected
-                    ]
-        connectedFromString s =
-            case s of
-                "NotConnected" -> SetConnected NotConnected
-                "Connected"    -> SetConnected Connected
-                "NoCard"       -> SetConnected NoCard
-                "NoPin"        -> SetConnected NoPin
-                _              -> CommonNoOp
-    in Maybe.withDefault CommonNoOp (decode message)
+type alias BackgroundState = {hidConnected : Bool, common : CommonState}
+
+default : BackgroundState
+default = {hidConnected = False, common = Common.default}
+
+type BackgroundAction = SetHidConnected Bool
+                      | CommonAction CommonAction
+                      | NoOp
+
+update : BackgroundAction -> BackgroundState -> BackgroundState
+update action s =
+    let updateCommon a = Common.update a s.common
+    in case action of
+        SetHidConnected b -> {s | hidConnected <- b}
+        CommonAction a    -> {s | common <- updateCommon a}
+        NoOp              -> s
+
+decode : FromDeviceMessage -> BackgroundAction
+decode message =
+    let decode {setHidConnected, receiveCommand, appendToLog} =
+        Maybe.oneOf
+            [ Maybe.map (CommonAction << Common.AppendToLog) appendToLog
+            , Maybe.map SetHidConnected setHidConnected
+            ]
+    in Maybe.withDefault NoOp (decode message)
 
 port fromGUI : Signal FromGuiMessage
+
+port toGUI : Signal ToGuiMessage
+port toGUI = (ToGuiMessage.encode << .common) <~ state
 
 port fromDevice : Signal FromDeviceMessage
 
 port toDevice : Signal ToDeviceMessage
-port toDevice =
-    (\_ -> {emptyToDeviceMessage | checkConnection <- Just ()}) <~ every (2*second)
+port toDevice = constant {connect = Nothing, sendCommand = Nothing}
 
-state : Signal CommonState
+state : Signal BackgroundState
 state =
     foldp update default
-        <| merge (mpDecode <~ fromDevice)
-        <| FromGuiMessage.decode <~ fromGUI
-
-port toGUI : Signal ToGuiMessage
-port toGUI = ToGuiMessage.encode <~ state
-
---deviceActions : Channel (List Int)
---deviceActions = channel []
---
---port toDevice : Signal (List Int)
---port toDevice = subscribe deviceActions
-
-main : Signal Element
-main = constant empty
+        <| merge (decode <~ fromDevice)
+        <| CommonAction <~ (FromGuiMessage.decode <~ fromGUI)

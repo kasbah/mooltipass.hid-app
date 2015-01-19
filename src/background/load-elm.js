@@ -1,8 +1,8 @@
 /* This file loads the Elm application and sets up communication with the
    gui through chrome.runtime. */
-var emptyFromDeviceMessage = { setConnected   : null
-                             , receiveCommand : null
-                             , appendToLog    : null
+var emptyFromDeviceMessage = { setHidConnected : null
+                             , receiveCommand  : null
+                             , appendToLog     : null
                              };
 var elm = Elm.worker(
     Elm.Background,
@@ -22,8 +22,8 @@ elm.ports.toGUI.subscribe(function(message) {
 });
 
 elm.ports.toDevice.subscribe(function(message) {
-    if (message.checkConnection != null) {
-        device.checkConnection();
+    if (message.connect != null) {
+        device.connect();
     }
 });
 
@@ -40,11 +40,6 @@ sendToElm = function (message) {
     elm.ports.fromDevice.send(messageWithNulls);
 };
 
-chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse)
-{
-    console.log('received request '+request.type);
-});
-
 function launch()
 {
     chrome.app.window.create('gui/index.html', {minWidth: 550, minHeight: 600});
@@ -53,4 +48,8 @@ function launch()
 //chrome.runtime.onInstalled.addListener(launch);
 chrome.app.runtime.onLaunched.addListener(launch);
 
-sendToElm({setConnected:"NotConnected"});
+chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse)
+{
+    console.log(request,sender,sendResponse);
+});
+
