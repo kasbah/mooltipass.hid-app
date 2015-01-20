@@ -19,7 +19,7 @@ default = { hidConnected    = False
           , common          = Common.default
           }
 
-type ExtData = Inputs Context | Update Context
+type ExtData = Inputs Context | Update (Context, String, String)
 
 type BackgroundAction = SetHidConnected Bool
                       | SetExtAwaitingPing Bool
