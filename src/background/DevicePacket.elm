@@ -1,3 +1,6 @@
+module DevicePacket where
+
+-- Elm standard library
 import Result (..)
 import Result
 import List

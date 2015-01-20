@@ -6,6 +6,7 @@ import Maybe
 -- local source
 import CommonState as Common
 import BackgroundState (..)
+import DevicePacket (..)
 
 type alias FromDeviceMessage = { setHidConnected : Maybe Bool
                                , receiveCommand  : Maybe (List Int)
@@ -20,10 +21,16 @@ emptyToDeviceMessage = {connect = Nothing, sendCommand = Nothing}
 
 decode : FromDeviceMessage -> BackgroundAction
 decode message =
-    let decode {setHidConnected, receiveCommand, appendToLog} =
+    let decode' {setHidConnected, receiveCommand, appendToLog} =
         Maybe.oneOf
             [ Maybe.map (CommonAction << Common.AppendToLog) appendToLog
             , Maybe.map SetHidConnected setHidConnected
             ]
-    in Maybe.withDefault NoOp (decode message)
+    in Maybe.withDefault NoOp (decode' message)
+
+encode : BackgroundState -> (ToDeviceMessage, BackgroundState)
+encode s =
+    let e = emptyToDeviceMessage
+    in if | not s.hidConnected -> ({e | connect <- Just ()}, s)
+          | otherwise          -> (e,s)
 
