@@ -25,6 +25,7 @@ decode message =
         Maybe.oneOf
             [ Maybe.map (CommonAction << Common.AppendToLog) appendToLog
             , Maybe.map SetHidConnected setHidConnected
+            , Maybe.map (fromPacket << fromInts) receiveCommand
             ]
     in Maybe.withDefault NoOp (decode' message)
 
@@ -32,4 +33,6 @@ encode : BackgroundState -> (ToDeviceMessage, BackgroundAction)
 encode s =
     let e = emptyToDeviceMessage
     in if | not s.hidConnected -> ({e | connect <- Just ()}, NoOp)
+          | s.common.connected == Common.NotConnected ->
+              ({e | sendCommand <- Just (toInts AppGetStatus)}, NoOp)
           | otherwise          -> (e,NoOp)

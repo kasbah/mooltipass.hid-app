@@ -1,4 +1,5 @@
 var device = {connection: null, connecting: false};
+var device_info = { "vendorId": 0x16d0, "productId": 0x09a0 };      // Mooltipass
 
 /**
  * Handler invoked when new USB mooltipass devices are found.
@@ -7,7 +8,7 @@ var device = {connection: null, connecting: false};
  * Stale entries appear to be left in chrome if the mooltipass is removed
  * and plugged in again, or the firmware is updated.
  */
-device.onDeviceFound = function (devices)
+onDeviceFound = function (devices)
 {
     if (devices.length <= 0)
     {
@@ -23,9 +24,10 @@ device.onDeviceFound = function (devices)
 		{
             device.connection = connectInfo.connectionId;
             deviceSendToElm({setHidConnected:true});
+            deviceSendToElm({appendToLog:"device found"});
         }
+        clearTimeout(device.timeoutId);
         device.connecting = false;
-        //clearTimeout(device.timeoutId);
     });
 }
 
@@ -33,32 +35,33 @@ device.connect = function ()
 {
     if (device.connecting)
         return;
-    deviceSendToElm({appendToLog:"> connecting to device"});
     device.connecting = true;
-    //device.timeoutId = setTimeout(function () {
-    //    if (device.connecting) {
-    //        deviceSendToElm({appendToLog:"connection attempt timed out"});
-    //        device.connecting = false;
-    //    }
-    //}, 5000)
-    chrome.hid.getDevices({}, device.onDeviceFound);
+    deviceSendToElm({appendToLog:"> looking for device"});
+    device.timeoutId = setTimeout(function () {
+        if (device.connecting) {
+            deviceSendToElm({appendToLog:"device search timed out"});
+            device.connecting = false;
+        }
+    }, 5000)
+    chrome.hid.getDevices(device_info, onDeviceFound);
 }
 
 
 function onDataReceived(reportId, data)
 {
     var bytes = new Uint8Array(data);
-    var msg = new Uint8Array(data,2);
-    var len = bytes[0]
-    var cmd = bytes[1]
-
-    console.log('Received CMD ' + cmd + ', len ' + len);
-    console.log(msg);
+    var ints = [];
+    for (var i = 0, len = bytes.length; i < len; i++)
+    {
+        ints[i] = bytes[i];
+    }
+    deviceSendToElm({receiveCommand: ints});
 }
 
 function sendMsg(msg)
 {
-    chrome.hid.send(device.connection, 0, msg, function()
+    var buffer = (new Uint8Array(msg)).buffer
+    chrome.hid.send(device.connection, 0, buffer, function()
     {
         if (!chrome.runtime.lastError)
         {

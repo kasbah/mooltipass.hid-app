@@ -8,6 +8,7 @@ import List ((::))
 import Maybe
 import String
 import Char
+import Bitwise (and)
 
 {-| The type of packets we send from the app to the device -}
 type AppPacket =
@@ -60,6 +61,7 @@ type AppPacket =
    | AppGetStartingParent
    | AppGetCtrValue
    | AppAddNewCard
+   | AppGetStatus
 -- disabled developer types:
     --AppEraseEeprom      -> 0x40
     --AppEraseFlash       -> 0x41
@@ -123,6 +125,7 @@ type DevicePacket =
     | DeviceGetStartingParent (Maybe ByteString)
     | DeviceGetCtrValue       (Maybe ByteString)
     | DeviceAddNewCard        ReturnCode
+    | DeviceGetStatus         Status
 
 {-| Carries firmware version and flash memory size -}
 type alias MpVersion = { flashMemSize : Byte
@@ -139,6 +142,9 @@ type CheckPasswordReturn = Incorrect | Correct | RequestBlocked
 
 {-| Return for 'DeviceSetContext' -}
 type SetContextReturn = UnknownContext | ContextSet | NoCardForContext
+
+{-| Return for 'DeviceGetStatus' -}
+type Status = NeedCard | Locked | LockScreen | Unlocked
 
 {-| This is (LSB, MSB) -}
 type alias FlashAddress = (Byte, Byte)
@@ -233,6 +239,7 @@ toInts msg =
         AppGetStartingParent  -> zeroSize 0x66
         AppGetCtrValue        -> zeroSize 0x67
         AppAddNewCard         -> zeroSize 0x68
+        AppGetStatus          -> zeroSize 0x70
 
 {-| Convert a list of ints received through a port from chrome.hid.receive into
     a packet we can interpret -}
@@ -340,6 +347,14 @@ fromInts (size::messageType::payload) =
             0x67 -> maybeByteString DeviceGetCtrValue       "get CTR value"
             0x68 -> doneOrNotDone DeviceAddNewCard "add unknown smartcard"
             0x69 -> Err "Got DeviceUsbKeyboardPress"
+            0x70 -> if size /= 1
+                    then Err "Invalid data size for 'get status'"
+                    else case (List.head payload) `and` 0x7 of
+                                0x0 -> Ok <| DeviceGetStatus NeedCard
+                                0x1 -> Ok <| DeviceGetStatus Locked
+                                0x3 -> Ok <| DeviceGetStatus LockScreen
+                                0x5 -> Ok <| DeviceGetStatus Unlocked
+                                _   -> Err "Invalid status received in 'get status'"
             _    -> Err <| "Got unknown message: " ++ toString messageType
 
 

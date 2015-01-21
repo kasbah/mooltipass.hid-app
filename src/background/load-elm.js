@@ -29,13 +29,16 @@ elm.ports.toGUI.subscribe(function(message) {
 });
 
 elm.ports.toDevice.subscribe(function(message) {
+    console.log("Dev: sending", message);
     if (message.connect != null) {
         device.connect();
+    } else if (message.sendCommand != null) {
+        sendMsg(message.sendCommand);
     }
 });
 
 elm.ports.toExtension.subscribe(function(message) {
-    console.log("sending", message);
+    console.log("Ext: sending", message);
     if (extensionId != null) {
         if (message.connectState != null) {
             chrome.runtime.sendMessage(extensionId,
@@ -49,6 +52,7 @@ elm.ports.toExtension.subscribe(function(message) {
 });
 
 deviceSendToElm = function (message) {
+    console.log("Dev: receiving", message);
     var messageWithNulls = {};
     //replace undefined with null so it becomes 'Nothing' in Elm
     for (var prop in emptyFromDeviceMessage) {
@@ -62,7 +66,7 @@ deviceSendToElm = function (message) {
 };
 
 extensionSendToElm = function (message) {
-    console.log("receiving", message);
+    console.log("Ext: receiving", message);
     var messageWithNulls = {};
     //replace undefined with null so it becomes 'Nothing' in Elm
     for (var prop in emptyFromExtensionMessage) {

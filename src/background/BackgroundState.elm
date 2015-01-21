@@ -68,3 +68,15 @@ toPacket s =
                 if cc == context then AppSetPassword password
                 else AppSetContext context
     in Maybe.map convert s.extAwaitingData
+
+fromPacket :  (Result Error DevicePacket) -> BackgroundAction
+fromPacket r = case r of
+    Err err -> CommonAction (Common.AppendToLog err)
+    Ok p    -> case p of
+        DeviceGetStatus s -> CommonAction (Common.SetConnected (case s of
+                                NeedCard   -> Common.NoCard
+                                Locked     -> Common.NoPin
+                                LockScreen -> Common.NoPin
+                                Unlocked   -> Common.Connected
+                             ))
+        _                 -> NoOp
