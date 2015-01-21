@@ -44,12 +44,12 @@ decode message =
             Just (Err err) -> CommonAction (Common.AppendToLog err)
             _              -> Maybe.withDefault NoOp (decode' message)
 
-encode : BackgroundState -> ToExtensionMessage
+encode : BackgroundState -> (ToExtensionMessage, BackgroundAction)
 encode s =
     if s.extAwaitingPing
-    then { connectState = case s.common.connected of
+    then ({ connectState = case s.common.connected of
                     Common.Connected    -> Just "connected"
                     Common.NotConnected -> Just "disconnected"
                     _                   -> Just "connected"
-         }
-    else emptyToExtensionMessage
+         }, SetExtAwaitingPing False)
+    else (emptyToExtensionMessage, NoOp)

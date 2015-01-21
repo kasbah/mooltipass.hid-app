@@ -28,9 +28,8 @@ decode message =
             ]
     in Maybe.withDefault NoOp (decode' message)
 
-encode : BackgroundState -> (ToDeviceMessage, BackgroundState)
+encode : BackgroundState -> (ToDeviceMessage, BackgroundAction)
 encode s =
     let e = emptyToDeviceMessage
-    in if | not s.hidConnected -> ({e | connect <- Just ()}, s)
-          | otherwise          -> (e,s)
-
+    in if | not s.hidConnected -> ({e | connect <- Just ()}, NoOp)
+          | otherwise          -> (e,NoOp)

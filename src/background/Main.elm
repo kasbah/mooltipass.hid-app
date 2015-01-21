@@ -18,7 +18,7 @@ import ExtensionMessage
 port fromGUI : Signal FromGuiMessage
 
 port toGUI : Signal ToGuiMessage
-port toGUI = (ToGuiMessage.encode << .common) <~ outputState
+port toGUI = map (ToGuiMessage.encode << .common) outputState
 
 port fromDevice : Signal FromDeviceMessage
 
@@ -31,9 +31,9 @@ outputState = map (\(_,_,s) -> s) output
 output : Signal (ToDeviceMessage, ToExtensionMessage, BackgroundState)
 output =
     let go s =
-        let (deviceMessage, newState) = DeviceMessage.encode s
-            extMessage = ExtensionMessage.encode s
-        in (deviceMessage, extMessage, newState)
+        let (deviceMessage, a1) = DeviceMessage.encode s
+            (extMessage, a2)    = ExtensionMessage.encode (update a1 s)
+        in (deviceMessage, extMessage, update a2 (update a1 s))
     in map go inputState
 
 port fromExtension : Signal FromExtensionMessage
