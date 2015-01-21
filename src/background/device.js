@@ -2,7 +2,6 @@ var device = {connection: null, connecting: false};
 
 /**
  * Handler invoked when new USB mooltipass devices are found.
- * Connects to the device and sends a version request.
  * @param devices array of device objects
  * @note only the last device is used, assumes that one mooltipass is present.
  * Stale entries appear to be left in chrome if the mooltipass is removed
@@ -18,34 +17,30 @@ device.onDeviceFound = function (devices)
     var ind = devices.length - 1;
     var devId = devices[ind].deviceId;
 
-    console.log("onDeviceFound", devId);
     chrome.hid.connect(devId, function(connectInfo)
     {
-        console.log(connectInfo);
         if (!chrome.runtime.lastError)
 		{
             device.connection = connectInfo.connectionId;
-        }
-        if (device.connection !== null) {
-            sendToElm({setConnected:"Connected"});
-        } else {
-            sendToElm({setConnected:"NotConnected"});
+            deviceSendToElm({setHidConnected:true});
         }
         device.connecting = false;
-        clearTimeout(device.timeoutId);
+        //clearTimeout(device.timeoutId);
     });
 }
 
 device.connect = function ()
 {
-    sendToElm({appendToLog:"> connecting to device"});
+    if (device.connecting)
+        return;
+    deviceSendToElm({appendToLog:"> connecting to device"});
     device.connecting = true;
-    device.timeoutId = setTimeout(function () {
-        if (device.connecting) {
-            sendToElm({appendToLog:"connection attempt timed out"});
-            device.connecting = false;
-        }
-    }, 5000)
+    //device.timeoutId = setTimeout(function () {
+    //    if (device.connecting) {
+    //        deviceSendToElm({appendToLog:"connection attempt timed out"});
+    //        device.connecting = false;
+    //    }
+    //}, 5000)
     chrome.hid.getDevices({}, device.onDeviceFound);
 }
 

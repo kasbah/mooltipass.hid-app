@@ -4,10 +4,17 @@ var emptyFromDeviceMessage = { setHidConnected : null
                              , receiveCommand  : null
                              , appendToLog     : null
                              };
+var emptyFromExtensionMessage  = { ping      : null
+                                 , getInputs : null
+                                 , update    : null
+                                 };
+var extensionId = null;
+
 var elm = Elm.worker(
     Elm.Background,
-    { fromGUI    : emptyFromGuiMessage
-    , fromDevice : emptyFromDeviceMessage
+    { fromGUI       : emptyFromGuiMessage
+    , fromDevice    : emptyFromDeviceMessage
+    , fromExtension : emptyFromExtensionMessage
     }
 );
 
@@ -27,11 +34,25 @@ elm.ports.toDevice.subscribe(function(message) {
     }
 });
 
-sendToElm = function (message) {
+elm.ports.toExtension.subscribe(function(message) {
+    console.log("sending", message);
+    if (extensionId != null) {
+        if (message.connectState != null) {
+            chrome.runtime.sendMessage(extensionId,
+                { type: message.connectState
+                , version: "unknown"
+                }
+            );
+        }
+    }
+
+});
+
+deviceSendToElm = function (message) {
     var messageWithNulls = {};
     //replace undefined with null so it becomes 'Nothing' in Elm
     for (var prop in emptyFromDeviceMessage) {
-        if(message.hasOwnProperty(prop)){
+        if (message.hasOwnProperty(prop)) {
             messageWithNulls[prop] = message[prop];
         } else {
             messageWithNulls[prop] = emptyFromDeviceMessage[prop];
@@ -39,6 +60,20 @@ sendToElm = function (message) {
     }
     elm.ports.fromDevice.send(messageWithNulls);
 };
+
+extensionSendToElm = function (message) {
+    console.log("receiving", message);
+    var messageWithNulls = {};
+    //replace undefined with null so it becomes 'Nothing' in Elm
+    for (var prop in emptyFromExtensionMessage) {
+        if (message.hasOwnProperty(prop)) {
+            messageWithNulls[prop] = message[prop];
+        } else {
+            messageWithNulls[prop] = emptyFromExtensionMessage[prop];
+        }
+    }
+    elm.ports.fromExtension.send(messageWithNulls);
+}
 
 function launch()
 {
@@ -48,8 +83,31 @@ function launch()
 //chrome.runtime.onInstalled.addListener(launch);
 chrome.app.runtime.onLaunched.addListener(launch);
 
+toContext = function (url) {
+    // URL regex to extract base domain for context
+    var reContext = /^\https?\:\/\/([\w\-\+]+\.)*([\w\-\_]+\.[\w\-\_]+)/;
+    return reContext.exec(url)[2];
+}
 chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse)
 {
-    console.log(request,sender,sendResponse);
+    extensionId = sender.id
+    switch (request.type) {
+        case 'ping':
+            extensionSendToElm({ping : []});
+            break;
+        case 'inputs':
+            var context = toContext(request.url);
+            extensionSendToElm({getInputs:{context:context}});
+            break;
+        case 'update':
+            var context = toContext(request.url);
+            extensionSendToElm({update:
+                { context  : context
+                , login    : request.inputs.login
+                , password : request.inputs.password
+                }
+            });
+            break;
+    }
 });
 
