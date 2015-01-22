@@ -20,10 +20,10 @@ type ConnectState = NotConnected | Connected | NoCard | NoPin
 
 toLogString : ConnectState -> String
 toLogString c = case c of
-    NotConnected -> "disconnected"
-    Connected    -> "unlocked"
-    NoCard       -> "no card present"
-    NoPin        -> "locked"
+    NotConnected -> "device disconnected"
+    Connected    -> "device status: unlocked"
+    NoCard       -> "device status: no card present"
+    NoPin        -> "device status: locked"
 
 {-| All actions that can be performed to change state -}
 type CommonAction = SetLog (List String)

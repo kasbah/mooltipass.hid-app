@@ -6,7 +6,7 @@ import List ((::))
 
 -- local source
 import CommonState as Common
-import CommonState (CommonAction,CommonState)
+import CommonState (CommonAction(..),CommonState,ConnectState (..), toLogString)
 import DevicePacket (..)
 
 type alias BackgroundState = { hidConnected    : Bool
@@ -47,20 +47,24 @@ update action s =
     let updateCommon a = Common.update a s.common
         applyCommon acs = Common.apply acs s.common
     in case action of
-        SetHidConnected b -> if not b then update (CommonAction (Common.SetConnected Common.NotConnected)) {s | hidConnected <-  False}
-                                      else {s | hidConnected <- True}
+        SetHidConnected b -> if not b
+                             then update
+                                (CommonAction (SetConnected NotConnected))
+                                {s | hidConnected <-  False}
+                             else {s | hidConnected <- True}
         SetExtAwaitingPing b -> {s | extAwaitingPing <- b}
         SetExtAwaitingData d -> {s | extAwaitingData <- d}
-        CommonAction (Common.SetConnected c) ->
-            {s | common <- applyCommon (Common.SetConnected c ::
-                                            if c /= s.common.connected then
-                                                [ Common.AppendToLog
-                                                  ("device status: " ++ Common.toLogString c)
-                                                ]
-                                            else [])
-            }
-        CommonAction a       -> {s | common <- updateCommon a}
-        NoOp                 -> s
+        CommonAction (SetConnected c) ->
+            let s' = {s | common <- updateCommon (SetConnected c)}
+            in if c /= s.common.connected
+               then {s' | common <-
+                            Common.update
+                                (AppendToLog (toLogString c))
+                                s'.common
+                    }
+               else s'
+        CommonAction a -> {s | common <- updateCommon a}
+        NoOp           -> s
 
 toPacket : BackgroundState -> Maybe AppPacket
 toPacket s =
@@ -82,9 +86,9 @@ toPacket s =
 
 fromPacket :  (Result Error DevicePacket) -> BackgroundAction
 fromPacket r = case r of
-    Err err -> CommonAction (Common.AppendToLog err)
+    Err err -> CommonAction (AppendToLog err)
     Ok p    -> case p of
-        DeviceGetStatus s -> CommonAction (Common.SetConnected (case s of
+        DeviceGetStatus s -> CommonAction (SetConnected (case s of
                                 NeedCard   -> Common.NoCard
                                 Locked     -> Common.NoPin
                                 LockScreen -> Common.NoPin
