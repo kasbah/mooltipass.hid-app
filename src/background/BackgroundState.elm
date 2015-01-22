@@ -45,7 +45,9 @@ update : BackgroundAction -> BackgroundState -> BackgroundState
 update action s =
     let updateCommon a = Common.update a s.common
     in case action of
-        SetHidConnected b    -> {s | hidConnected <- b}
+        SetHidConnected b    -> {s | hidConnected <- b
+                                   , common <- if not b then updateCommon (Common.SetConnected Common.NotConnected) else s.common
+                                }
         SetExtAwaitingPing b -> {s | extAwaitingPing <- b}
         SetExtAwaitingData d -> {s | extAwaitingData <- d}
         CommonAction a       -> {s | common <- updateCommon a}

@@ -17,6 +17,9 @@ type alias ToDeviceMessage   = { connect     : Maybe ()
                                , sendCommand : Maybe (List Int)
                                }
 
+sendCommand : AppPacket -> ToDeviceMessage
+sendCommand p = {emptyToDeviceMessage | sendCommand <- Just (toInts p)}
+
 emptyToDeviceMessage = {connect = Nothing, sendCommand = Nothing}
 
 decode : FromDeviceMessage -> BackgroundAction

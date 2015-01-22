@@ -70,6 +70,7 @@ function sendMsg(msg)
         else
         {
             console.log("hid error", chrome.runtime.lastError);
+            deviceSendToElm({setHidConnected:false});
         }
     });
 }

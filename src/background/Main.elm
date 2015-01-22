@@ -2,6 +2,7 @@ module Background where
 
 -- Elm standard library
 import Signal (..)
+import Time (..)
 
 -- local source
 import ToGuiMessage
@@ -9,11 +10,12 @@ import ToGuiMessage (ToGuiMessage)
 import FromGuiMessage
 import FromGuiMessage (FromGuiMessage)
 import CommonState (CommonAction)
-import DeviceMessage (FromDeviceMessage, ToDeviceMessage, emptyToDeviceMessage)
+import DeviceMessage (..)
 import DeviceMessage
 import BackgroundState (..)
-import ExtensionMessage (FromExtensionMessage, ToExtensionMessage, emptyToExtensionMessage)
+import ExtensionMessage (..)
 import ExtensionMessage
+import DevicePacket (..)
 
 port fromGUI : Signal FromGuiMessage
 
@@ -23,7 +25,15 @@ port toGUI = map (ToGuiMessage.encode << .common) outputState
 port fromDevice : Signal FromDeviceMessage
 
 port toDevice : Signal ToDeviceMessage
-port toDevice = map (\(m,_,_) -> m) output
+port toDevice =
+    merge
+        (map (\(m,_,_) -> m) output)
+        <| map2
+            (\_ s -> if s.hidConnected
+                     then sendCommand AppGetStatus
+                     else emptyToDeviceMessage)
+            (every second)
+            outputState
 
 outputState : Signal BackgroundState
 outputState = map (\(_,_,s) -> s) output
