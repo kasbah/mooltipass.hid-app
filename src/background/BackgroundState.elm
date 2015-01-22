@@ -2,6 +2,7 @@ module BackgroundState where
 
 -- Elm standard library
 import Maybe
+import List ((::))
 
 -- local source
 import CommonState as Common
@@ -44,12 +45,20 @@ type BackgroundAction = SetHidConnected Bool
 update : BackgroundAction -> BackgroundState -> BackgroundState
 update action s =
     let updateCommon a = Common.update a s.common
+        applyCommon acs = Common.apply acs s.common
     in case action of
-        SetHidConnected b    -> {s | hidConnected <- b
-                                   , common <- if not b then updateCommon (Common.SetConnected Common.NotConnected) else s.common
-                                }
+        SetHidConnected b -> if not b then update (CommonAction (Common.SetConnected Common.NotConnected)) {s | hidConnected <-  False}
+                                      else {s | hidConnected <- True}
         SetExtAwaitingPing b -> {s | extAwaitingPing <- b}
         SetExtAwaitingData d -> {s | extAwaitingData <- d}
+        CommonAction (Common.SetConnected c) ->
+            {s | common <- applyCommon (Common.SetConnected c ::
+                                            if c /= s.common.connected then
+                                                [ Common.AppendToLog
+                                                  ("device status: " ++ Common.toLogString c)
+                                                ]
+                                            else [])
+            }
         CommonAction a       -> {s | common <- updateCommon a}
         NoOp                 -> s
 

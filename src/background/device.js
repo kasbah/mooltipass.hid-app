@@ -24,7 +24,7 @@ onDeviceFound = function (devices)
 		{
             device.connection = connectInfo.connectionId;
             deviceSendToElm({setHidConnected:true});
-            deviceSendToElm({appendToLog:"device found"});
+            deviceSendToElm({appendToLog:"device found, connection made"});
         }
         clearTimeout(device.timeoutId);
         device.connecting = false;

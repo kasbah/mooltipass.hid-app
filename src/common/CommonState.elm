@@ -18,6 +18,13 @@ default =
 
 type ConnectState = NotConnected | Connected | NoCard | NoPin
 
+toLogString : ConnectState -> String
+toLogString c = case c of
+    NotConnected -> "disconnected"
+    Connected    -> "unlocked"
+    NoCard       -> "no card present"
+    NoPin        -> "locked"
+
 {-| All actions that can be performed to change state -}
 type CommonAction = SetLog (List String)
                   | SetConnected ConnectState
