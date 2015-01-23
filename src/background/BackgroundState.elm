@@ -24,10 +24,14 @@ default = { hidConnected    = False
           , common          = Common.default
           }
 
-type ExtData = ExtLogin {context : ByteString}
-             | ExtPassword { context : ByteString
-                           , login   : ByteString
-                           }
+type ExtData = ExtNeedsLogin {context : ByteString}
+             | ExtNeedsPassword { context : ByteString
+                                , login   : ByteString
+                                }
+             | ExtCredentials { context  : ByteString
+                              , login    : ByteString
+                              , password : ByteString
+                              }
              | ExtUpdate { context  : ByteString
                          , login    : ByteString
                          , password : ByteString
@@ -35,17 +39,23 @@ type ExtData = ExtLogin {context : ByteString}
              | ExtUpdatePassword { context  : ByteString
                                  , password : ByteString
                                  }
+             | ExtUpdateComplete { context  : ByteString }
+             | ExtNoCredentials
 
 type BackgroundAction = SetHidConnected Bool
                       | SetExtAwaitingPing Bool
                       | SetExtAwaitingData (Maybe ExtData)
+                      | GotLogin String
+                      | GotPassword String
+                      | SetLogin ReturnCode
+                      | SetPassword ReturnCode
+                      | SetContext SetContextReturn
                       | CommonAction CommonAction
                       | NoOp
 
 update : BackgroundAction -> BackgroundState -> BackgroundState
 update action s =
     let updateCommon a = Common.update a s.common
-        applyCommon acs = Common.apply acs s.common
     in case action of
         SetHidConnected b -> if not b
                              then update
@@ -64,29 +74,42 @@ update action s =
                     }
                else s'
         CommonAction a -> {s | common <- updateCommon a}
+        GotLogin     l -> {s | extAwaitingData <- case s.extAwaitingData of
+                                    Just (ExtNeedsLogin c) ->
+                                        Just (ExtNeedsPassword {c | login = l})
+                                    _ -> s.extAwaitingData
+                          }
+        GotPassword  p -> {s | extAwaitingData <- case s.extAwaitingData of
+                                    Just (ExtNeedsPassword c) ->
+                                        Just (ExtCredentials {c | password = p})
+                                    _ -> s.extAwaitingData
+                          }
+        SetLogin  r    -> {s | extAwaitingData <- case s.extAwaitingData of
+                                       Just (ExtUpdate c) ->
+                                           Just (ExtUpdatePassword { c - login })
+                                       _ -> s.extAwaitingData
+                          }
+        SetPassword  r -> {s | extAwaitingData <- case s.extAwaitingData of
+                                    Just (ExtUpdatePassword c) ->
+                                        Just (ExtUpdateComplete { c - password })
+                                    _ -> s.extAwaitingData
+                          }
+        SetContext r   -> if r /= ContextSet then s else case s.extAwaitingData of
+                           Just (ExtNeedsLogin c)     ->
+                               {s | currentContext <- c.context}
+                           Just (ExtNeedsPassword c)  ->
+                               {s | currentContext <- c.context}
+                           Just (ExtUpdate c)         ->
+                               {s | currentContext <- c.context}
+                           Just (ExtUpdatePassword c) ->
+                               {s | currentContext <- c.context}
+                           _                          -> s
         NoOp           -> s
 
-toPacket : BackgroundState -> Maybe AppPacket
-toPacket s =
-    let cc = s.currentContext
-        convert data = case data of
-            ExtLogin {context} ->
-                if cc == context then AppGetLogin
-                else AppSetContext context
-            ExtPassword {context, login} ->
-                if cc == context then AppGetPassword
-                else AppSetContext context
-            ExtUpdate {context, login, password} ->
-                if cc == context then AppSetLogin login
-                else AppSetContext context
-            ExtUpdatePassword {context, password} ->
-                if cc == context then AppSetPassword password
-                else AppSetContext context
-    in Maybe.map convert s.extAwaitingData
 
 fromPacket :  (Result Error DevicePacket) -> BackgroundAction
 fromPacket r = case r of
-    Err err -> CommonAction (AppendToLog err)
+    Err err -> CommonAction (AppendToLog ("HID Error: " ++ err))
     Ok p    -> case p of
         DeviceGetStatus s -> CommonAction (SetConnected (case s of
                                 NeedCard   -> Common.NoCard
@@ -94,4 +117,15 @@ fromPacket r = case r of
                                 LockScreen -> Common.NoPin
                                 Unlocked   -> Common.Connected
                              ))
-        _                 -> NoOp
+        DeviceGetLogin ms    ->
+            Maybe.withDefault
+                (SetExtAwaitingData (Just ExtNoCredentials))
+                (Maybe.map GotLogin ms)
+        DeviceGetPassword ms ->
+            Maybe.withDefault
+                (SetExtAwaitingData (Just ExtNoCredentials))
+                (Maybe.map GotPassword ms)
+        DeviceSetLogin    r  -> SetLogin r
+        DeviceSetPassword r  -> SetPassword r
+        DeviceSetContext r   -> SetContext r
+        _                    -> NoOp
