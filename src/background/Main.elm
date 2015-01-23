@@ -20,7 +20,7 @@ import DevicePacket (..)
 port fromGUI : Signal FromGuiMessage
 
 port toGUI : Signal ToGuiMessage
-port toGUI = map (ToGuiMessage.encode << .common) outputState
+port toGUI = map (ToGuiMessage.encode << .common) state
 
 port fromDevice : Signal FromDeviceMessage
 
@@ -33,28 +33,27 @@ port toDevice =
                      then sendCommand AppGetStatus
                      else emptyToDeviceMessage)
             (every second)
-            outputState
+            state
 
-outputState : Signal BackgroundState
-outputState = map (\(_,_,s) -> s) output
+state : Signal BackgroundState
+state = map (\(_,_,s) -> s) output
 
 output : Signal (ToDeviceMessage, ToExtensionMessage, BackgroundState)
 output =
-    let go s =
-        let (deviceMessage, a1) = DeviceMessage.encode s
-            (extMessage, a2)    = ExtensionMessage.encode (update a1 s)
-        in (deviceMessage, extMessage, update a2 (update a1 s))
-    in map go inputState
+    let go inputActions (dm,em,s) =
+        let s' = update inputActions s
+            (deviceMessage, a1) = DeviceMessage.encode s'
+            (extMessage, a2)    = ExtensionMessage.encode (update a1 s')
+        in (deviceMessage, extMessage, update a2 (update a1 s'))
+    in foldp go (emptyToDeviceMessage, emptyToExtensionMessage, default) inputActions
 
 port fromExtension : Signal FromExtensionMessage
 
 port toExtension : Signal ToExtensionMessage
 port toExtension = map (\(_,m,_) -> m) output
 
-inputState : Signal BackgroundState
-inputState =
-    foldp update default
-        <| mergeMany
+inputActions : Signal BackgroundAction
+inputActions = mergeMany
             [ map DeviceMessage.decode fromDevice
             , map (CommonAction << FromGuiMessage.decode) fromGUI
             , map ExtensionMessage.decode fromExtension
