@@ -31,7 +31,7 @@ port toDevice =
         <| map2
             (\_ s -> if s.hidConnected
                      then sendCommand AppGetStatus
-                     else emptyToDeviceMessage)
+                     else {emptyToDeviceMessage | connect <- Just ()})
             (every second)
             state
 
