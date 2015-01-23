@@ -49,7 +49,6 @@ disabledTabs s =
 update : Action -> GuiState -> GuiState
 update action s =
     let updateCommon a = Common.update a s.common
-        activeTab = s.activeTab
     in case action of
         (ChangeTab t) -> {s | activeTab <- t}
         -- clicking the icon 7 times toggles developer tab visibility
@@ -68,8 +67,8 @@ update action s =
         (CommonAction a) -> case a of
                             (Common.SetConnected c) ->
                                 { s | activeTab <-
-                                        if activeTab `List.member` (disabledTabs c)
-                                        then Log else activeTab
+                                        if s.activeTab `List.member` (disabledTabs c)
+                                        then Log else s.activeTab
                                     , common <- updateCommon a
                                 }
                             _ -> {s | common <- updateCommon a}
