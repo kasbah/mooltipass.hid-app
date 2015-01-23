@@ -11,7 +11,7 @@ DIRS 			 = $(sort $(dir $(call wildc_recursive, src/, *)))
 
 all: images elm js json html
 
-dirs   : $(patsubst src%, build%/.dirstamp, $(DIRS))
+dirs   : elm-stuff/.core-linked $(patsubst src%, build%/.dirstamp, $(DIRS))
 elm    : dirs build/background/elm-background.js build/gui/elm-gui.js
 js     : dirs $(patsubst src/%, build/%, $(JS_FILES))
 html   : dirs $(patsubst src/%, build/%, $(HTML_FILES))
@@ -20,6 +20,15 @@ images : dirs $(patsubst src/%, build/%, $(IMAGE_FILES))
 
 %/.dirstamp:
 	mkdir $*
+	touch $@
+
+elm-stuff/.core-linked: elm-stuff/.dirstamp
+	rm -rf elm-stuff/packages/elm-lang/core/1.1.0
+	ln -s $(PWD)/elm-core $(PWD)/elm-stuff/packages/elm-lang/core/1.1.0
+	touch $@
+
+elm-stuff/.dirstamp:
+	elm-package install -y
 	touch $@
 
 build/gui/elm-gui.js: $(GUI_ELM_FILES) $(COMMON_ELM_FILES)
@@ -33,5 +42,6 @@ build/%: src/%
 
 clean:
 	rm -rf build
+	rm -rf elm-stuff
 
-.PHONY: all images dirs js elm clean
+.PHONY: all images dirs js elm clean elm
