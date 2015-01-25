@@ -44,7 +44,7 @@ decode message =
             , Maybe.map (set ExtNeedsLogin) getInputs
             , Maybe.map (set ExtUpdate) update
             ]
-        set constructor d = SetExtAwaitingData (Just (constructor d))
+        set constructor d = SetExtAwaitingData (constructor d)
         -- we do a bytestring conversion to check for errors but we just use
         -- the string above as ByteString is just a type alias
         errOrInputs = Maybe.map (\{context} -> byteString context) message.getInputs
@@ -69,12 +69,12 @@ encode s =
                                NotConnected -> "disconnected"
                                _            -> "connected"
                 }, SetExtAwaitingPing False)
-           | isJust s.extAwaitingData -> case s.extAwaitingData of
-                Just (ExtCredentials    c ) ->
-                    ({e | credentials <- Just c}, SetExtAwaitingData Nothing)
-                Just (ExtUpdateComplete _ ) ->
-                    ({e | updateComplete <- Just ()}, SetExtAwaitingData Nothing)
-                Just (ExtNoCredentials) ->
-                    ({e | noCredentials <- Just ()}, SetExtAwaitingData Nothing)
+           | s.extAwaitingData /= NoData -> case s.extAwaitingData of
+                ExtCredentials    c  ->
+                    ({e | credentials <- Just c}, SetExtAwaitingData NoData)
+                ExtUpdateComplete _  ->
+                    ({e | updateComplete <- Just ()}, SetExtAwaitingData NoData)
+                ExtNoCredentials ->
+                    ({e | noCredentials <- Just ()}, SetExtAwaitingData NoData)
                 _ -> (e,NoOp)
            | otherwise -> (e, NoOp)

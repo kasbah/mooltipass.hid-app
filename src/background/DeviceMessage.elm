@@ -39,24 +39,24 @@ encode s =
     in if | not s.hidConnected -> ({e | connect <- Just ()}, NoOp)
           | s.common.connected == Common.NotConnected ->
               ({e | sendCommand <- Just (toInts AppGetStatus)}, NoOp)
-          | isJust s.extAwaitingData ->
-              ({e | sendCommand <- Maybe.map toInts (toPacket s)},NoOp)
+          | s.extAwaitingData /= NoData ->
+              ({e | sendCommand <- Maybe.map toInts (toPacket s)},CommonAction (Common.AppendToLog (toString s.extAwaitingData)))
           | otherwise          -> (e,NoOp)
 
 toPacket : BackgroundState -> Maybe AppPacket
 toPacket s =
     let cc = s.currentContext
     in case s.extAwaitingData of
-        Just (ExtNeedsLogin {context}) ->
+        ExtNeedsLogin {context} ->
             if cc == context then Just AppGetLogin
             else Just (AppSetContext context)
-        Just (ExtNeedsPassword {context, login}) ->
+        ExtNeedsPassword {context, login} ->
             if cc == context then (Just AppGetPassword)
             else Just (AppSetContext context)
-        Just (ExtUpdate {context, login, password}) ->
+        ExtUpdate {context, login, password} ->
             if cc == context then Just (AppSetLogin login)
             else Just (AppSetContext context)
-        Just (ExtUpdatePassword {context, password}) ->
+        ExtUpdatePassword {context, password} ->
             if cc == context then Just (AppSetPassword password)
             else Just (AppSetContext context)
         _ -> Nothing

@@ -41,9 +41,9 @@ state = map (\(_,_,s) -> s) output
 output : Signal (ToDeviceMessage, ToExtensionMessage, BackgroundState)
 output =
     let go inputActions (dm,em,s) =
-        let s' = update inputActions s
+        let s'                  = update inputActions s
             (deviceMessage, a1) = DeviceMessage.encode s'
-            s'' = update a1 s'
+            s''                 = update a1 s'
             (extMessage, a2)    = ExtensionMessage.encode s''
         in (deviceMessage, extMessage, update a2 s'')
     in foldp go (emptyToDeviceMessage, emptyToExtensionMessage, default) inputActions

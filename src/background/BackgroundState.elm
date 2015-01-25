@@ -12,7 +12,7 @@ import DevicePacket (..)
 type alias BackgroundState = { hidConnected    : Bool
                              , currentContext  : ByteString
                              , extAwaitingPing : Bool
-                             , extAwaitingData : Maybe ExtData
+                             , extAwaitingData : ExtData
                              , common          : CommonState
                              }
 
@@ -20,7 +20,7 @@ default : BackgroundState
 default = { hidConnected    = False
           , currentContext  = ""
           , extAwaitingPing = False
-          , extAwaitingData = Nothing
+          , extAwaitingData = NoData
           , common          = Common.default
           }
 
@@ -41,10 +41,11 @@ type ExtData = ExtNeedsLogin {context : ByteString}
                                  }
              | ExtUpdateComplete { context  : ByteString }
              | ExtNoCredentials
+             | NoData
 
 type BackgroundAction = SetHidConnected Bool
                       | SetExtAwaitingPing Bool
-                      | SetExtAwaitingData (Maybe ExtData)
+                      | SetExtAwaitingData ExtData
                       | GotLogin String
                       | GotPassword String
                       | SetLogin ReturnCode
@@ -75,47 +76,47 @@ update action s =
                else s'
         CommonAction a -> {s | common <- updateCommon a}
         GotLogin     l -> {s | extAwaitingData <- case s.extAwaitingData of
-                                    Just (ExtNeedsLogin c) ->
-                                        Just (ExtNeedsPassword {c | login = l})
+                                    ExtNeedsLogin c ->
+                                        ExtNeedsPassword {c | login = l}
                                     _ -> s.extAwaitingData
                           }
         GotPassword  p -> {s | extAwaitingData <- case s.extAwaitingData of
-                                    Just (ExtNeedsPassword c) ->
-                                        Just (ExtCredentials {c | password = p})
+                                    ExtNeedsPassword c ->
+                                        ExtCredentials {c | password = p}
                                     _ -> s.extAwaitingData
                           }
         SetLogin  r    -> {s | extAwaitingData <- case s.extAwaitingData of
-                                       Just (ExtUpdate c) ->
-                                           Just (ExtUpdatePassword { c - login })
+                                       ExtUpdate c ->
+                                           ExtUpdatePassword { c - login }
                                        _ -> s.extAwaitingData
                           }
         SetPassword  r -> {s | extAwaitingData <- case s.extAwaitingData of
-                                    Just (ExtUpdatePassword c) ->
-                                        Just (ExtUpdateComplete { c - password })
+                                    ExtUpdatePassword c ->
+                                        ExtUpdateComplete { c - password }
                                     _ -> s.extAwaitingData
                           }
         SetContext r   -> case r of
                             ContextSet -> case s.extAwaitingData of
-                                Just (ExtNeedsLogin c)     ->
+                                ExtNeedsLogin c     ->
                                     {s | currentContext <- c.context}
-                                Just (ExtNeedsPassword c)  ->
+                                ExtNeedsPassword c  ->
                                     {s | currentContext <- c.context}
-                                Just (ExtUpdate c)         ->
+                                ExtUpdate c         ->
                                     {s | currentContext <- c.context}
-                                Just (ExtUpdatePassword c) ->
+                                ExtUpdatePassword c ->
                                     {s | currentContext <- c.context}
                                 _                          -> s
                             UnknownContext -> case s.extAwaitingData of
-                                Just (ExtNeedsLogin _)     ->
-                                    {s | extAwaitingData <- Just ExtNoCredentials}
-                                Just (ExtNeedsPassword _)  ->
-                                    {s | extAwaitingData <- Just ExtNoCredentials}
-                                Just (ExtUpdate _)         ->
-                                    {s | extAwaitingData <- Nothing}
-                                Just (ExtUpdatePassword _) ->
-                                    {s | extAwaitingData <- Nothing}
+                                ExtNeedsLogin _     ->
+                                    {s | extAwaitingData <- ExtNoCredentials}
+                                ExtNeedsPassword _  ->
+                                    {s | extAwaitingData <- ExtNoCredentials}
+                                ExtUpdate _         ->
+                                    {s | extAwaitingData <- NoData}
+                                ExtUpdatePassword _ ->
+                                    {s | extAwaitingData <- NoData}
                                 _                          -> s
-                            NoCardForContext -> s
+                            NoCardForContext -> update (CommonAction (AppendToLog "NO CARD FOR CONTEXT HAPPENED!!!111!!!")) s
         NoOp           -> s
 
 
@@ -131,11 +132,11 @@ fromPacket r = case r of
                              ))
         DeviceGetLogin ms    ->
             Maybe.withDefault
-                (SetExtAwaitingData (Just ExtNoCredentials))
+                (SetExtAwaitingData ExtNoCredentials)
                 (Maybe.map GotLogin ms)
         DeviceGetPassword ms ->
             Maybe.withDefault
-                (SetExtAwaitingData (Just ExtNoCredentials))
+                (SetExtAwaitingData ExtNoCredentials)
                 (Maybe.map GotPassword ms)
         DeviceSetLogin    r  -> SetLogin r
         DeviceSetPassword r  -> SetPassword r
