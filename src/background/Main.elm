@@ -43,8 +43,9 @@ output =
     let go inputActions (dm,em,s) =
         let s' = update inputActions s
             (deviceMessage, a1) = DeviceMessage.encode s'
-            (extMessage, a2)    = ExtensionMessage.encode (update a1 s')
-        in (deviceMessage, extMessage, update a2 (update a1 s'))
+            s'' = update a1 s'
+            (extMessage, a2)    = ExtensionMessage.encode s''
+        in (deviceMessage, extMessage, update a2 s'')
     in foldp go (emptyToDeviceMessage, emptyToExtensionMessage, default) inputActions
 
 port fromExtension : Signal FromExtensionMessage
@@ -54,7 +55,7 @@ port toExtension = map (\(_,m,_) -> m) output
 
 inputActions : Signal BackgroundAction
 inputActions = mergeMany
-            [ map DeviceMessage.decode fromDevice
-            , map (CommonAction << FromGuiMessage.decode) fromGUI
-            , map ExtensionMessage.decode fromExtension
-            ]
+    [ map DeviceMessage.decode fromDevice
+    , map (CommonAction << FromGuiMessage.decode) fromGUI
+    , map ExtensionMessage.decode fromExtension
+    ]
