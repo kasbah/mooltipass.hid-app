@@ -6,7 +6,7 @@ import List ((::))
 
 -- local source
 import CommonState as Common
-import CommonState (CommonAction(..),CommonState,ConnectState (..), toLogString)
+import CommonState (..)
 import DevicePacket (..)
 
 type alias BackgroundState = { hidConnected    : Bool
@@ -96,7 +96,7 @@ update action s =
             in if c /= s.common.connected
                then {s' | common <-
                             Common.update
-                                (AppendToLog (toLogString c))
+                                (AppendToLog (connectToLog c))
                                 s'.common
                         , currentContext <- ""
                     }

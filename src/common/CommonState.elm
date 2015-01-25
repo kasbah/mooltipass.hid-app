@@ -18,8 +18,8 @@ default =
 
 type ConnectState = NotConnected | Connected | NoCard | NoPin
 
-toLogString : ConnectState -> String
-toLogString c = case c of
+connectToLog : ConnectState -> String
+connectToLog c = case c of
     NotConnected -> "device disconnected"
     Connected    -> "device status: unlocked"
     NoCard       -> "device status: no card present"
