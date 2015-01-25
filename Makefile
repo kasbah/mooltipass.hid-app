@@ -1,25 +1,28 @@
 wildc_recursive=$(foreach d,$(wildcard $1*),$(call wildc_recursive,$d/,$2) $(filter $(subst *,%,$2),$d))
 
-PACKAGE_NAME = mooltipass.hid-app.0.7.0
+VERSION = 0.7.0
+PACKAGE_NAME = mooltipass.hid-app.$(VERSION)
 
 GUI_ELM_FILES    = $(wildcard src/gui/*.elm)
 BG_ELM_FILES     = $(wildcard src/background/*.elm)
 COMMON_ELM_FILES = $(wildcard src/common/*.elm)
 JS_FILES         = $(call wildc_recursive, src/, *.js)
 HTML_FILES       = $(call wildc_recursive, src/, *.html)
-JSON_FILES       = $(call wildc_recursive, src/, *.json)
 IMAGE_FILES      = $(wildcard src/gui/images/*)
 DIRS             = $(sort $(dir $(call wildc_recursive, src/, *)))
-PACKAGE_STAMPS           = $(patsubst src%, $(PACKAGE_NAME)%.dirstamp, $(DIRS))
+PACKAGE_STAMPS   = $(patsubst src%, $(PACKAGE_NAME)%.dirstamp, $(DIRS))
 
-all: images elm js json html
+all: images elm js manifest html
 
 dirs   : elm-stuff/.core-linked $(patsubst src%, build%/.dirstamp, $(DIRS))
 elm    : dirs build/background/elm-background.js build/gui/elm-gui.js
 js     : dirs $(patsubst src/%, build/%, $(JS_FILES))
 html   : dirs $(patsubst src/%, build/%, $(HTML_FILES))
-json   : dirs $(patsubst src/%, build/%, $(JSON_FILES))
 images : dirs $(patsubst src/%, build/%, $(IMAGE_FILES))
+manifest: build/manifest.json
+
+build/manifest.json: src/manifest.json
+	sed 's/@version/"$(VERSION)"/' src/manifest.json > build/manifest.json
 
 %/.dirstamp:
 	mkdir $*
@@ -53,4 +56,4 @@ package: all
 	zip -r $(PACKAGE_NAME).zip $(PACKAGE_NAME)/
 	rm -rf $(PACKAGE_NAME)/
 
-.PHONY: all images dirs js elm clean package
+.PHONY: all images dirs js manifest elm clean package
