@@ -1,4 +1,4 @@
-var device = {connection: null, connecting: false};
+var device = {connection: null, connecting: false, waitingForMessage: false};
 var device_info = { "vendorId": 0x16d0, "productId": 0x09a0 };      // Mooltipass
 
 /**
@@ -56,10 +56,14 @@ function onDataReceived(reportId, data)
         ints[i] = bytes[i];
     }
     deviceSendToElm({receiveCommand: ints});
+    device.waitingForMessage = false;
 }
 
 function sendMsg(msg)
 {
+    if (device.waitingForMessage)
+        return;
+    device.waitingForMessage = true;
     var buffer = (new Uint8Array(msg)).buffer
     chrome.hid.send(device.connection, 0, buffer, function()
     {
@@ -71,6 +75,7 @@ function sendMsg(msg)
         {
             console.log("hid error", chrome.runtime.lastError);
             deviceSendToElm({setHidConnected:false});
+            device.waitingForMessage = false;
         }
     });
 }
