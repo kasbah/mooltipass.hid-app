@@ -172,6 +172,7 @@ toInts : AppPacket -> List Int
 toInts msg =
     -- the packet format is [payload-size, message-type, payload ... ]
     let byteString msgType s = String.length s::msgType::stringToInts s
+        byteStringNull msgType s =  (String.length s + 1)::msgType::stringToInts s ++ [0]
         zeroSize msgType     = [0, msgType]
         stringToInts s       = List.map Char.toCode (String.toList s)
         param p              = case p of
@@ -188,7 +189,7 @@ toInts msg =
         AppDebug       s  -> byteString 0x01 s
         AppPing           -> zeroSize 0x02
         AppGetVersion     -> zeroSize 0x03
-        AppSetContext  s  -> byteString 0x04 s
+        AppSetContext  s  -> byteStringNull 0x04 s
         AppGetLogin       -> zeroSize 0x05
         AppGetPassword    -> zeroSize 0x06
         AppSetLogin    s  -> byteString 0x07 s
@@ -259,6 +260,13 @@ fromInts (size::messageType::payload) =
                  then Ok <| constructor Maybe.Nothing
                  else Result.map (constructor << Maybe.Just)
                         (toByteString size payload)
+        maybeByteStringNull constructor name =
+            if size <= 0
+            then Err <| "Zero data returned for '" ++ name ++ "'"
+            else if size == 1 && List.head payload == 0x00
+                 then Ok <| constructor Maybe.Nothing
+                 else Result.map (constructor << Maybe.Just)
+                        (toByteString (size - 1) payload)
     in
         if size > List.length payload
         then Err "Invalid size"
@@ -281,8 +289,8 @@ fromInts (size::messageType::payload) =
                         0x01 -> Ok <| DeviceSetContext ContextSet
                         0x03 -> Ok <| DeviceSetContext NoCardForContext
                         _    -> Err "Invalid data for 'set context'"
-            0x05 -> maybeByteString DeviceGetLogin    "get login"
-            0x06 -> maybeByteString DeviceGetPassword "get password"
+            0x05 -> maybeByteStringNull DeviceGetLogin    "get login"
+            0x06 -> maybeByteStringNull DeviceGetPassword "get password"
             0x07 -> doneOrNotDone DeviceSetLogin      "set login"
             0x08 -> doneOrNotDone DeviceSetPassword   "set password"
             0x09 -> if size /= 1
