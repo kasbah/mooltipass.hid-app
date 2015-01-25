@@ -41,7 +41,7 @@ decode message =
     let decode' {ping, getInputs, update} =
         Maybe.oneOf
             [ Maybe.map (\_ -> SetExtAwaitingPing True) ping
-            , Maybe.map (set ExtNeedsLogin) getInputs
+            , Maybe.map (set ExtInputs) getInputs
             , Maybe.map (set ExtUpdate) update
             ]
         set constructor d = SetExtAwaitingData (constructor d)

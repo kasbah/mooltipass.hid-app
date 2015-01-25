@@ -52,6 +52,9 @@ toPacket : BackgroundState -> Maybe AppPacket
 toPacket s =
     let cc = s.currentContext
     in case s.extAwaitingData of
+        ExtInputs {context} ->
+            if cc == context then Just AppGetLogin
+            else Just (AppSetContext context)
         ExtNeedsLogin {context} ->
             if cc == context then Just AppGetLogin
             else Just (AppSetContext context)
@@ -59,6 +62,9 @@ toPacket s =
             if cc == context then (Just AppGetPassword)
             else Just (AppSetContext context)
         ExtUpdate {context, login, password} ->
+            if cc == context then Just (AppSetLogin login)
+            else Just (AppSetContext context)
+        ExtUpdateLogin {context, login, password} ->
             if cc == context then Just (AppSetLogin login)
             else Just (AppSetContext context)
         ExtAddNew {context, login, password} ->

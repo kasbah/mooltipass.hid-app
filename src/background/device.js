@@ -63,6 +63,8 @@ function sendMsg(msg)
 {
     if (device.waitingForMessage)
         return;
+    if (msg[1] !== 112)
+        console.log("sending: ", msg);
     device.waitingForMessage = true;
     var buffer = (new Uint8Array(msg)).buffer
     chrome.hid.send(device.connection, 0, buffer, function()
