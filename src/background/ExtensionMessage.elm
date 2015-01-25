@@ -55,9 +55,9 @@ decode message =
                 bSp = byteString password
             in bSc `andThen` (\_ -> bSl) `andThen` (\_ -> bSp) `andThen` (\_ -> Ok ())
     in case errOrUpdate of
-        Just (Err err) -> CommonAction (AppendToLog ("Error: " ++ err))
+        Just (Err err) -> CommonAction (AppendToLog ("Extension Error: " ++ err))
         _              -> case errOrInputs of
-            Just (Err err) -> CommonAction (AppendToLog ("Error: " ++ err))
+            Just (Err err) -> CommonAction (AppendToLog ("Extension Error: " ++ err))
             _              -> Maybe.withDefault NoOp (decode' message)
 
 encode : BackgroundState -> (ToExtensionMessage, BackgroundAction)
