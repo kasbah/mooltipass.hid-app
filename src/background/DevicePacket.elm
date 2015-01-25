@@ -192,8 +192,8 @@ toInts msg =
         AppSetContext  s  -> byteStringNull 0x04 s
         AppGetLogin       -> zeroSize 0x05
         AppGetPassword    -> zeroSize 0x06
-        AppSetLogin    s  -> byteString 0x07 s
-        AppSetPassword s  -> byteString 0x08 s
+        AppSetLogin    s  -> byteStringNull 0x07 s
+        AppSetPassword s  -> byteStringNull 0x08 s
         AppCheckPassword  -> zeroSize 0x09
         AppAddContext  s  -> byteString 0x0A s
         AppExportFlash    -> zeroSize 0x30

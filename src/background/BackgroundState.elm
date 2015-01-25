@@ -105,7 +105,7 @@ update action s =
                                     {s | currentContext <- c.context}
                                 ExtUpdatePassword c ->
                                     {s | currentContext <- c.context}
-                                _                          -> s
+                                _ -> s
                             UnknownContext -> case s.extAwaitingData of
                                 ExtNeedsLogin _     ->
                                     {s | extAwaitingData <- ExtNoCredentials}
@@ -115,8 +115,9 @@ update action s =
                                     {s | extAwaitingData <- NoData}
                                 ExtUpdatePassword _ ->
                                     {s | extAwaitingData <- NoData}
-                                _                          -> s
-                            NoCardForContext -> update (CommonAction (AppendToLog "NO CARD FOR CONTEXT HAPPENED!!!111!!!")) s
+                                _ -> s
+                            NoCardForContext ->
+                                update (CommonAction (SetConnected NoCard)) s
         NoOp           -> s
 
 
@@ -125,10 +126,10 @@ fromPacket r = case r of
     Err err -> CommonAction (AppendToLog ("HID Error: " ++ err))
     Ok p    -> case p of
         DeviceGetStatus s -> CommonAction (SetConnected (case s of
-                                NeedCard   -> Common.NoCard
-                                Locked     -> Common.NoPin
-                                LockScreen -> Common.NoPin
-                                Unlocked   -> Common.Connected
+                                NeedCard   -> NoCard
+                                Locked     -> NoPin
+                                LockScreen -> NoPin
+                                Unlocked   -> Connected
                              ))
         DeviceGetLogin ms    ->
             Maybe.withDefault

@@ -119,8 +119,8 @@ chrome.runtime.onMessageExternal.addListener(function(request, sender, sendRespo
             var context = toContext(request.url);
             extensionSendToElm({update:
                 { context  : context
-                , login    : request.inputs.login
-                , password : request.inputs.password
+                , login    : request.inputs.login.value
+                , password : request.inputs.password.value
                 }
             });
             break;
