@@ -128,5 +128,5 @@ chrome.runtime.onMessageExternal.addListener(function(request, sender, sendRespo
 });
 
 
-//give
-elm.ports.fromExtension.send({toBackground:{setLog:null, getState:[]}});
+//jumpstart
+elm.ports.fromGUI.send({setLog:null, getState:[]});

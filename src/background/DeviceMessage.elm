@@ -38,15 +38,14 @@ encode : BackgroundState -> (ToDeviceMessage, BackgroundAction)
 encode s =
     let e = emptyToDeviceMessage
     in if | not s.hidConnected -> ({e | connect <- Just ()}, NoOp)
-          | s.common.connected == Common.NotConnected ->
-              ({e | sendCommand <- Just (toInts AppGetStatus)}, NoOp)
+          | s.common.connected /= Common.Connected -> (e, NoOp)
           | s.extAwaitingData /= NoData ->
               ({e | sendCommand <- Maybe.map toInts (toPacket s)}
               , Maybe.withDefault NoOp
                     (Maybe.map
                         (CommonAction << AppendToLog)
                         (extDataToLog s.extAwaitingData)))
-          | otherwise          -> (e,NoOp)
+          | otherwise -> (e,NoOp)
 
 toPacket : BackgroundState -> Maybe AppPacket
 toPacket s =
