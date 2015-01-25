@@ -96,8 +96,8 @@ function launch()
     chrome.app.window.create('gui/index.html', {minWidth: 550, minHeight: 600});
 }
 
-//chrome.runtime.onInstalled.addListener(launch);
-chrome.app.runtime.onLaunched.addListener(launch);
+chrome.runtime.onInstalled.addListener(launch);
+chrome.runtime.onStartup.addListener(launch);
 
 toContext = function (url) {
     // URL regex to extract base domain for context

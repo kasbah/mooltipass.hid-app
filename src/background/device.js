@@ -66,7 +66,12 @@ function sendMsg(msg)
     if (msg[1] !== 112)
         console.log("sending: ", msg);
     device.waitingForMessage = true;
-    var buffer = (new Uint8Array(msg)).buffer
+    //buffer creation is a bit awkward because windows doesn't like us using
+    //the Uint8Array.buffer directly (or maybe it's something to do with the
+    //ArrayBuffer size argument?)
+    var buffer = new ArrayBuffer(64);
+    var array = new Uint8Array(buffer);
+    array.set(msg,0);
     chrome.hid.send(device.connection, 0, buffer, function()
     {
         if (!chrome.runtime.lastError)
