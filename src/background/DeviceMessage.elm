@@ -4,6 +4,7 @@ module DeviceMessage where
 import Maybe
 
 -- local source
+import CommonState (..)
 import CommonState as Common
 import BackgroundState (..)
 import DevicePacket (..)
@@ -40,7 +41,11 @@ encode s =
           | s.common.connected == Common.NotConnected ->
               ({e | sendCommand <- Just (toInts AppGetStatus)}, NoOp)
           | s.extAwaitingData /= NoData ->
-              ({e | sendCommand <- Maybe.map toInts (toPacket s)},CommonAction (Common.AppendToLog (toString s.extAwaitingData)))
+              ({e | sendCommand <- Maybe.map toInts (toPacket s)}
+              , Maybe.withDefault NoOp
+                    (Maybe.map
+                        (CommonAction << AppendToLog)
+                        (extDataToLog s.extAwaitingData)))
           | otherwise          -> (e,NoOp)
 
 toPacket : BackgroundState -> Maybe AppPacket
@@ -56,6 +61,8 @@ toPacket s =
         ExtUpdate {context, login, password} ->
             if cc == context then Just (AppSetLogin login)
             else Just (AppSetContext context)
+        ExtAddNew {context, login, password} ->
+            Just (AppAddContext context)
         ExtUpdatePassword {context, password} ->
             if cc == context then Just (AppSetPassword password)
             else Just (AppSetContext context)

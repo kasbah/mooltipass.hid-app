@@ -195,7 +195,7 @@ toInts msg =
         AppSetLogin    s  -> byteStringNull 0x07 s
         AppSetPassword s  -> byteStringNull 0x08 s
         AppCheckPassword  -> zeroSize 0x09
-        AppAddContext  s  -> byteString 0x0A s
+        AppAddContext  s  -> byteStringNull 0x0A s
         AppExportFlash    -> zeroSize 0x30
         AppExportFlashEnd -> zeroSize 0x31
         AppImportFlashStart space -> [ 1
@@ -234,8 +234,8 @@ toInts msg =
         AppResetCard (b1,b2)  -> [2, 0x60, b1, b2]
         AppGetCardLogin       -> zeroSize 0x61
         AppGetCardPassword    -> zeroSize 0x62
-        AppSetCardLogin s     -> byteString 0x63 s
-        AppSetCardPassword s  -> byteString 0x64 s
+        AppSetCardLogin s     -> byteStringNull 0x63 s
+        AppSetCardPassword s  -> byteStringNull 0x64 s
         AppGetFreeSlotAddress -> zeroSize 0x65
         AppGetStartingParent  -> zeroSize 0x66
         AppGetCtrValue        -> zeroSize 0x67
@@ -346,8 +346,8 @@ fromInts (size::messageType::payload) =
             0x5E -> maybeByteString DeviceGetParameter    "get parameter"
             0x5F -> maybeByteString DeviceGetFavorite     "get favorite"
             0x60 -> doneOrNotDone DeviceResetCard         "reset card"
-            0x61 -> maybeByteString DeviceGetCardLogin    "get card login"
-            0x62 -> maybeByteString DeviceGetCardPassword "get card password"
+            0x61 -> maybeByteStringNull DeviceGetCardLogin    "get card login"
+            0x62 -> maybeByteStringNull DeviceGetCardPassword "get card password"
             0x63 -> doneOrNotDone DeviceSetCardLogin      "set card password"
             0x64 -> doneOrNotDone DeviceSetCardPassword   "set card password"
             0x65 -> maybeByteString DeviceGetFreeSlotAddr "get free slot address"

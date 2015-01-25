@@ -36,12 +36,33 @@ type ExtData = ExtNeedsLogin {context : ByteString}
                          , login    : ByteString
                          , password : ByteString
                          }
+             | ExtAddNew { context  : ByteString
+                         , login    : ByteString
+                         , password : ByteString
+                         }
              | ExtUpdatePassword { context  : ByteString
                                  , password : ByteString
                                  }
              | ExtUpdateComplete { context  : ByteString }
              | ExtNoCredentials
+             | ExtNoUpdate
              | NoData
+
+extDataToLog : ExtData -> Maybe String
+extDataToLog d = case d of
+    ExtNeedsLogin {context} ->
+        Just <| "> requesting credentials for " ++ context
+    ExtUpdate {context, login, password} ->
+        Just <| "> updating login for " ++ context
+    ExtUpdatePassword {context, password} ->
+        Just <| "> updating password for " ++ context
+    ExtAddNew {context, login, password} ->
+        Just <| "> adding new credentials for " ++ context
+    ExtNoCredentials    -> Just "access denied or no credentials"
+    ExtNoUpdate         -> Just "access denied"
+    ExtUpdateComplete _ -> Just "credentials updated"
+    ExtCredentials    _ -> Just "credentials retrieved"
+    _ -> Nothing
 
 type BackgroundAction = SetHidConnected Bool
                       | SetExtAwaitingPing Bool
@@ -51,6 +72,7 @@ type BackgroundAction = SetHidConnected Bool
                       | SetLogin ReturnCode
                       | SetPassword ReturnCode
                       | SetContext SetContextReturn
+                      | AddContext ReturnCode
                       | CommonAction CommonAction
                       | NoOp
 
@@ -85,16 +107,30 @@ update action s =
                                         ExtCredentials {c | password = p}
                                     _ -> s.extAwaitingData
                           }
-        SetLogin  r    -> {s | extAwaitingData <- case s.extAwaitingData of
+        SetLogin  r    -> if r == Done then
+                             {s | extAwaitingData <- case s.extAwaitingData of
                                        ExtUpdate c ->
                                            ExtUpdatePassword { c - login }
                                        _ -> s.extAwaitingData
-                          }
-        SetPassword  r -> {s | extAwaitingData <- case s.extAwaitingData of
+                             }
+                          else
+                             {s | extAwaitingData <- case s.extAwaitingData of
+                                       ExtUpdate c ->
+                                            ExtNoUpdate
+                                       _ -> s.extAwaitingData
+                             }
+        SetPassword  r -> if r == Done then
+                            {s | extAwaitingData <- case s.extAwaitingData of
                                     ExtUpdatePassword c ->
                                         ExtUpdateComplete { c - password }
                                     _ -> s.extAwaitingData
-                          }
+                            }
+                          else
+                            {s | extAwaitingData <- case s.extAwaitingData of
+                                    ExtUpdatePassword c ->
+                                        ExtNoUpdate
+                                    _ -> s.extAwaitingData
+                            }
         SetContext r   -> case r of
                             ContextSet -> case s.extAwaitingData of
                                 ExtNeedsLogin c     ->
@@ -111,13 +147,24 @@ update action s =
                                     {s | extAwaitingData <- ExtNoCredentials}
                                 ExtNeedsPassword _  ->
                                     {s | extAwaitingData <- ExtNoCredentials}
-                                ExtUpdate _         ->
-                                    {s | extAwaitingData <- NoData}
+                                ExtUpdate c         ->
+                                    {s | extAwaitingData <- ExtAddNew c}
                                 ExtUpdatePassword _ ->
-                                    {s | extAwaitingData <- NoData}
+                                    {s | extAwaitingData <- ExtNoUpdate}
                                 _ -> s
                             NoCardForContext ->
                                 update (CommonAction (SetConnected NoCard)) s
+        AddContext r   -> if r == Done then
+                             {s | extAwaitingData <- case s.extAwaitingData of
+                                    ExtAddNew c -> ExtUpdate c
+                                    _ -> s.extAwaitingData
+                             }
+                          else
+                            {s | extAwaitingData <- case s.extAwaitingData of
+                                    ExtAddNew c ->
+                                        ExtNoUpdate
+                                    _ -> s.extAwaitingData
+                            }
         NoOp           -> s
 
 
@@ -142,4 +189,5 @@ fromPacket r = case r of
         DeviceSetLogin    r  -> SetLogin r
         DeviceSetPassword r  -> SetPassword r
         DeviceSetContext r   -> SetContext r
+        DeviceAddContext r   -> AddContext r
         _                    -> NoOp

@@ -76,5 +76,6 @@ encode s =
                     ({e | updateComplete <- Just ()}, SetExtAwaitingData NoData)
                 ExtNoCredentials ->
                     ({e | noCredentials <- Just ()}, SetExtAwaitingData NoData)
+                ExtNoUpdate -> (e, SetExtAwaitingData NoData)
                 _ -> (e,NoOp)
            | otherwise -> (e, NoOp)
