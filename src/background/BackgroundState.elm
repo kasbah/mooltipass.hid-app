@@ -67,27 +67,28 @@ extDataToLog d = case d of
     ExtCredentials    _ -> Just "credentials retrieved"
     _ -> Nothing
 
-type BackgroundAction = SetHidConnected Bool
+type BackgroundAction = SetHidConnected    Bool
                       | SetExtAwaitingPing Bool
                       | SetExtAwaitingData ExtData
-                      | GotLogin String
-                      | GotPassword String
-                      | SetLogin ReturnCode
-                      | SetPassword ReturnCode
-                      | SetContext SetContextReturn
-                      | AddContext ReturnCode
-                      | CommonAction CommonAction
+                      | ReceiveGetLogin    String
+                      | ReceiveGetPassword String
+                      | ReceiveSetLogin    ReturnCode
+                      | ReceiveSetPassword ReturnCode
+                      | ReceiveSetContext  SetContextReturn
+                      | ReceiveAddContext  ReturnCode
+                      | CommonAction       CommonAction
                       | NoOp
 
 update : BackgroundAction -> BackgroundState -> BackgroundState
 update action s =
     let updateCommon a = Common.update a s.common
     in case action of
-        SetHidConnected b -> if not b
-                             then update
-                                (CommonAction (SetConnected NotConnected))
-                                {s | hidConnected <-  False}
-                             else {s | hidConnected <- True}
+        SetHidConnected b ->
+            if not b
+            then update
+               (CommonAction (SetConnected NotConnected))
+               {s | hidConnected <-  False}
+            else {s | hidConnected <- True}
         SetExtAwaitingPing b -> {s | extAwaitingPing <- b}
         SetExtAwaitingData d -> {s | extAwaitingData <- d}
         CommonAction (SetConnected c) ->
@@ -101,92 +102,83 @@ update action s =
                     }
                else s'
         CommonAction a -> {s | common <- updateCommon a}
-        GotLogin     l -> {s | extAwaitingData <- case s.extAwaitingData of
-                                    ExtNeedsLogin c ->
-                                        ExtNeedsPassword {c | login = l}
-                                    ExtInputs c ->
-                                        ExtNeedsPassword {c | login = l}
-                                    _ -> NoData
-                          }
-        GotPassword  p -> {s | extAwaitingData <- case s.extAwaitingData of
-                                    ExtNeedsPassword c ->
-                                        ExtCredentials {c | password = p}
-                                    _ -> NoData
-                          }
-        SetLogin  r    -> if r == Done then
-                             {s | extAwaitingData <- case s.extAwaitingData of
-                                       ExtUpdateLogin c ->
-                                           ExtUpdatePassword { c - login }
-                                       _ -> NoData
-                             }
-                          else
-                             {s | extAwaitingData <- case s.extAwaitingData of
-                                       ExtUpdateLogin c ->
-                                            ExtNoUpdate
-                                       _ -> NoData
-                             }
-        SetPassword  r -> if r == Done then
-                            {s | extAwaitingData <- case s.extAwaitingData of
-                                    ExtUpdatePassword c ->
-                                        ExtUpdateComplete { c - password }
-                                    _ -> NoData
-                            }
-                          else
-                            {s | extAwaitingData <- case s.extAwaitingData of
-                                    ExtUpdatePassword c ->
-                                        ExtNoUpdate
-                                    _ -> NoData
-                            }
-        SetContext r   -> case r of
-                            ContextSet -> case s.extAwaitingData of
-                                ExtInputs c ->
-                                    {s | currentContext <- c.context
-                                       , extAwaitingData <- ExtNeedsLogin c
-                                    }
-                                ExtNeedsLogin c ->
-                                    {s | currentContext <- c.context}
-                                ExtNeedsPassword c  ->
-                                    {s | currentContext <- c.context}
-                                ExtUpdate c ->
-                                    {s | currentContext <- c.context
-                                       , extAwaitingData <- ExtUpdateLogin c
-                                    }
-                                ExtUpdateLogin c ->
-                                    {s | currentContext <- c.context}
-                                ExtUpdatePassword c ->
-                                    {s | currentContext <- c.context}
-                                -- this fall-through would be: we have no idea
-                                -- what context we set so we just keep the
-                                -- original state
-                                _ -> s
-                            UnknownContext -> case s.extAwaitingData of
-                                ExtInputs _ ->
-                                    {s | extAwaitingData <- ExtNoCredentials}
-                                ExtNeedsLogin _ ->
-                                    {s | extAwaitingData <- ExtNoCredentials}
-                                ExtNeedsPassword _ ->
-                                    {s | extAwaitingData <- ExtNoCredentials}
-                                ExtUpdate c ->
-                                    {s | extAwaitingData <- ExtAddNew c}
-                                ExtUpdatePassword _ ->
-                                    {s | extAwaitingData <- ExtNoUpdate}
-                                ExtUpdateLogin _ ->
-                                    {s | extAwaitingData <- ExtNoUpdate}
-                                _ -> s
-                            NoCardForContext ->
-                                update (CommonAction (SetConnected NoCard)) s
-        AddContext r   -> if r == Done then
-                             {s | extAwaitingData <- case s.extAwaitingData of
-                                    ExtAddNew c -> ExtUpdate c
-                                    _ -> s.extAwaitingData
-                             }
-                          else
-                            {s | extAwaitingData <- case s.extAwaitingData of
-                                    ExtAddNew c ->
-                                        ExtNoUpdate
-                                    _ -> s.extAwaitingData
-                            }
-        NoOp           -> s
+        ReceiveGetLogin l ->
+            {s | extAwaitingData <- case s.extAwaitingData of
+                      ExtNeedsLogin c ->
+                          ExtNeedsPassword {c | login = l}
+                      ExtInputs c ->
+                          ExtNeedsPassword {c | login = l}
+                      _ -> NoData
+            }
+        ReceiveGetPassword p ->
+            {s | extAwaitingData <- case s.extAwaitingData of
+                      ExtNeedsPassword c ->
+                          ExtCredentials {c | password = p}
+                      _ -> NoData
+            }
+        ReceiveSetLogin r ->
+            {s | extAwaitingData <- case s.extAwaitingData of
+                     ExtUpdateLogin c ->
+                         if r == Done
+                         then ExtUpdatePassword { c - login }
+                         else ExtNoUpdate
+                     _ -> NoData
+            }
+        ReceiveSetPassword r ->
+            {s | extAwaitingData <- case s.extAwaitingData of
+                     ExtUpdatePassword c ->
+                         if r == Done
+                         then ExtUpdateComplete { c - password }
+                         else ExtNoUpdate
+                     _ -> NoData
+            }
+        ReceiveSetContext r ->
+            case r of
+                ContextSet -> case s.extAwaitingData of
+                    ExtInputs c ->
+                        {s | currentContext <- c.context
+                           , extAwaitingData <- ExtNeedsLogin c
+                        }
+                    ExtNeedsLogin c ->
+                        {s | currentContext <- c.context}
+                    ExtNeedsPassword c  ->
+                        {s | currentContext <- c.context}
+                    ExtUpdate c ->
+                        {s | currentContext <- c.context
+                           , extAwaitingData <- ExtUpdateLogin c
+                        }
+                    ExtUpdateLogin c ->
+                        {s | currentContext <- c.context}
+                    ExtUpdatePassword c ->
+                        {s | currentContext <- c.context}
+                    -- this fall-through would be: we have no idea what context
+                    -- we set so we just keep the original state
+                    _ -> s
+                UnknownContext -> case s.extAwaitingData of
+                    ExtInputs _ ->
+                        {s | extAwaitingData <- ExtNoCredentials}
+                    ExtNeedsLogin _ ->
+                        {s | extAwaitingData <- ExtNoCredentials}
+                    ExtNeedsPassword _ ->
+                        {s | extAwaitingData <- ExtNoCredentials}
+                    ExtUpdate c ->
+                        {s | extAwaitingData <- ExtAddNew c}
+                    ExtUpdatePassword _ ->
+                        {s | extAwaitingData <- ExtNoUpdate}
+                    ExtUpdateLogin _ ->
+                        {s | extAwaitingData <- ExtNoUpdate}
+                    _ -> s
+                NoCardForContext ->
+                    update (CommonAction (SetConnected NoCard)) s
+        ReceiveAddContext r ->
+            {s | extAwaitingData <- case s.extAwaitingData of
+                     ExtAddNew c ->
+                         if r == Done
+                         then ExtUpdate c
+                         else ExtNoUpdate
+                     _ -> NoData
+            }
+        NoOp -> s
 
 
 fromPacket :  (Result Error DevicePacket) -> BackgroundAction
@@ -202,13 +194,13 @@ fromPacket r = case r of
         DeviceGetLogin ms    ->
             Maybe.withDefault
                 (SetExtAwaitingData ExtNoCredentials)
-                (Maybe.map GotLogin ms)
+                (Maybe.map ReceiveGetLogin ms)
         DeviceGetPassword ms ->
             Maybe.withDefault
                 (SetExtAwaitingData ExtNoCredentials)
-                (Maybe.map GotPassword ms)
-        DeviceSetLogin    r  -> SetLogin r
-        DeviceSetPassword r  -> SetPassword r
-        DeviceSetContext r   -> SetContext r
-        DeviceAddContext r   -> AddContext r
+                (Maybe.map ReceiveGetPassword ms)
+        DeviceSetLogin    r  -> ReceiveSetLogin r
+        DeviceSetPassword r  -> ReceiveSetPassword r
+        DeviceSetContext r   -> ReceiveSetContext r
+        DeviceAddContext r   -> ReceiveAddContext r
         _                    -> NoOp
