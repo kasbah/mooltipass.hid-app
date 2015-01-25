@@ -94,16 +94,28 @@ update action s =
                                         Just (ExtUpdateComplete { c - password })
                                     _ -> s.extAwaitingData
                           }
-        SetContext r   -> if r /= ContextSet then s else case s.extAwaitingData of
-                           Just (ExtNeedsLogin c)     ->
-                               {s | currentContext <- c.context}
-                           Just (ExtNeedsPassword c)  ->
-                               {s | currentContext <- c.context}
-                           Just (ExtUpdate c)         ->
-                               {s | currentContext <- c.context}
-                           Just (ExtUpdatePassword c) ->
-                               {s | currentContext <- c.context}
-                           _                          -> s
+        SetContext r   -> case r of
+                            ContextSet -> case s.extAwaitingData of
+                                Just (ExtNeedsLogin c)     ->
+                                    {s | currentContext <- c.context}
+                                Just (ExtNeedsPassword c)  ->
+                                    {s | currentContext <- c.context}
+                                Just (ExtUpdate c)         ->
+                                    {s | currentContext <- c.context}
+                                Just (ExtUpdatePassword c) ->
+                                    {s | currentContext <- c.context}
+                                _                          -> s
+                            UnknownContext -> case s.extAwaitingData of
+                                Just (ExtNeedsLogin _)     ->
+                                    {s | extAwaitingData <- Just ExtNoCredentials}
+                                Just (ExtNeedsPassword _)  ->
+                                    {s | extAwaitingData <- Just ExtNoCredentials}
+                                Just (ExtUpdate _)         ->
+                                    {s | extAwaitingData <- Nothing}
+                                Just (ExtUpdatePassword _) ->
+                                    {s | extAwaitingData <- Nothing}
+                                _                          -> s
+                            NoCardForContext -> s
         NoOp           -> s
 
 
