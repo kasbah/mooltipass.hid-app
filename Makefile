@@ -20,16 +20,16 @@ images : dirs $(patsubst src/%, build/%, $(IMAGE_FILES))
 
 %/.dirstamp:
 	mkdir $*
-	touch $@
+	@touch $@
 
 elm-stuff/.core-linked: elm-stuff/.dirstamp
 	rm -rf elm-stuff/packages/elm-lang/core/1.1.0
 	ln -s $(PWD)/elm-core $(PWD)/elm-stuff/packages/elm-lang/core/1.1.0
-	touch $@
+	@touch $@
 
 elm-stuff/.dirstamp:
 	elm-package install -y
-	touch $@
+	@touch $@
 
 build/gui/elm-gui.js: $(GUI_ELM_FILES) $(COMMON_ELM_FILES)
 	elm-make $(COMMON_ELM_FILES) $(GUI_ELM_FILES) --output $@
