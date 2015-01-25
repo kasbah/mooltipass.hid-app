@@ -18,7 +18,7 @@
    inkscape:export-filename="/home/kaspar/projects/mooltipass/code/ext/chromeipass/icons/mooltipass-blue19.png"
    inkscape:export-xdpi="34.922058"
    inkscape:export-ydpi="34.922058"
-   sodipodi:docname="logo_square.svg">
+   sodipodi:docname="logo_square2.svg">
   <defs
      id="defs4245" />
   <sodipodi:namedview
@@ -28,9 +28,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="5.6"
-     inkscape:cx="88.978049"
-     inkscape:cy="32.892003"
+     inkscape:zoom="2.8"
+     inkscape:cx="74.492888"
+     inkscape:cy="-1.156563"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -52,7 +52,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -66,20 +66,20 @@
        id="rect4841-2"
        width="18.146263"
        height="18.146263"
-       x="114.83085"
-       y="66.474655"
+       x="115.27804"
+       y="62.124382"
        ry="2.8309758"
-       inkscape:export-xdpi="179.17"
-       inkscape:export-ydpi="179.17"
-       inkscape:export-filename="/home/kaspar/projects/mooltipass/code/app/src/images/logo_square128.png"
+       inkscape:export-xdpi="179.16635"
+       inkscape:export-ydpi="179.16635"
+       inkscape:export-filename="/home/kaspar/projects/mooltipass/code/app/build/gui/images/logo_square128.png"
        clip-path="none" />
     <g
        id="g4912"
-       transform="matrix(0.79002515,0,0,0.79929063,25.698778,15.502531)"
-       inkscape:export-filename="/home/kaspar/projects/mooltipass/code/app/src/images/logo_square128.png"
-       inkscape:export-xdpi="179.17"
-       inkscape:export-ydpi="179.17"
-       style="stroke:#0cfeff;stroke-width:0.65838253;stroke-opacity:1"
+       transform="matrix(1.1837955,0,0,1.1976792,-16.954502,-18.775958)"
+       inkscape:export-filename="/home/kaspar/projects/mooltipass/code/app/build/gui/images/logo_square128.png"
+       inkscape:export-xdpi="179.16635"
+       inkscape:export-ydpi="179.16635"
+       style="stroke:#0cfeff;stroke-width:0.65838253;stroke-opacity:1;opacity:0.109"
        clip-path="none">
       <g
          transform="matrix(0.18600708,0,0,0.18416311,98.018689,-97.772454)"
@@ -131,7 +131,7 @@
       </g>
       <path
          id="path4408-1"
-         style="opacity:0.98814231;fill:#0cfef8;fill-opacity:0.50196078;stroke:#0cfeff;stroke-width:0.41068754;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:0.57868024"
+         style="opacity:0.98814231;fill:#0cfef8;fill-opacity:0.50196078;stroke:#0cfeff;stroke-width:0.41068754;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
          d="m 117.97022,71.742127 0.3202,0.775283 m 2.15244,5.211526 0.3202,0.775284 m -4.81134,-1.99846 0.78304,-0.31703 m 5.26372,-2.131075 0.78305,-0.317049 m -6.81702,-0.03057 0.78012,0.324041 m 5.244,2.1782 0.78012,0.324041 m -4.82941,1.955267 0.32728,-0.772382 m 2.20001,-5.192033 0.32728,-0.772381"
          inkscape:connector-curvature="0"
          inkscape:export-filename="/home/kaspar/projects/mooltipass/code/ext/chromeipass/icons/mooltipass-red19.png"
@@ -166,30 +166,14 @@
          inkscape:export-xdpi="38.259998"
          inkscape:export-ydpi="38.259998" />
     </g>
-    <g
-       transform="matrix(1.165887,0,0,1.165887,12.447621,-2.0616308)"
-       id="g11254"
-       inkscape:export-filename="/home/kaspar/projects/mooltipass/code/app/src/images/logo_square128.png"
-       inkscape:export-xdpi="179.17"
-       inkscape:export-ydpi="179.17">
-      <path
-         style="display:inline;opacity:0.98814231;fill:none;stroke:#0cfeff;stroke-width:0.60000002;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
-         d="m 97.614453,65.3006 4.337957,0"
-         id="path3269-9"
-         inkscape:connector-curvature="0"
-         sodipodi:nodetypes="cc" />
-      <path
-         style="display:inline;opacity:0.98814231;fill:none;stroke:#0cfeff;stroke-width:0.60000002;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
-         d="m 97.614452,66.566839 4.337958,0"
-         id="path3269-9-2"
-         inkscape:connector-curvature="0"
-         sodipodi:nodetypes="cc" />
-      <path
-         style="display:inline;opacity:0.98814231;fill:none;stroke:#0cfeff;stroke-width:0.60000002;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:6.4000001;stroke-opacity:1"
-         d="m 97.614454,67.833087 4.337956,0"
-         id="path3269-9-2-9"
-         inkscape:connector-curvature="0"
-         sodipodi:nodetypes="cc" />
-    </g>
+    <path
+       style="fill:#0cfeff;stroke:#0cfeff;stroke-width:0.26458332px;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       d="m 118.53749,65.386122 5.09484,7.628502 1.2737,-1.907125 4.45801,5.721378 -4.45801,-7.628503 -1.2737,1.907125 z"
+       id="path5155"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccc"
+       inkscape:export-filename="/home/kaspar/projects/mooltipass/code/app/build/gui/images/logo_square128.png"
+       inkscape:export-xdpi="179.16635"
+       inkscape:export-ydpi="179.16635" />
   </g>
 </svg>

@@ -1,5 +1,7 @@
 wildc_recursive=$(foreach d,$(wildcard $1*),$(call wildc_recursive,$d/,$2) $(filter $(subst *,%,$2),$d))
 
+PACKAGE_NAME = mooltipass.hid-app.0.7.0
+
 GUI_ELM_FILES    = $(wildcard src/gui/*.elm)
 BG_ELM_FILES     = $(wildcard src/background/*.elm)
 COMMON_ELM_FILES = $(wildcard src/common/*.elm)
@@ -7,7 +9,8 @@ JS_FILES         = $(call wildc_recursive, src/, *.js)
 HTML_FILES       = $(call wildc_recursive, src/, *.html)
 JSON_FILES       = $(call wildc_recursive, src/, *.json)
 IMAGE_FILES      = $(wildcard src/gui/images/*)
-DIRS 			 = $(sort $(dir $(call wildc_recursive, src/, *)))
+DIRS             = $(sort $(dir $(call wildc_recursive, src/, *)))
+PACKAGE_STAMPS           = $(patsubst src%, $(PACKAGE_NAME)%.dirstamp, $(DIRS))
 
 all: images elm js json html
 
@@ -44,4 +47,10 @@ clean:
 	rm -rf build
 	rm -rf elm-stuff
 
-.PHONY: all images dirs js elm clean elm
+package: all
+	cp -r build $(PACKAGE_NAME)
+	rm -f $(PACKAGE_STAMPS)
+	zip -r $(PACKAGE_NAME).zip $(PACKAGE_NAME)/
+	rm -rf $(PACKAGE_NAME)/
+
+.PHONY: all images dirs js elm clean package
