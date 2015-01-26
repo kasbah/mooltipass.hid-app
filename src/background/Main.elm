@@ -29,7 +29,7 @@ port toDevice =
     merge
         (map (\(m,_,_) -> m) output)
         <| map2
-            (\_ s -> if s.hidConnected
+            (\_ s -> if s.deviceConnected
                      then sendCommand AppGetStatus
                      else {emptyToDeviceMessage | connect <- Just ()})
             (every second)

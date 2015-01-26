@@ -10,7 +10,7 @@ import CommonState (..)
 import DevicePacket (..)
 import Byte (..)
 
-type alias BackgroundState = { hidConnected    : Bool
+type alias BackgroundState = { deviceConnected : Bool
                              , deviceVersion   : Maybe MpVersion
                              , currentContext  : ByteString
                              , extAwaitingPing : Bool
@@ -19,7 +19,7 @@ type alias BackgroundState = { hidConnected    : Bool
                              }
 
 default : BackgroundState
-default = { hidConnected    = False
+default = { deviceConnected = False
           , deviceVersion   = Nothing
           , currentContext  = ""
           , extAwaitingPing = False
@@ -97,8 +97,8 @@ update action s =
             if not b
             then update
                (CommonAction (SetConnected NotConnected))
-               {s | hidConnected <-  False}
-            else {s | hidConnected <- True}
+               {s | deviceConnected <-  False}
+            else {s | deviceConnected <- True}
         SetExtAwaitingPing b -> {s | extAwaitingPing <- b}
         SetExtensionRequest d -> {s | extRequest <- d}
         CommonAction (SetConnected c) ->

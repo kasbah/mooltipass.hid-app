@@ -71,7 +71,7 @@ encode s =
                            _            ->
                                {state = "disconnected", version = ""}) s.deviceVersion
                 }, SetExtAwaitingPing False)
-           | s.extAwaitingPing || not s.hidConnected ->
+           | s.extAwaitingPing || not s.deviceConnected ->
                ({ e | connectState <- Just {state = "disconnected", version = ""}}
                , SetExtAwaitingPing False)
            | s.extRequest /= NoRequest -> case s.extRequest of
