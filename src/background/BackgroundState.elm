@@ -70,12 +70,7 @@ extDataToLog d = case d of
 type BackgroundAction = SetHidConnected    Bool
                       | SetExtAwaitingPing Bool
                       | SetExtAwaitingData ExtData
-                      | ReceiveGetLogin    String
-                      | ReceiveGetPassword String
-                      | ReceiveSetLogin    ReturnCode
-                      | ReceiveSetPassword ReturnCode
-                      | ReceiveSetContext  SetContextReturn
-                      | ReceiveAddContext  ReturnCode
+                      | Receive            DevicePacket
                       | CommonAction       CommonAction
                       | NoOp
 
@@ -102,21 +97,25 @@ update action s =
                     }
                else s'
         CommonAction a -> {s | common <- updateCommon a}
-        ReceiveGetLogin l ->
-            {s | extAwaitingData <- case s.extAwaitingData of
-                      ExtNeedsLogin c ->
-                          ExtNeedsPassword {c | login = l}
-                      ExtInputs c ->
-                          ExtNeedsPassword {c | login = l}
-                      _ -> NoData
-            }
-        ReceiveGetPassword p ->
-            {s | extAwaitingData <- case s.extAwaitingData of
-                      ExtNeedsPassword c ->
-                          ExtCredentials {c | password = p}
-                      _ -> NoData
-            }
-        ReceiveSetLogin r ->
+        Receive (DeviceGetLogin ml) -> case ml of
+            Just l ->
+                {s | extAwaitingData <- case s.extAwaitingData of
+                          ExtNeedsLogin c ->
+                              ExtNeedsPassword {c | login = l}
+                          ExtInputs c ->
+                              ExtNeedsPassword {c | login = l}
+                          _ -> NoData
+                }
+            Nothing -> { s | extAwaitingData <- ExtNoCredentials }
+        Receive (DeviceGetPassword mp) -> case mp of
+            Just p ->
+                {s | extAwaitingData <- case s.extAwaitingData of
+                          ExtNeedsPassword c ->
+                              ExtCredentials {c | password = p}
+                          _ -> NoData
+                }
+            Nothing -> { s | extAwaitingData <- ExtNoCredentials }
+        Receive (DeviceSetLogin r) ->
             {s | extAwaitingData <- case s.extAwaitingData of
                      ExtUpdateLogin c ->
                          if r == Done
@@ -124,7 +123,7 @@ update action s =
                          else ExtNoUpdate
                      _ -> NoData
             }
-        ReceiveSetPassword r ->
+        Receive (DeviceSetPassword r) ->
             {s | extAwaitingData <- case s.extAwaitingData of
                      ExtUpdatePassword c ->
                          if r == Done
@@ -132,21 +131,21 @@ update action s =
                          else ExtNoUpdate
                      _ -> NoData
             }
-        ReceiveSetContext r ->
+        Receive (DeviceSetContext r) ->
             case r of
                 ContextSet -> case s.extAwaitingData of
                     ExtInputs c ->
                         {s | currentContext <- c.context
                            , extAwaitingData <- ExtNeedsLogin c
                         }
-                    ExtNeedsLogin c ->
-                        {s | currentContext <- c.context}
-                    ExtNeedsPassword c  ->
-                        {s | currentContext <- c.context}
                     ExtUpdate c ->
                         {s | currentContext <- c.context
                            , extAwaitingData <- ExtUpdateLogin c
                         }
+                    ExtNeedsLogin c ->
+                        {s | currentContext <- c.context}
+                    ExtNeedsPassword c  ->
+                        {s | currentContext <- c.context}
                     ExtUpdateLogin c ->
                         {s | currentContext <- c.context}
                     ExtUpdatePassword c ->
@@ -155,14 +154,14 @@ update action s =
                     -- we set so we just keep the original state
                     _ -> s
                 UnknownContext -> case s.extAwaitingData of
+                    ExtUpdate c ->
+                        {s | extAwaitingData <- ExtAddNew c}
                     ExtInputs _ ->
                         {s | extAwaitingData <- ExtNoCredentials}
                     ExtNeedsLogin _ ->
                         {s | extAwaitingData <- ExtNoCredentials}
                     ExtNeedsPassword _ ->
                         {s | extAwaitingData <- ExtNoCredentials}
-                    ExtUpdate c ->
-                        {s | extAwaitingData <- ExtAddNew c}
                     ExtUpdatePassword _ ->
                         {s | extAwaitingData <- ExtNoUpdate}
                     ExtUpdateLogin _ ->
@@ -170,7 +169,7 @@ update action s =
                     _ -> s
                 NoCardForContext ->
                     update (CommonAction (SetConnected NoCard)) s
-        ReceiveAddContext r ->
+        Receive (DeviceAddContext r) ->
             {s | extAwaitingData <- case s.extAwaitingData of
                      ExtAddNew c ->
                          if r == Done
@@ -178,6 +177,7 @@ update action s =
                          else ExtNoUpdate
                      _ -> NoData
             }
+        Receive _ -> s
         NoOp -> s
 
 
@@ -191,16 +191,4 @@ fromPacket r = case r of
                                 LockScreen -> NoPin
                                 Unlocked   -> Connected
                              ))
-        DeviceGetLogin ms    ->
-            Maybe.withDefault
-                (SetExtAwaitingData ExtNoCredentials)
-                (Maybe.map ReceiveGetLogin ms)
-        DeviceGetPassword ms ->
-            Maybe.withDefault
-                (SetExtAwaitingData ExtNoCredentials)
-                (Maybe.map ReceiveGetPassword ms)
-        DeviceSetLogin    r  -> ReceiveSetLogin r
-        DeviceSetPassword r  -> ReceiveSetPassword r
-        DeviceSetContext r   -> ReceiveSetContext r
-        DeviceAddContext r   -> ReceiveAddContext r
-        _                    -> NoOp
+        x                 -> Receive x
