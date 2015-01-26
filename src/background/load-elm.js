@@ -8,6 +8,7 @@ var emptyFromExtensionMessage  = { ping      : null
                                  , getInputs : null
                                  , update    : null
                                  };
+var guiOpen = false;
 var extensionId = null;
 
 var elm = Elm.worker(
@@ -93,11 +94,18 @@ extensionSendToElm = function (message) {
 
 function launch()
 {
-    chrome.app.window.create('gui/index.html', {minWidth: 550, minHeight: 600});
+    chrome.app.window.create('gui/index.html',
+            //id takes care of making sure only one is running
+            { id:"mooltipass"
+            , minWidth: 550
+            , minHeight: 600
+            }
+    );
 }
 
 chrome.runtime.onInstalled.addListener(launch);
 chrome.runtime.onStartup.addListener(launch);
+chrome.app.runtime.onLaunched.addListener(launch);
 
 toContext = function (url) {
     // URL regex to extract base domain for context
@@ -126,7 +134,3 @@ chrome.runtime.onMessageExternal.addListener(function(request, sender, sendRespo
             break;
     }
 });
-
-
-//jumpstart
-elm.ports.fromGUI.send({setLog:null, getState:[]});
