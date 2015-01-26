@@ -8,6 +8,7 @@ import List ((::))
 import CommonState as Common
 import CommonState (..)
 import DevicePacket (..)
+import Byte (..)
 
 type alias BackgroundState = { hidConnected    : Bool
                              , deviceVersion   : Maybe MpVersion
