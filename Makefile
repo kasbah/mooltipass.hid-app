@@ -1,6 +1,6 @@
 wildc_recursive=$(foreach d,$(wildcard $1*),$(call wildc_recursive,$d/,$2) $(filter $(subst *,%,$2),$d))
 
-VERSION = 0.8.0
+VERSION = 0.8.0.1
 PACKAGE_NAME = mooltipass.hid-app.$(VERSION)
 
 GUI_ELM_FILES    = $(wildcard src/gui/*.elm)
@@ -14,12 +14,12 @@ PACKAGE_STAMPS   = $(patsubst src%, $(PACKAGE_NAME)%.dirstamp, $(DIRS))
 
 all: images elm js manifest html
 
-dirs   : elm-stuff/.core-linked $(patsubst src%, build%/.dirstamp, $(DIRS))
-elm    : dirs build/background/elm-background.js build/gui/elm-gui.js
-js     : dirs $(patsubst src/%, build/%, $(JS_FILES))
-html   : dirs $(patsubst src/%, build/%, $(HTML_FILES))
-images : dirs $(patsubst src/%, build/%, $(IMAGE_FILES))
-manifest: build/manifest.json
+dirs     : elm-stuff/.core-linked $(patsubst src%, build%/.dirstamp, $(DIRS))
+elm      : dirs build/background/elm-background.js build/gui/elm-gui.js
+js       : dirs $(patsubst src/%, build/%, $(JS_FILES))
+html     : dirs $(patsubst src/%, build/%, $(HTML_FILES))
+images   : dirs $(patsubst src/%, build/%, $(IMAGE_FILES))
+manifest : build/manifest.json
 
 build/manifest.json: src/manifest.json
 	sed 's/@version/"$(VERSION)"/' src/manifest.json > build/manifest.json
@@ -56,4 +56,7 @@ package: all
 	zip -r $(PACKAGE_NAME).zip $(PACKAGE_NAME)/
 	rm -rf $(PACKAGE_NAME)/
 
-.PHONY: all images dirs js manifest elm clean package
+watch:
+	@while true; do make | grep -v "^make\[1\]:"; sleep 1; done
+
+.PHONY: all images dirs js manifest elm clean package watch
