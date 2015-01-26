@@ -39,36 +39,36 @@ encode s =
     let e = emptyToDeviceMessage
     in if | not s.hidConnected -> ({e | connect <- Just ()}, NoOp)
           | s.common.connected /= Common.Connected -> (e, NoOp)
-          | s.extAwaitingData /= NoData ->
+          | s.extRequest /= NoRequest ->
               ({e | sendCommand <- Maybe.map toInts (toPacket s)}
               , Maybe.withDefault NoOp
                     (Maybe.map
                         (CommonAction << AppendToLog)
-                        (extDataToLog s.extAwaitingData)))
+                        (extensionRequestToLog s.extRequest)))
           | otherwise -> (e,NoOp)
 
 toPacket : BackgroundState -> Maybe AppPacket
 toPacket s =
     let cc = s.currentContext
-    in case s.extAwaitingData of
-        ExtInputs {context} ->
+    in case s.extRequest of
+        ExtNeedsNewContext {context, login, password} ->
+            Just (AppAddContext context)
+        ExtWantsCredentials {context} ->
             if cc == context then Just AppGetLogin
             else Just (AppSetContext context)
         ExtNeedsLogin {context} ->
             if cc == context then Just AppGetLogin
             else Just (AppSetContext context)
         ExtNeedsPassword {context, login} ->
-            if cc == context then (Just AppGetPassword)
+            if cc == context then Just AppGetPassword
             else Just (AppSetContext context)
-        ExtUpdate {context, login, password} ->
+        ExtWantsToWrite {context, login, password} ->
             if cc == context then Just (AppSetLogin login)
             else Just (AppSetContext context)
-        ExtUpdateLogin {context, login, password} ->
+        ExtNeedsToWriteLogin {context, login, password} ->
             if cc == context then Just (AppSetLogin login)
             else Just (AppSetContext context)
-        ExtAddNew {context, login, password} ->
-            Just (AppAddContext context)
-        ExtUpdatePassword {context, password} ->
+        ExtNeedsToWritePassword {context, password} ->
             if cc == context then Just (AppSetPassword password)
             else Just (AppSetContext context)
         _ -> Nothing

@@ -41,10 +41,10 @@ decode message =
     let decode' {ping, getInputs, update} =
         Maybe.oneOf
             [ Maybe.map (\_ -> SetExtAwaitingPing True) ping
-            , Maybe.map (set ExtInputs) getInputs
-            , Maybe.map (set ExtUpdate) update
+            , Maybe.map (set ExtWantsCredentials) getInputs
+            , Maybe.map (set ExtWantsToWrite) update
             ]
-        set constructor d = SetExtAwaitingData (constructor d)
+        set constructor d = SetExtensionRequest (constructor d)
         -- we do a bytestring conversion to check for errors but we just use
         -- the string above as ByteString is just a type alias
         errOrInputs = Maybe.map (\{context} -> byteString context) message.getInputs
@@ -69,13 +69,13 @@ encode s =
                                NotConnected -> "disconnected"
                                _            -> "connected"
                 }, SetExtAwaitingPing False)
-           | s.extAwaitingData /= NoData -> case s.extAwaitingData of
+           | s.extRequest /= NoRequest -> case s.extRequest of
                 ExtCredentials    c  ->
-                    ({e | credentials <- Just c}, SetExtAwaitingData NoData)
-                ExtUpdateComplete _  ->
-                    ({e | updateComplete <- Just ()}, SetExtAwaitingData NoData)
+                    ({e | credentials <- Just c}, SetExtensionRequest NoRequest)
+                ExtWriteComplete _  ->
+                    ({e | updateComplete <- Just ()}, SetExtensionRequest NoRequest)
                 ExtNoCredentials ->
-                    ({e | noCredentials <- Just ()}, SetExtAwaitingData NoData)
-                ExtNoUpdate -> (e, SetExtAwaitingData NoData)
+                    ({e | noCredentials <- Just ()}, SetExtensionRequest NoRequest)
+                ExtNotWritten -> (e, SetExtensionRequest NoRequest)
                 _ -> (e,NoOp)
            | otherwise -> (e, NoOp)

@@ -12,7 +12,7 @@ import DevicePacket (..)
 type alias BackgroundState = { hidConnected    : Bool
                              , currentContext  : ByteString
                              , extAwaitingPing : Bool
-                             , extAwaitingData : ExtData
+                             , extRequest      : ExtensionRequest
                              , common          : CommonState
                              }
 
@@ -20,56 +20,68 @@ default : BackgroundState
 default = { hidConnected    = False
           , currentContext  = ""
           , extAwaitingPing = False
-          , extAwaitingData = NoData
+          , extRequest      = NoRequest
           , common          = Common.default
           }
 
-type ExtData = ExtInputs {context : ByteString}
-             | ExtNeedsLogin { context : ByteString }
-             | ExtNeedsPassword { context : ByteString
-                                , login   : ByteString
-                                }
-             | ExtCredentials { context  : ByteString
-                              , login    : ByteString
-                              , password : ByteString
-                              }
-             | ExtUpdate { context  : ByteString
-                         , login    : ByteString
-                         , password : ByteString
-                         }
-             | ExtAddNew { context  : ByteString
-                         , login    : ByteString
-                         , password : ByteString
-                         }
-             | ExtUpdateLogin { context  : ByteString
-                              , login    : ByteString
-                              , password : ByteString
-                              }
-             | ExtUpdatePassword { context  : ByteString
-                                 , password : ByteString
-                                 }
-             | ExtUpdateComplete { context  : ByteString }
-             | ExtNoCredentials
-             | ExtNoUpdate
-             | NoData
+type ExtensionRequest =
+      ExtWantsCredentials     { context : ByteString }
 
-extDataToLog : ExtData -> Maybe String
-extDataToLog d = case d of
-    ExtInputs {context} ->
+    | ExtNeedsLogin           { context : ByteString }
+
+    | ExtNeedsPassword        { context : ByteString
+                              , login   : ByteString
+                              }
+
+    | ExtCredentials          { context  : ByteString
+                              , login    : ByteString
+                              , password : ByteString
+                              }
+
+    | ExtNoCredentials
+
+    | ExtWantsToWrite         { context  : ByteString
+                              , login    : ByteString
+                              , password : ByteString
+                              }
+
+    | ExtNeedsNewContext      { context  : ByteString
+                              , login    : ByteString
+                              , password : ByteString
+                              }
+
+    | ExtNeedsToWriteLogin    { context  : ByteString
+                              , login    : ByteString
+                              , password : ByteString
+                              }
+
+    | ExtNeedsToWritePassword { context  : ByteString
+                              , password : ByteString
+                              }
+
+    | ExtWriteComplete        { context  : ByteString }
+
+    | ExtNotWritten
+
+    | NoRequest
+
+extensionRequestToLog : ExtensionRequest -> Maybe String
+extensionRequestToLog d = case d of
+    ExtWantsCredentials {context} ->
         Just <| "> requesting credentials for " ++ context
-    ExtUpdateLogin {context, login, password} ->
+    ExtNeedsToWriteLogin {context, login, password} ->
         Just <| "> writing credentials for " ++ context
-    ExtAddNew {context, login, password} ->
+    ExtNeedsNewContext {context, login, password} ->
         Just <| "> adding new credentials for " ++ context
     ExtNoCredentials    -> Just "access denied or no credentials"
-    ExtNoUpdate         -> Just "access denied"
-    ExtUpdateComplete _ -> Just "credentials written"
-    ExtCredentials    _ -> Just "credentials retrieved"
+    ExtNotWritten       -> Just "access denied"
+    ExtWriteComplete _  -> Just "credentials written"
+    ExtCredentials   _  -> Just "credentials retrieved"
     _ -> Nothing
 
 type BackgroundAction = SetHidConnected    Bool
                       | SetExtAwaitingPing Bool
-                      | SetExtAwaitingData ExtData
+                      | SetExtensionRequest ExtensionRequest
                       | Receive            DevicePacket
                       | CommonAction       CommonAction
                       | NoOp
@@ -85,7 +97,7 @@ update action s =
                {s | hidConnected <-  False}
             else {s | hidConnected <- True}
         SetExtAwaitingPing b -> {s | extAwaitingPing <- b}
-        SetExtAwaitingData d -> {s | extAwaitingData <- d}
+        SetExtensionRequest d -> {s | extRequest <- d}
         CommonAction (SetConnected c) ->
             let s' = {s | common <- updateCommon (SetConnected c)}
             in if c /= s.common.connected
@@ -99,96 +111,98 @@ update action s =
         CommonAction a -> {s | common <- updateCommon a}
         Receive (DeviceGetLogin ml) -> case ml of
             Just l ->
-                {s | extAwaitingData <- case s.extAwaitingData of
+                {s | extRequest <- case s.extRequest of
                           ExtNeedsLogin c ->
                               ExtNeedsPassword {c | login = l}
-                          ExtInputs c ->
+                          ExtWantsCredentials c ->
                               ExtNeedsPassword {c | login = l}
-                          _ -> NoData
+                          _ -> NoRequest
                 }
-            Nothing -> { s | extAwaitingData <- ExtNoCredentials }
+            Nothing -> { s | extRequest <- ExtNoCredentials }
         Receive (DeviceGetPassword mp) -> case mp of
             Just p ->
-                {s | extAwaitingData <- case s.extAwaitingData of
+                {s | extRequest <- case s.extRequest of
                           ExtNeedsPassword c ->
                               ExtCredentials {c | password = p}
-                          _ -> NoData
+                          _ -> NoRequest
                 }
-            Nothing -> { s | extAwaitingData <- ExtNoCredentials }
+            Nothing -> { s | extRequest <- ExtNoCredentials }
         Receive (DeviceSetLogin r) ->
-            {s | extAwaitingData <- case s.extAwaitingData of
-                     ExtUpdateLogin c ->
+            {s | extRequest <- case s.extRequest of
+                     ExtNeedsToWriteLogin c ->
                          if r == Done
-                         then ExtUpdatePassword { c - login }
-                         else ExtNoUpdate
-                     _ -> NoData
+                         then ExtNeedsToWritePassword { c - login }
+                         else ExtNotWritten
+                     _ -> NoRequest
             }
         Receive (DeviceSetPassword r) ->
-            {s | extAwaitingData <- case s.extAwaitingData of
-                     ExtUpdatePassword c ->
+            {s | extRequest <- case s.extRequest of
+                     ExtNeedsToWritePassword c ->
                          if r == Done
-                         then ExtUpdateComplete { c - password }
-                         else ExtNoUpdate
-                     _ -> NoData
+                         then ExtWriteComplete { c - password }
+                         else ExtNotWritten
+                     _ -> NoRequest
             }
         Receive (DeviceSetContext r) ->
             case r of
-                ContextSet -> case s.extAwaitingData of
-                    ExtInputs c ->
+                ContextSet -> case s.extRequest of
+                    ExtWantsCredentials c ->
                         {s | currentContext <- c.context
-                           , extAwaitingData <- ExtNeedsLogin c
+                           , extRequest <- ExtNeedsLogin c
                         }
-                    ExtUpdate c ->
+                    ExtWantsToWrite c ->
                         {s | currentContext <- c.context
-                           , extAwaitingData <- ExtUpdateLogin c
+                           , extRequest <- ExtNeedsToWriteLogin c
                         }
                     ExtNeedsLogin c ->
                         {s | currentContext <- c.context}
                     ExtNeedsPassword c  ->
                         {s | currentContext <- c.context}
-                    ExtUpdateLogin c ->
+                    ExtNeedsToWriteLogin c ->
                         {s | currentContext <- c.context}
-                    ExtUpdatePassword c ->
+                    ExtNeedsToWritePassword c ->
                         {s | currentContext <- c.context}
                     -- this fall-through would be: we have no idea what context
                     -- we set so we just keep the original state
                     _ -> s
-                UnknownContext -> case s.extAwaitingData of
-                    ExtUpdate c ->
-                        {s | extAwaitingData <- ExtAddNew c}
-                    ExtInputs _ ->
-                        {s | extAwaitingData <- ExtNoCredentials}
+                UnknownContext -> case s.extRequest of
+                    ExtWantsToWrite c ->
+                        {s | extRequest <- ExtNeedsNewContext c}
+                    ExtWantsCredentials _ ->
+                        {s | extRequest <- ExtNoCredentials}
                     ExtNeedsLogin _ ->
-                        {s | extAwaitingData <- ExtNoCredentials}
+                        {s | extRequest <- ExtNoCredentials}
                     ExtNeedsPassword _ ->
-                        {s | extAwaitingData <- ExtNoCredentials}
-                    ExtUpdatePassword _ ->
-                        {s | extAwaitingData <- ExtNoUpdate}
-                    ExtUpdateLogin _ ->
-                        {s | extAwaitingData <- ExtNoUpdate}
+                        {s | extRequest <- ExtNoCredentials}
+                    ExtNeedsToWritePassword _ ->
+                        {s | extRequest <- ExtNotWritten}
+                    ExtNeedsToWriteLogin _ ->
+                        {s | extRequest <- ExtNotWritten}
                     _ -> s
                 NoCardForContext ->
                     update (CommonAction (SetConnected NoCard)) s
         Receive (DeviceAddContext r) ->
-            {s | extAwaitingData <- case s.extAwaitingData of
-                     ExtAddNew c ->
+            {s | extRequest <- case s.extRequest of
+                     ExtNeedsNewContext c ->
                          if r == Done
-                         then ExtUpdate c
-                         else ExtNoUpdate
-                     _ -> NoData
+                         then ExtWantsToWrite c
+                         else ExtNotWritten
+                     _ -> NoRequest
             }
-        Receive _ -> s
+        Receive (DeviceGetStatus st) ->
+            update (CommonAction (SetConnected (case st of
+                       NeedCard   -> NoCard
+                       Locked     -> NoPin
+                       LockScreen -> NoPin
+                       Unlocked   -> Connected
+                    ))) s
+        Receive x ->
+            update
+                (CommonAction (AppendToLog ("Warning: received " ++ toString x)))
+                s
         NoOp -> s
-
 
 fromPacket :  (Result Error DevicePacket) -> BackgroundAction
 fromPacket r = case r of
     Err err -> CommonAction (AppendToLog ("HID Error: " ++ err))
-    Ok p    -> case p of
-        DeviceGetStatus s -> CommonAction (SetConnected (case s of
-                                NeedCard   -> NoCard
-                                Locked     -> NoPin
-                                LockScreen -> NoPin
-                                Unlocked   -> Connected
-                             ))
-        x                 -> Receive x
+    Ok p    -> Receive p
