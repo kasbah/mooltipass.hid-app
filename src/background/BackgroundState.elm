@@ -109,9 +109,11 @@ update action s =
                                 (AppendToLog (connectToLog c))
                                 s'.common
                         , currentContext <- ""
-                        , deviceVersion  <- Nothing
+                        , deviceVersion  <- if c == NotConnected
+                                            then Nothing
+                                            else s.deviceVersion
                     }
-               else s'
+               else s
         CommonAction a -> {s | common <- updateCommon a}
         Receive (DeviceGetLogin ml) -> case ml of
             Just l ->
