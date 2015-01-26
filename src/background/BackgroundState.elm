@@ -10,6 +10,7 @@ import CommonState (..)
 import DevicePacket (..)
 
 type alias BackgroundState = { hidConnected    : Bool
+                             , deviceVersion   : Maybe MpVersion
                              , currentContext  : ByteString
                              , extAwaitingPing : Bool
                              , extRequest      : ExtensionRequest
@@ -18,6 +19,7 @@ type alias BackgroundState = { hidConnected    : Bool
 
 default : BackgroundState
 default = { hidConnected    = False
+          , deviceVersion   = Nothing
           , currentContext  = ""
           , extAwaitingPing = False
           , extRequest      = NoRequest
@@ -106,6 +108,7 @@ update action s =
                                 (AppendToLog (connectToLog c))
                                 s'.common
                         , currentContext <- ""
+                        , deviceVersion  <- Nothing
                     }
                else s'
         CommonAction a -> {s | common <- updateCommon a}
@@ -196,13 +199,23 @@ update action s =
                        LockScreen -> NoPin
                        Unlocked   -> Connected
                     ))) s
+        Receive (DeviceGetVersion v) ->
+            update
+                (appendToLog
+                    ("device is "
+                        ++ v.version ++ " "
+                        ++ toString v.flashMemSize
+                        ++ "MBit"))
+                {s | deviceVersion <- Just v}
         Receive x ->
             update
-                (CommonAction (AppendToLog ("Warning: received " ++ toString x)))
+                (appendToLog ("Error: received unhandled packet " ++ toString x))
                 s
         NoOp -> s
 
 fromPacket :  (Result Error DevicePacket) -> BackgroundAction
 fromPacket r = case r of
-    Err err -> CommonAction (AppendToLog ("HID Error: " ++ err))
+    Err err -> appendToLog ("HID Error: " ++ err)
     Ok p    -> Receive p
+
+appendToLog s = CommonAction (AppendToLog s)

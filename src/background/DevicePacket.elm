@@ -172,7 +172,8 @@ toInts : AppPacket -> List Int
 toInts msg =
     -- the packet format is [payload-size, message-type, payload ... ]
     let byteString msgType s = String.length s::msgType::stringToInts s
-        byteStringNull msgType s =  (String.length s + 1)::msgType::stringToInts s ++ [0]
+        byteStringNull msgType s =
+            (String.length s + 1)::msgType::stringToInts s ++ [0]
         zeroSize msgType     = [0, msgType]
         stringToInts s       = List.map Char.toCode (String.toList s)
         param p              = case p of
@@ -280,7 +281,8 @@ fromInts (size::messageType::payload) =
                                 <| toByte (List.head payload)
                         mpVersion mpv =
                             Result.map (\s -> {mpv | version = s})
-                                <| toByteString (size - 1) (List.tail payload)
+                            -- (size - 3) because of null-termination
+                                <| toByteString (size - 3) (List.tail payload)
                     in Result.map DeviceGetVersion (flashSize `andThen` mpVersion)
             0x04 -> if size /= 1
                     then Err "Invalid data size for 'set context'"

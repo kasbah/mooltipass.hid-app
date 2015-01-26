@@ -40,8 +40,8 @@ elm.ports.toExtension.subscribe(function(message) {
     if (extensionId != null) {
         if (message.connectState != null) {
             chrome.runtime.sendMessage(extensionId,
-                { type: message.connectState
-                , version: "unknown"
+                { type: message.connectState.state
+                , version: message.connectState.version
                 }
             );
         } else if (message.credentials != null) {
