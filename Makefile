@@ -53,7 +53,6 @@ clean:
 package: all
 	cp -r build $(PACKAGE_NAME)
 	rm -f $(PACKAGE_STAMPS)
-	rm -f $(PACKAGE_NAME)/gui/images/logo_square*.svg
 	zip -r $(PACKAGE_NAME).zip $(PACKAGE_NAME)/
 	rm -rf $(PACKAGE_NAME)/
 
