@@ -44,7 +44,7 @@ decode message =
             , Maybe.map (set ExtWantsCredentials) getInputs
             , Maybe.map (set ExtWantsToWrite) update
             ]
-        set constructor d = SetExtensionRequest (constructor d)
+        set constructor d = SetExtRequest (constructor d)
         -- we do a bytestring conversion to check for errors but we just use
         -- the string above as ByteString is just a type alias
         errOrInputs = Maybe.map (\{context} -> byteString context) message.getInputs
@@ -76,11 +76,11 @@ encode s =
                , SetExtAwaitingPing False)
            | s.extRequest /= NoRequest -> case s.extRequest of
                 ExtCredentials    c  ->
-                    ({e | credentials <- Just c}, SetExtensionRequest NoRequest)
+                    ({e | credentials <- Just c}, SetExtRequest NoRequest)
                 ExtWriteComplete _  ->
-                    ({e | updateComplete <- Just ()}, SetExtensionRequest NoRequest)
+                    ({e | updateComplete <- Just ()}, SetExtRequest NoRequest)
                 ExtNoCredentials ->
-                    ({e | noCredentials <- Just ()}, SetExtensionRequest NoRequest)
-                ExtNotWritten -> (e, SetExtensionRequest NoRequest)
+                    ({e | noCredentials <- Just ()}, SetExtRequest NoRequest)
+                ExtNotWritten -> (e, SetExtRequest NoRequest)
                 _ -> (e,NoOp)
            | otherwise -> (e, NoOp)

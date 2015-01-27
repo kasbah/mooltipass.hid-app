@@ -84,7 +84,7 @@ extensionRequestToLog d = case d of
 
 type BackgroundAction = SetHidConnected    Bool
                       | SetExtAwaitingPing Bool
-                      | SetExtensionRequest ExtensionRequest
+                      | SetExtRequest      ExtensionRequest
                       | Receive            DevicePacket
                       | CommonAction       CommonAction
                       | NoOp
@@ -100,7 +100,7 @@ update action s =
                {s | deviceConnected <-  False}
             else {s | deviceConnected <- True}
         SetExtAwaitingPing b -> {s | extAwaitingPing <- b}
-        SetExtensionRequest d -> {s | extRequest <- d}
+        SetExtRequest d -> {s | extRequest <- d}
         CommonAction (SetConnected c) ->
             let s' = {s | common <- updateCommon (SetConnected c)}
             in if c /= s.common.connected
