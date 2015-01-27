@@ -38,7 +38,7 @@ encode : BackgroundState -> (ToDeviceMessage, BackgroundAction)
 encode s =
     let e = emptyToDeviceMessage
     in if | not s.deviceConnected -> ({e | connect <- Just ()}, NoOp)
-          -- this is take caro of with keep-alive
+          -- this is taken care of with keep-alive
           | s.common.connected /= Common.Connected -> (e, NoOp)
           | s.deviceVersion == Nothing ->
               ({e | sendCommand <- Just (toInts AppGetVersion)}, NoOp)

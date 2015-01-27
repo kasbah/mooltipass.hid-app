@@ -151,8 +151,8 @@ update action s =
                         {s | currentContext <- c.context}
                     ExtNeedsToWritePassword c ->
                         {s | currentContext <- c.context}
-                    -- this fall-through would be: we have no idea what context
-                    -- we set so we just keep the original state
+                    -- this fall-through would be: we have no idea what
+                    -- context we set so we just keep the original state
                     _ -> s
                 UnknownContext -> case s.extRequest of
                     ExtWantsToWrite c ->
