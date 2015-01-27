@@ -46,7 +46,6 @@ navSpacer w = container w heights.tab bottomLeft (navLine w)
 navLine : Int -> Element
 navLine w = tiledImage w 1 "images/tab_spacer_pixel.png"
 
-
 {-| The tab navigation with an optional developer tab. -}
 tabs : GuiState -> Element
 tabs state =
@@ -57,11 +56,11 @@ tabs state =
                      --, tab Settings state.activeTab disabled
                      --, navSpacer 5
                      --, tab Manage   state.activeTab disabled
-                     ] --++ ( if state.devEnabled
-                       --     then [ navSpacer 5
-                       --          , tab Developer state.activeTab disabled
-                       --          ]
-                       --     else [] )
+                     ] ++ ( if state.devEnabled
+                            then [ navSpacer 5
+                                 , tab Developer state.activeTab disabled
+                                 ]
+                            else [] )
                      ++ [navSpacer 9000]
 
 {-| Tab button which is rendered appropriately depending on if it is active,
