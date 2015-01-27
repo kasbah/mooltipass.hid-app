@@ -59,20 +59,11 @@ toPacket s =
         ExtWantsCredentials {context} ->
             if cc == context then Just AppGetLogin
             else Just (AppSetContext context)
-        ExtNeedsLogin {context} ->
-            if cc == context then Just AppGetLogin
-            else Just (AppSetContext context)
         ExtNeedsPassword {context, login} ->
             if cc == context then Just AppGetPassword
             else Just (AppSetContext context)
         ExtWantsToWrite {context, login, password} ->
             if cc == context then Just (AppSetLogin login)
-            else Just (AppSetContext context)
-        ExtNeedsToWriteLogin {context, login, password} ->
-            if cc == context then Just (AppSetLogin login)
-            else Just (AppSetContext context)
-        ExtNeedsToWritePassword {context, password} ->
-            if cc == context then Just (AppSetPassword password)
             else Just (AppSetContext context)
         _ -> Nothing
 

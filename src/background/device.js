@@ -64,9 +64,9 @@ function sendMsg(msg)
     if (device.waitingForMessage)
         return;
     device.waitingForMessage = true;
-    //buffer creation is a bit awkward because windows doesn't like us using
+    //Buffer creation is a bit awkward because windows doesn't like us using
     //the Uint8Array.buffer directly (or maybe it's something to do with the
-    //ArrayBuffer size argument?)
+    //ArrayBuffer size argument?). This is what works on all platforms equally.
     var buffer = new ArrayBuffer(64);
     var array = new Uint8Array(buffer);
     array.set(msg,0);

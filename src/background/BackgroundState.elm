@@ -30,8 +30,6 @@ default = { deviceConnected = False
 type ExtensionRequest =
       ExtWantsCredentials     { context : ByteString }
 
-    | ExtNeedsLogin           { context : ByteString }
-
     | ExtNeedsPassword        { context : ByteString
                               , login   : ByteString
                               }
@@ -49,11 +47,6 @@ type ExtensionRequest =
                               }
 
     | ExtNeedsNewContext      { context  : ByteString
-                              , login    : ByteString
-                              , password : ByteString
-                              }
-
-    | ExtNeedsToWriteLogin    { context  : ByteString
                               , login    : ByteString
                               , password : ByteString
                               }
@@ -118,8 +111,6 @@ update action s =
         Receive (DeviceGetLogin ml) -> case ml of
             Just l ->
                 {s | extRequest <- case s.extRequest of
-                          ExtNeedsLogin c ->
-                              ExtNeedsPassword {c | login = l}
                           ExtWantsCredentials c ->
                               ExtNeedsPassword {c | login = l}
                           _ -> NoRequest
@@ -139,10 +130,6 @@ update action s =
                          if r == Done
                          then ExtNeedsToWritePassword { c - login }
                          else ExtNotWritten
-                     ExtNeedsToWriteLogin c ->
-                         if r == Done
-                         then ExtNeedsToWritePassword { c - login }
-                         else ExtNotWritten
                      _ -> NoRequest
             }
         Receive (DeviceSetPassword r) ->
@@ -157,18 +144,10 @@ update action s =
             case r of
                 ContextSet -> case s.extRequest of
                     ExtWantsCredentials c ->
-                        {s | currentContext <- c.context
-                           , extRequest <- ExtNeedsLogin c
-                        }
+                        {s | currentContext <- c.context}
                     ExtWantsToWrite c ->
-                        {s | currentContext <- c.context
-                           , extRequest <- ExtNeedsToWriteLogin c
-                        }
-                    ExtNeedsLogin c ->
                         {s | currentContext <- c.context}
                     ExtNeedsPassword c  ->
-                        {s | currentContext <- c.context}
-                    ExtNeedsToWriteLogin c ->
                         {s | currentContext <- c.context}
                     ExtNeedsToWritePassword c ->
                         {s | currentContext <- c.context}
@@ -180,13 +159,9 @@ update action s =
                         {s | extRequest <- ExtNeedsNewContext c}
                     ExtWantsCredentials _ ->
                         {s | extRequest <- ExtNoCredentials}
-                    ExtNeedsLogin _ ->
-                        {s | extRequest <- ExtNoCredentials}
                     ExtNeedsPassword _ ->
                         {s | extRequest <- ExtNoCredentials}
                     ExtNeedsToWritePassword _ ->
-                        {s | extRequest <- ExtNotWritten}
-                    ExtNeedsToWriteLogin _ ->
                         {s | extRequest <- ExtNotWritten}
                     _ -> s
                 NoCardForContext ->
