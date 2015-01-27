@@ -21,7 +21,7 @@ type alias FromExtensionMessage =
     }
 
 type alias ToExtensionMessage =
-    { connectState : Maybe {state : String, version : String}
+    { connectState : Maybe { connected : Bool, version : String }
     , credentials  : Maybe { context  : String
                            , login    : String
                            , password : String
@@ -71,18 +71,13 @@ decode message =
 encode : BackgroundState -> (ToExtensionMessage, BackgroundAction)
 encode s =
     let e = emptyToExtensionMessage
-    in  if | s.extAwaitingPing && isJust s.deviceVersion ->
-                let con (Just v) = case s.common.connected of
-                           Connected ->
-                               {state = "connected", version = v.version}
-                           _         ->
-                               {state = "disconnected", version = ""}
-                in ({ e | connectState <- Just (con s.deviceVersion)}
-                   , SetExtAwaitingPing False)
-           | s.extAwaitingPing || not s.deviceConnected ->
-               ({ e | connectState <-
-                        Just {state = "disconnected", version = ""}}
-               , SetExtAwaitingPing False)
+    in  if | s.extAwaitingPing ->
+            ({e | connectState <- Just <|
+                { connected = s.common.connected == Connected
+                , version   = Maybe.withDefault "unknown"
+                                (Maybe.map (\v -> v.version) s.deviceVersion)
+                }
+            }, SetExtAwaitingPing False)
            | s.extRequest /= NoRequest -> case s.extRequest of
                 ExtCredentials    c  ->
                     ({e | credentials <- Just c}, SetExtRequest NoRequest)

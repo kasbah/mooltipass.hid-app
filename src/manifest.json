@@ -1,6 +1,6 @@
 {
-    "name": "Mooltipass Client",
-    "description": "Mooltipass password manager client",
+    "name": "Mooltipass App",
+    "description": "Configure the Mooltipass and connect it with the extension",
     "version": @version,
     "app": {
         "background": {

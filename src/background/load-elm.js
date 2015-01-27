@@ -30,40 +30,25 @@ elm.ports.toGUI.subscribe(function(message) {
 });
 
 elm.ports.toDevice.subscribe(function(message) {
-    if (message.connect != null) {
+    if (message.connect !== null) {
         device.connect();
-    } else if (message.sendCommand != null) {
+    } else if (message.sendCommand !== null) {
         sendMsg(message.sendCommand);
     }
 });
 
-elm.ports.toExtension.subscribe(function(message) {
-    if (extensionId != null) {
-        if (message.connectState != null) {
-            chrome.runtime.sendMessage(extensionId,
-                { type: message.connectState.state
-                , version: message.connectState.version
-                }
-            );
-        } else if (message.credentials != null) {
-            chrome.runtime.sendMessage(extensionId,
-                { type : "credentials"
-                , inputs : { login : {value : message.credentials.login}
-                           , password : {value: message.credentials.password}
-                           }
-                }
-            );
-       } else if (message.noCredentials != null) {
-            chrome.runtime.sendMessage(extensionId,
-                { type : "noCredentials"}
-            );
-       } else if (message.updateComplete != null) {
-            chrome.runtime.sendMessage(extensionId,
-                { type : "updateComplete"}
-            );
-       }
+messageHasValue = function (message) {
+    var hasValue = false;
+    for (var prop in message) {
+        hasValue |= message[prop] !== null;
     }
+    return hasValue;
+}
 
+elm.ports.toExtension.subscribe(function(message) {
+    if (extensionId != null && messageHasValue(message)) {
+        chrome.runtime.sendMessage(extensionId, message);
+    }
 });
 
 deviceSendToElm = function (message) {
@@ -92,45 +77,23 @@ extensionSendToElm = function (message) {
     elm.ports.fromExtension.send(messageWithNulls);
 }
 
+chrome.runtime.onMessageExternal.addListener(function(message, sender, sendResponse)
+{
+    extensionId = sender.id;
+    extensionSendToElm(message);
+});
+
 function launch()
 {
     chrome.app.window.create('gui/index.html',
-            //id takes care of making sure only one is running
-            { id:"mooltipass"
-            , minWidth: 550
-            , minHeight: 600
-            }
+        //id takes care of making sure only one is running
+        { id:"mooltipass"
+        , minWidth: 550
+        , minHeight: 600
+        }
     );
 }
 
 chrome.runtime.onInstalled.addListener(launch);
 chrome.runtime.onStartup.addListener(launch);
 chrome.app.runtime.onLaunched.addListener(launch);
-
-toContext = function (url) {
-    // URL regex to extract base domain for context
-    var reContext = /^\https?\:\/\/([\w\-\+]+\.)*([\w\-\_]+\.[\w\-\_]+)/;
-    return reContext.exec(url)[2];
-}
-chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse)
-{
-    extensionId = sender.id
-    switch (request.type) {
-        case 'ping':
-            extensionSendToElm({ping : []});
-            break;
-        case 'inputs':
-            var context = toContext(request.url);
-            extensionSendToElm({getInputs:{context:context}});
-            break;
-        case 'update':
-            var context = toContext(request.url);
-            extensionSendToElm({update:
-                { context  : context
-                , login    : request.inputs.login.value
-                , password : request.inputs.password.value
-                }
-            });
-            break;
-    }
-});
