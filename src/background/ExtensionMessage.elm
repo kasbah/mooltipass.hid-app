@@ -1,5 +1,6 @@
 module ExtensionMessage where
 
+-- Elm standard library
 import Maybe
 
 -- local source
@@ -47,32 +48,40 @@ decode message =
         set constructor d = SetExtRequest (constructor d)
         -- we do a bytestring conversion to check for errors but we just use
         -- the string above as ByteString is just a type alias
-        errOrInputs = Maybe.map (\{context} -> byteString context) message.getInputs
+        errOrInputs =
+            Maybe.map
+                (\{context} -> byteString context)
+                message.getInputs
         errOrUpdate = Maybe.map errOrUpdate' message.update
         errOrUpdate' {context, login, password} =
             let bSc = byteString context
                 bSl = byteString login
                 bSp = byteString password
-            in bSc `andThen` (\_ -> bSl) `andThen` (\_ -> bSp) `andThen` (\_ -> Ok ())
+            in bSc `andThen` (\_ -> bSl)
+                   `andThen` (\_ -> bSp)
+                   `andThen` (\_ -> Ok ())
     in case errOrUpdate of
-        Just (Err err) -> CommonAction (AppendToLog ("Extension Error: " ++ err))
+        Just (Err err) -> CommonAction
+                            (AppendToLog ("Extension Error: " ++ err))
         _              -> case errOrInputs of
-            Just (Err err) -> CommonAction (AppendToLog ("Extension Error: " ++ err))
+            Just (Err err) -> CommonAction
+                                (AppendToLog ("Extension Error: " ++ err))
             _              -> Maybe.withDefault NoOp (decode' message)
 
 encode : BackgroundState -> (ToExtensionMessage, BackgroundAction)
 encode s =
     let e = emptyToExtensionMessage
     in  if | s.extAwaitingPing && isJust s.deviceVersion ->
-                ({ e | connectState <- Maybe.map (\v ->
-                        case s.common.connected of
-                           Connected    ->
+                let con (Just v) = case s.common.connected of
+                           Connected ->
                                {state = "connected", version = v.version}
-                           _            ->
-                               {state = "disconnected", version = ""}) s.deviceVersion
-                }, SetExtAwaitingPing False)
+                           _         ->
+                               {state = "disconnected", version = ""}
+                in ({ e | connectState <- Just (con s.deviceVersion)}
+                   , SetExtAwaitingPing False)
            | s.extAwaitingPing || not s.deviceConnected ->
-               ({ e | connectState <- Just {state = "disconnected", version = ""}}
+               ({ e | connectState <-
+                        Just {state = "disconnected", version = ""}}
                , SetExtAwaitingPing False)
            | s.extRequest /= NoRequest -> case s.extRequest of
                 ExtCredentials    c  ->
