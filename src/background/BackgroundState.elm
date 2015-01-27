@@ -72,8 +72,8 @@ extensionRequestToLog : ExtensionRequest -> Maybe String
 extensionRequestToLog d = case d of
     ExtWantsCredentials {context} ->
         Just <| "> requesting credentials for " ++ context
-    ExtNeedsToWriteLogin {context, login, password} ->
-        Just <| "> writing credentials for " ++ context
+    ExtWantsToWrite {context, login, password} ->
+        Just <| "> requesting to write credentials for " ++ context
     ExtNeedsNewContext {context, login, password} ->
         Just <| "> adding new credentials for " ++ context
     ExtNoCredentials    -> Just "access denied or no credentials"
@@ -135,6 +135,10 @@ update action s =
             Nothing -> { s | extRequest <- ExtNoCredentials }
         Receive (DeviceSetLogin r) ->
             {s | extRequest <- case s.extRequest of
+                     ExtWantsToWrite c ->
+                         if r == Done
+                         then ExtNeedsToWritePassword { c - login }
+                         else ExtNotWritten
                      ExtNeedsToWriteLogin c ->
                          if r == Done
                          then ExtNeedsToWritePassword { c - login }
