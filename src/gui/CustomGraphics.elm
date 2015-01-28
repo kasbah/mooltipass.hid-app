@@ -5,6 +5,7 @@ import Graphics.Collage (..)
 import Graphics.Element (..)
 import Graphics.Input (..)
 import Text (..)
+import Text
 import Color
 import Signal
 
@@ -39,6 +40,11 @@ darkGrey = Color.rgb 0x10 0x10 0x10
 blue : Color.Color
 blue = Color.rgb 0x0C 0xFE 0xFF
 
+text : String -> Text
+text str = Text.style {defaultStyle | typeface <- ["DejaVu Sans Mono"]
+                                , color <- Color.white
+                      } (fromString str)
+
 button : Signal.Message -> String -> Element
 button msg str =
     let aspect = 2.96658357613427
@@ -47,11 +53,8 @@ button msg str =
         hDown = heights.logTabButton - 2
         wDown = round (toFloat hDown * aspect)
         img w' h' t = image w' h' ("images/button-" ++ t ++ ".svg")
-        s = {defaultStyle | typeface <- ["DejaVu Sans Mono"]
-                          , color <- Color.white
-            }
-        text th = centered <| style {s | height <- Just th} (fromString str)
-        centeredText w' h' th = container (w' - 4) h' middle (text th)
+        txt th = centered <| Text.height th <| text str
+        centeredText w' h' th = container (w' - 4) h' middle (txt th)
         up     = layers [img w h "up"   , centeredText w h 11]
         hover  = layers [img w h "hover", centeredText w h 11]
         down   = container w h middle <| layers [img wDown hDown "hover", centeredText wDown hDown 10]
