@@ -9,7 +9,7 @@ import CommonState (CommonState, CommonAction)
 
 type Tab = Log | Settings | Manage | Developer
 
-{-| The entire application state including gui components -}
+{-| The entire GUI state -}
 type alias GuiState =
     { activeTab   : Tab
     , iconClicked : Int
@@ -17,26 +17,22 @@ type alias GuiState =
     , common : CommonState
     }
 
-{-| All actions that can be performed to change state -}
+{-| All actions that can be performed to change GUI state directly -}
 type Action = ChangeTab Tab
             | ClickIcon
             | CommonAction CommonAction
             | NoOp
-
-{-| Updating the gui state with a common state completely replaces the
-    existing background state -}
-fromCommonState : CommonState -> GuiState -> GuiState
-fromCommonState com gui = { gui | common <- com }
 
 {-| The initial state -}
 default : GuiState
 default =
     { activeTab   = Log
     , iconClicked = 0
-    , devEnabled  = False
+    , devEnabled  = True
     , common = Common.default
     }
 
+{-| The non-visible tabs according to the 'CommonState.ConectState' -}
 disabledTabs : Common.ConnectState -> List Tab
 disabledTabs s =
     case s of
@@ -74,5 +70,6 @@ update action s =
                             _ -> {s | common <- updateCommon a}
         NoOp -> s
 
+{-| Apply 'update' to a list of actions -}
 apply : List Action -> GuiState -> GuiState
 apply actions state = List.foldr update state actions

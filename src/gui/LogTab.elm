@@ -4,7 +4,6 @@ module LogTab where
 import Color
 import Graphics.Collage (..)
 import Graphics.Element (..)
-import Graphics.Input (..)
 import Signal (..)
 import Html
 import Html.Attributes
@@ -24,8 +23,7 @@ logTab (w,h) log =
     let toolbar = container w heights.logTabToolbar middle clearButton
         screenH = h - heights.logTabToolbar - 32
         screenW = w - 64
-        screen' =
-            container w screenH middle <| screen (screenW, screenH) log
+        screen' = container w screenH middle <| screen (screenW, screenH) log
     in container w h middle <| flow down [screen', toolbar]
 
 {-| The screen that displays the log string. -}
@@ -59,13 +57,4 @@ screen (w,h) log =
 
 {-| A button that says 'clear' and clears the log -}
 clearButton : Element
-clearButton =
-    let aspect = 2.96658357613427
-        img t =
-            image (round (toFloat heights.logTabButton * aspect))
-                heights.logTabButton
-                    ("images/button_clear-" ++ t ++ ".svg")
-        up     = img "up"
-        hover  = img "hover"
-        down   = img "down"
-    in  customButton (send commonActions (SetLog [])) up hover down
+clearButton = button (send commonActions (SetLog [])) "clear"
