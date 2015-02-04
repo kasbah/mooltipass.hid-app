@@ -1,20 +1,37 @@
 module FromGuiMessage where
 
+-- Elm standard library
+import Maybe
+
 -- local source
 import CommonState (..)
 
-type alias FromGuiMessage = { setLog : Maybe (List String)
-                            , getState : Maybe ()
-                            }
+type alias FromGuiMessage =
+    { setLog : Maybe (List String)
+    , getState : Maybe ()
+    , startImportMedia : Maybe FilePath
+    }
+
+emptyFromGuiMessage =
+    { setLog           = Nothing
+    , getState         = Nothing
+    , startImportMedia = Nothing
+    }
 
 encode : CommonAction -> FromGuiMessage
 encode action =
-        case action of
-            SetLog s -> {setLog = Just s , getState = Nothing}
-            GetState -> {setLog = Nothing, getState = Just ()}
-            _        -> {setLog = Nothing, getState = Nothing}
+    let e = emptyFromGuiMessage
+    in case action of
+        SetLog l           -> {e | setLog <- Just l}
+        GetState           -> {e | getState <- Just ()}
+        StartImportMedia p -> {e | startImportMedia <- Just p}
+        _                  -> e
 
 decode :  FromGuiMessage -> CommonAction
-decode msg = case msg.setLog of
-        Just s -> SetLog s
-        Nothing -> CommonNoOp
+decode msg =
+    let decode' =
+        Maybe.oneOf
+            [ Maybe.map SetLog msg.setLog
+            , Maybe.map StartImportMedia msg.startImportMedia
+            ]
+    in Maybe.withDefault CommonNoOp decode'

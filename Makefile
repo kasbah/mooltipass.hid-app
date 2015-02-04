@@ -48,7 +48,7 @@ build/%: src/%
 
 clean:
 	rm -rf build
-	rm -rf elm-stuff
+	#rm -rf elm-stuff
 
 package: all
 	cp -r build $(PACKAGE_NAME)
