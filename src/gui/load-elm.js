@@ -1,8 +1,14 @@
 /* This file loads the Elm application and sets up communication with the
    background through chrome.runtime. */
 
+var emptyFromChromeMessage = {pickedMediaFile: null};
 
-var gui = Elm.fullscreen(Elm.GUI, {fromBackground: emptyToGuiMessage});
+
+var gui = Elm.fullscreen(Elm.GUI,
+    { fromBackground: emptyToGuiMessage
+    , fromChrome: emptyFromChromeMessage
+    }
+);
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.toGUI !== undefined) {
@@ -20,7 +26,9 @@ gui.ports.toBackground.subscribe(function(message) {
 gui.ports.toChrome.subscribe(function(message) {
     if (message.pickMediaFile !== null) {
         chrome.fileSystem.chooseEntry({type: 'openFile'}, function(entry) {
-            console.log(entry);
+            if (entry != null) {
+                gui.ports.fromChrome.send({pickedMediaFile: entry.fullPath});
+            }
         });
     }
 });

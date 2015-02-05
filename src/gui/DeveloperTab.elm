@@ -26,7 +26,9 @@ screen (w,h) t =
         <| flow down
             [ widget (w, 64) t
             , container w 64 middle
-                <| bigButton (send guiActions (RequestImportMedia)) "import media"
+                <| bigButton
+                    (send guiActions (SetImportMedia Requested))
+                    "import media"
             ]
 
 widget : (Int, Int) -> Transfer -> Element

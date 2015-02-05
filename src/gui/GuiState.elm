@@ -27,7 +27,6 @@ type alias GuiState =
 {-| All actions that can be performed to change GUI state directly -}
 type Action = ChangeTab Tab
             | ClickIcon
-            | RequestImportMedia
             | SetImportMedia TransferRequest
             | CommonAction CommonAction
             | NoOp
@@ -67,8 +66,12 @@ update action s =
                                      then Log else s.activeTab
                               }
                          else {s | iconClicked <- s.iconClicked + 1}
-        RequestImportMedia -> {s | importMedia <- Requested}
-        SetImportMedia r   -> {s | importMedia <- r}
+        SetImportMedia r   -> case r of
+            RequestFile p -> if s.importMedia == Waiting
+                             then {s | importMedia <- r}
+                             else s
+            _ -> {s | importMedia <- r}
+
         -- An action on the common state can have an affect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
         -- connected state for instance.
