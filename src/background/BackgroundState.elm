@@ -15,6 +15,7 @@ type alias BackgroundState = { deviceConnected : Bool
                              , currentContext  : ByteString
                              , extAwaitingPing : Bool
                              , extRequest      : ExtensionRequest
+                             , mediaTransfer   : MediaTransfer
                              , common          : CommonState
                              }
 
@@ -24,8 +25,14 @@ default = { deviceConnected = False
           , currentContext  = ""
           , extAwaitingPing = False
           , extRequest      = NoRequest
+          , mediaTransfer   = NoMediaTransfer
           , common          = Common.default
           }
+
+type MediaTransfer =
+      NoMediaTransfer
+    | MediaImportRequested FilePath
+    | MediaImport Int (List DevicePacket)
 
 type ExtensionRequest =
       ExtWantsCredentials     { context : ByteString }
@@ -107,6 +114,9 @@ update action s =
                                             else s.deviceVersion
                     }
                else s
+        CommonAction (StartImportMedia p) -> case s.mediaTransfer of
+            NoMediaTransfer -> {s | mediaTransfer <- MediaImportRequested p}
+            _               -> s
         CommonAction a -> {s | common <- updateCommon a}
         Receive (DeviceGetLogin ml) -> case ml of
             Just l ->
