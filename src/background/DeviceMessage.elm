@@ -43,17 +43,29 @@ encode s =
           | s.deviceVersion == Nothing ->
               ({e | sendCommand <- Just (toInts AppGetVersion)}, NoOp)
           | s.extRequest /= NoRequest ->
-              ({e | sendCommand <- Maybe.map toInts (toPacket s)}
+              ({e | sendCommand <-
+                    Maybe.map toInts (toPacket s.currentContext s.extRequest)}
               , Maybe.withDefault NoOp
                     (Maybe.map
                         (CommonAction << AppendToLog)
                         (extensionRequestToLog s.extRequest)))
+          | s.mediaTransfer /= NoMediaTransfer ->
+                case s.mediaTransfer of
+                    MediaImportStart _ ->
+                        ({e | sendCommand <- Just (toInts AppImportMediaStart)}
+                        , NoOp)
+                    MediaImport (p::ps) ->
+                        ({e | sendCommand <- Just (toInts p)}
+                        , NoOp)
+                    MediaImport [] ->
+                        ({e | sendCommand <- Just (toInts AppImportMediaEnd)}
+                        , NoOp)
+                    _ -> (e, NoOp)
           | otherwise -> (e,NoOp)
 
-toPacket : BackgroundState -> Maybe AppPacket
-toPacket s =
-    let cc = s.currentContext
-    in case s.extRequest of
+toPacket : String -> ExtensionRequest -> Maybe AppPacket
+toPacket cc extRequest =
+    case extRequest of
         ExtNeedsNewContext {context, login, password} ->
             Just (AppAddContext context)
         ExtWantsCredentials {context} ->

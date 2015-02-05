@@ -32,7 +32,8 @@ default = { deviceConnected = False
 type MediaTransfer =
       NoMediaTransfer
     | MediaImportRequested FilePath
-    | MediaImport Int (List DevicePacket)
+    | MediaImportStart (List AppPacket)
+    | MediaImport (List AppPacket)
 
 type ExtensionRequest =
       ExtWantsCredentials     { context : ByteString }
@@ -85,6 +86,7 @@ extensionRequestToLog d = case d of
 type BackgroundAction = SetHidConnected    Bool
                       | SetExtAwaitingPing Bool
                       | SetExtRequest      ExtensionRequest
+                      | SetMediaTransfer     MediaTransfer
                       | Receive            DevicePacket
                       | CommonAction       CommonAction
                       | NoOp
@@ -101,6 +103,7 @@ update action s =
             else {s | deviceConnected <- True}
         SetExtAwaitingPing b -> {s | extAwaitingPing <- b}
         SetExtRequest d -> {s | extRequest <- d}
+        SetMediaTransfer t -> {s | mediaTransfer <- t}
         CommonAction (SetConnected c) ->
             let s' = {s | common <- updateCommon (SetConnected c)}
             in if c /= s.common.connected
