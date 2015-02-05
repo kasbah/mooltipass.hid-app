@@ -38,8 +38,8 @@ grey = Color.rgb 0x1A 0x1A 0x1A
 darkGrey : Color.Color
 darkGrey = Color.rgb 0x10 0x10 0x10
 
-blue : Color.Color
-blue = Color.rgb 0x0C 0xFE 0xFF
+cyan : Color.Color
+cyan = Color.rgb 0x00 0xff 0xd8
 
 text : String -> Text
 text str = Text.style {defaultStyle | typeface <- ["DejaVu Sans Mono"]
