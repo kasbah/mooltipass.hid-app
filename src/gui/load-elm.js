@@ -27,7 +27,8 @@ gui.ports.toChrome.subscribe(function(message) {
     if (message.pickMediaFile !== null) {
         chrome.fileSystem.chooseEntry({type: 'openFile'}, function(entry) {
             if (entry != null) {
-                gui.ports.fromChrome.send({pickedMediaFile: entry.fullPath});
+                var id = chrome.fileSystem.retainEntry(entry);
+                gui.ports.fromChrome.send({pickedMediaFile: id});
             }
         });
     }

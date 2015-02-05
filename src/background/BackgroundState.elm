@@ -119,7 +119,7 @@ update action s =
                else s
         CommonAction (StartImportMedia p) -> case s.mediaImport of
             NoMediaImport -> {s | mediaImport <- MediaImportRequested p}
-            _               -> s
+            _             -> s
         CommonAction a -> {s | common <- updateCommon a}
         Receive (DeviceGetLogin ml) -> case ml of
             Just l ->

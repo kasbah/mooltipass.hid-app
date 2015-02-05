@@ -16,6 +16,8 @@ import BackgroundState (..)
 import ExtensionMessage (..)
 import ExtensionMessage
 import DevicePacket (..)
+import ChromeMessage
+import ChromeMessage (..)
 
 port fromGUI : Signal FromGuiMessage
 
@@ -34,6 +36,9 @@ port toDevice =
                      else {emptyToDeviceMessage | connect <- Just ()})
             (every second)
             state
+
+port toChrome : Signal ToChromeMessage
+port toChrome = map ChromeMessage.encode state
 
 state : Signal BackgroundState
 state = map (\(_,_,s) -> s) output

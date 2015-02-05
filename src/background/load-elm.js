@@ -10,6 +10,7 @@ var emptyFromExtensionMessage  = { ping      : null
                                  };
 var guiOpen = false;
 var extensionId = null;
+var readingFile = false;
 
 var elm = Elm.worker(
     Elm.Background,
@@ -34,6 +35,26 @@ elm.ports.toDevice.subscribe(function(message) {
         device.connect();
     } else if (message.sendCommand !== null) {
         sendMsg(message.sendCommand);
+    }
+});
+
+elm.ports.toChrome.subscribe(function(message) {
+    if (message.readFile !== null && (! readingFile)) {
+        readingFile = true;
+        chrome.fileSystem.restoreEntry(message.readFile, function(entry) {
+            entry.file(function(file) {
+                var reader = new FileReader();
+                reader.onerror = function(e) {
+                    console.log(e);
+                    readingFile = false;
+                };
+                reader.onloadend = function(e) {
+                    console.log(e);
+                    readingFile = false;
+                }
+                reader.readAsArrayBuffer(file);
+            });
+        });
     }
 });
 
