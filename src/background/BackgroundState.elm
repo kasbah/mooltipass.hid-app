@@ -15,7 +15,7 @@ type alias BackgroundState = { deviceConnected : Bool
                              , currentContext  : ByteString
                              , extAwaitingPing : Bool
                              , extRequest      : ExtensionRequest
-                             , mediaTransfer   : MediaTransfer
+                             , mediaImport     : MediaImport
                              , common          : CommonState
                              }
 
@@ -25,12 +25,12 @@ default = { deviceConnected = False
           , currentContext  = ""
           , extAwaitingPing = False
           , extRequest      = NoRequest
-          , mediaTransfer   = NoMediaTransfer
+          , mediaImport     = NoMediaImport
           , common          = Common.default
           }
 
-type MediaTransfer =
-      NoMediaTransfer
+type MediaImport =
+      NoMediaImport
     | MediaImportRequested FilePath
     | MediaImportStart (List AppPacket)
     | MediaImport (List AppPacket)
@@ -86,7 +86,7 @@ extensionRequestToLog d = case d of
 type BackgroundAction = SetHidConnected    Bool
                       | SetExtAwaitingPing Bool
                       | SetExtRequest      ExtensionRequest
-                      | SetMediaTransfer     MediaTransfer
+                      | SetMediaImport     MediaImport
                       | Receive            DevicePacket
                       | CommonAction       CommonAction
                       | NoOp
@@ -103,7 +103,7 @@ update action s =
             else {s | deviceConnected <- True}
         SetExtAwaitingPing b -> {s | extAwaitingPing <- b}
         SetExtRequest d -> {s | extRequest <- d}
-        SetMediaTransfer t -> {s | mediaTransfer <- t}
+        SetMediaImport t -> {s | mediaImport <- t}
         CommonAction (SetConnected c) ->
             let s' = {s | common <- updateCommon (SetConnected c)}
             in if c /= s.common.connected
@@ -117,8 +117,8 @@ update action s =
                                             else s.deviceVersion
                     }
                else s
-        CommonAction (StartImportMedia p) -> case s.mediaTransfer of
-            NoMediaTransfer -> {s | mediaTransfer <- MediaImportRequested p}
+        CommonAction (StartImportMedia p) -> case s.mediaImport of
+            NoMediaImport -> {s | mediaImport <- MediaImportRequested p}
             _               -> s
         CommonAction a -> {s | common <- updateCommon a}
         Receive (DeviceGetLogin ml) -> case ml of

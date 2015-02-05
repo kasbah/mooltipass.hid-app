@@ -49,8 +49,8 @@ encode s =
                     (Maybe.map
                         (CommonAction << AppendToLog)
                         (extensionRequestToLog s.extRequest)))
-          | s.mediaTransfer /= NoMediaTransfer ->
-                case s.mediaTransfer of
+          | s.mediaImport /= NoMediaImport ->
+                case s.mediaImport of
                     MediaImportStart _ ->
                         ({e | sendCommand <- Just (toInts AppImportMediaStart)}
                         , NoOp)
