@@ -5,21 +5,30 @@ import List
 
 -- local source
 import CommonState as Common
-import CommonState (CommonState, CommonAction)
+import CommonState (..)
 
 type Tab = Log | Settings | Manage | Developer
+
+type TransferRequest =
+      Requested
+    | Waiting
+    | RequestFile FilePath
+    | NotRequested
 
 {-| The entire GUI state -}
 type alias GuiState =
     { activeTab   : Tab
     , iconClicked : Int
     , devEnabled  : Bool
-    , common : CommonState
+    , importMedia : TransferRequest
+    , common      : CommonState
     }
 
 {-| All actions that can be performed to change GUI state directly -}
 type Action = ChangeTab Tab
             | ClickIcon
+            | RequestImportMedia
+            | SetImportMedia TransferRequest
             | CommonAction CommonAction
             | NoOp
 
@@ -29,10 +38,11 @@ default =
     { activeTab   = Log
     , iconClicked = 0
     , devEnabled  = True
-    , common = Common.default
+    , importMedia = NotRequested
+    , common      = Common.default
     }
 
-{-| The non-visible tabs according to the 'CommonState.ConectState' -}
+{-| The non-visible tabs according to the 'CommonState.ConnectState' -}
 disabledTabs : Common.ConnectState -> List Tab
 disabledTabs s =
     case s of
@@ -57,6 +67,8 @@ update action s =
                                      then Log else s.activeTab
                               }
                          else {s | iconClicked <- s.iconClicked + 1}
+        RequestImportMedia -> {s | importMedia <- Requested}
+        SetImportMedia r   -> {s | importMedia <- r}
         -- An action on the common state can have an affect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
         -- connected state for instance.

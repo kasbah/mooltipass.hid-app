@@ -9,11 +9,13 @@ import List
 -- local source
 import Scene
 import ToGuiMessage
-import ToGuiMessage (ToGuiMessage)
+import ToGuiMessage (..)
 import FromGuiMessage
-import FromGuiMessage (FromGuiMessage)
+import FromGuiMessage (..)
 import Actions (..)
 import GuiState (..)
+import ChromeMessage (..)
+import ChromeMessage
 
 {-| Any state updates from the background are received through this port -}
 port fromBackground : Signal ToGuiMessage
@@ -23,16 +25,32 @@ port fromBackground : Signal ToGuiMessage
 port toBackground : Signal FromGuiMessage
 port toBackground = FromGuiMessage.encode <~ (subscribe commonActions)
 
+port toChrome : Signal ToChromeMessage
+port toChrome = map (\(m,_) -> m) output
+
 {-| The complete application state signal to map our main element to. It is
     the gui-state updated by any state updates from the background. -}
 state : Signal GuiState
-state =
-    foldp apply default
-        <| merge ((\m -> [m]) <~ (subscribe guiActions))
-        <| (List.map CommonAction) <~ (ToGuiMessage.decode <~ fromBackground)
+state = map (\(_,s) -> s) output
+
+output : Signal (ToChromeMessage, GuiState)
+output =
+    let go inputActions (_, s) =
+        let s' = apply inputActions s
+            (tcm, a) = ChromeMessage.encode s'
+        in (tcm, update a s')
+    in foldp go
+        (emptyToChromeMessage, default)
+        inputActions
 
 {-| Our main function simply maps the scene to the window dimensions and state
     signals. The scene converts a state and window dimension into an Element.
 -}
 main : Signal Element
 main = Scene.scene <~ Window.dimensions ~ state
+
+inputActions : Signal (List Action)
+inputActions = mergeMany
+    [ map ((List.map CommonAction) << ToGuiMessage.decode) fromBackground
+    , map (\m -> [m]) (subscribe guiActions)
+    ]

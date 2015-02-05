@@ -16,3 +16,11 @@ chrome.runtime.sendMessage({toBackground:{setLog:null, getState:[], startImportM
 gui.ports.toBackground.subscribe(function(message) {
     chrome.runtime.sendMessage({toBackground: message});
 });
+
+gui.ports.toChrome.subscribe(function(message) {
+    if (message.pickMediaFile !== null) {
+        chrome.fileSystem.chooseEntry({type: 'openFile'}, function(entry) {
+            console.log(entry);
+        });
+    }
+});

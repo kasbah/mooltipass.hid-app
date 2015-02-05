@@ -11,6 +11,7 @@ import Layout (..)
 import CustomGraphics (..)
 import Actions (..)
 import CommonState (..)
+import GuiState (..)
 
 developerTab : (Int, Int) -> Transfer -> Element
 developerTab (w,h) t =
@@ -25,7 +26,7 @@ screen (w,h) t =
         <| flow down
             [ widget (w, 64) t
             , container w 64 middle
-                <| bigButton (send commonActions (CommonNoOp)) "import media"
+                <| bigButton (send guiActions (RequestImportMedia)) "import media"
             ]
 
 widget : (Int, Int) -> Transfer -> Element
