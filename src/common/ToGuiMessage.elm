@@ -3,9 +3,9 @@ module ToGuiMessage where
 -- local source
 import CommonState (..)
 
-type alias ToGuiMessage = { setLog : (List String)
-                          , setConnected : Int
-                          , setTransferMedia  : (Int,String,Int)
+type alias ToGuiMessage = { setLog           : (List String)
+                          , setConnected     : Int
+                          , setTransferMedia : (Int,String,Int)
                           }
 
 encode : CommonState -> ToGuiMessage
@@ -17,11 +17,11 @@ encode s =
                     NoCard       -> 2
                     NoPin        -> 3
     , setTransferMedia = case s.transferMedia of
-        NoTransfer         -> (0,"",0)
+        NoTransfer        -> (0,"",0)
         ImportRequested p -> (1,p,0)
-        Importing p i      -> (2,p,i)
-        Imported p         -> (3,p,0)
-        TransferError s    -> (4,s,0)
+        Importing p i     -> (2,p,i)
+        Imported p        -> (3,p,0)
+        TransferError s   -> (4,s,0)
     }
 
 decode : ToGuiMessage -> List CommonAction

@@ -23,11 +23,7 @@ screen : (Int, Int) -> Element
 screen (w,h) =
     container w h midTop
         <| flow down
-            [ widget (w, 64) "Media:"
-            , spacer 1 16
-            , widget (w, 64) "Flash:"
-            , spacer 1 16
-            , widget (w, 64) "Eeprom:"
+            [ widget (w, 64) "Import Media:"
             ]
 
 widget : (Int, Int) -> String -> Element
@@ -44,8 +40,6 @@ widget (w,h) str =
               , container w h midRight buttons
               ]
 
-buttons = flow right [ button (send commonActions (CommonNoOp)) "import"
-                     , spacer 10 1
-                     , button (send commonActions (CommonNoOp)) "export"
+buttons = flow right [ bigButton (send commonActions (CommonNoOp)) "import media"
                      , spacer 16 1
                      ]

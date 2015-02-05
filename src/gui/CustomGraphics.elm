@@ -3,6 +3,7 @@ module CustomGraphics where
 import List
 import Graphics.Collage (..)
 import Graphics.Element (..)
+import Graphics.Element as Element
 import Graphics.Input (..)
 import Text (..)
 import Text
@@ -42,19 +43,23 @@ blue = Color.rgb 0x0C 0xFE 0xFF
 
 text : String -> Text
 text str = Text.style {defaultStyle | typeface <- ["DejaVu Sans Mono"]
-                                , color <- Color.white
+                                    , color <- Color.white
                       } (fromString str)
 
 button : Signal.Message -> String -> Element
-button msg str =
-    let aspect = 2.96658357613427
-        h = heights.logTabButton
+button msg str = button' 2.96658357613427 "button" msg str
+
+bigButton : Signal.Message -> String -> Element
+bigButton msg str = button' 6.018072289156627 "bigButton" msg str
+
+button' aspect src msg str =
+    let h = heights.logTabButton
         w = round (toFloat h * aspect)
         hDown = heights.logTabButton - 2
         wDown = round (toFloat hDown * aspect)
-        img w' h' t = image w' h' ("images/button-" ++ t ++ ".svg")
-        txt th = centered <| Text.height th <| text str
-        centeredText w' h' th = container (w' - 4) h' middle (txt th)
+        img w' h' t = image w' h' ("images/" ++ src ++ "-" ++ t ++ ".svg")
+        txt w' th = Element.width w' <| centered <| Text.height th <| text str
+        centeredText w' h' th = container (w' - 4) h' middle (txt w' th)
         up     = layers [img w h "up"   , centeredText w h 11]
         hover  = layers [img w h "hover", centeredText w h 11]
         down   = container w h middle <| layers [img wDown hDown "hover", centeredText wDown hDown 10]
