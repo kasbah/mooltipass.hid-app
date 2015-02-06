@@ -1,7 +1,12 @@
 module ChromeMessage where
 
+-- Elm standard library
+import List
 -- local source
 import BackgroundState (..)
+import CommonState (..)
+import Byte (..)
+import DevicePacket (..)
 
 type alias ToChromeMessage = {readFile : Maybe String}
 
@@ -14,4 +19,10 @@ encode s =
         MediaImportRequested p -> {e | readFile <- Just p}
         _ -> e
 
+type alias FromChromeMessage = {readFile : List ByteArray}
 
+decode : FromChromeMessage -> BackgroundAction
+decode msg = case msg.readFile of
+    [] -> NoOp
+    --is -> SetMediaImport (MediaImportStart (List.map AppImportMedia is))
+    is -> CommonAction (AppendToLog (toString msg))

@@ -31,9 +31,13 @@ default = { deviceConnected = False
 
 type MediaImport =
       NoMediaImport
-    | MediaImportRequested FilePath
-    | MediaImportStart (List AppPacket)
-    | MediaImport (List AppPacket)
+    | MediaImportRequested    String
+    | MediaImportStart        (List AppPacket)
+    | MediaImportStartWaiting (List AppPacket)
+    | MediaImport             (List AppPacket)
+    | MediaImportWaiting      (List AppPacket)
+    | MediaImportError        String
+    | MediaImportSuccess
 
 type ExtensionRequest =
       ExtWantsCredentials     { context : ByteString }
@@ -118,8 +122,8 @@ update action s =
                     }
                else s
         CommonAction (StartImportMedia p) -> case s.mediaImport of
-            NoMediaImport -> {s | mediaImport <- MediaImportRequested p}
-            _             -> s
+            NoMediaImport -> update (appendToLog "NoMediaImport") {s | mediaImport <- MediaImportRequested p}
+            _             -> update (appendToLog (toString s.mediaImport)) s
         CommonAction a -> {s | common <- updateCommon a}
         Receive (DeviceGetLogin ml) -> case ml of
             Just l ->
@@ -202,6 +206,25 @@ update action s =
                         ++ toString v.flashMemSize
                         ++ "MBit"))
                 {s | deviceVersion <- Just v}
+        Receive (DeviceImportMediaStart r) ->
+            update (appendToLog "DeviceImportMediaStart")
+            { s | mediaImport <- case s.mediaImport of
+                MediaImportStartWaiting ps -> if r == Done then MediaImport ps else MediaImportError "Start failed"
+                MediaImportWaiting ps -> if r == Done then MediaImport ps else MediaImportError "Start failed"
+                _ -> MediaImportError "Received unexpected start import confirmation from device"
+            }
+        Receive (DeviceImportMedia r) ->
+            update (appendToLog "DeviceImportMedia")
+            { s | mediaImport <- case s.mediaImport of
+                MediaImportWaiting (p::ps) -> if r == Done then MediaImport ps else MediaImportError "Write failed"
+                _ -> MediaImportError "Received unexpected imported data confirmation from device"
+            }
+        Receive (DeviceImportMediaEnd r) ->
+            update (appendToLog "DeviceImportMediaEnd")
+            { s | mediaImport <- case s.mediaImport of
+                MediaImportWaiting [] -> if r == Done then MediaImportSuccess else MediaImportError "End not succeeded"
+                _ -> MediaImportError "Received unexpected end import confirmation from device"
+            }
         Receive x ->
             update
                 (appendToLog ("Error: received unhandled packet " ++ toString x))

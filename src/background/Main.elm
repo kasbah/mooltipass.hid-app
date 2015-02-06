@@ -40,6 +40,8 @@ port toDevice =
 port toChrome : Signal ToChromeMessage
 port toChrome = map ChromeMessage.encode state
 
+port fromChrome : Signal FromChromeMessage
+
 state : Signal BackgroundState
 state = map (\(_,_,s) -> s) output
 
@@ -63,4 +65,5 @@ inputActions = mergeMany
     [ map DeviceMessage.decode fromDevice
     , map (CommonAction << FromGuiMessage.decode) fromGUI
     , map ExtensionMessage.decode fromExtension
+    , map ChromeMessage.decode fromChrome
     ]

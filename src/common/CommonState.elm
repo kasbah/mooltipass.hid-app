@@ -42,7 +42,7 @@ type CommonAction = SetLog (List String)
                   | AppendToLog String
                   | GetState
                   | SetTransferMedia Transfer
-                  | StartImportMedia FilePath
+                  | StartImportMedia String
                   | CommonNoOp
 
 {-| Transform the state to a new state according to an action -}

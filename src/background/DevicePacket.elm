@@ -29,7 +29,7 @@ type AppPacket =
    | AppExportFlash
    | AppExportFlashEnd
    | AppImportFlashStart   FlashSpace
-   | AppImportFlash        ByteString
+   | AppImportFlash        ByteArray
    | AppImportFlashEnd
    | AppExportEepromStart
    | AppExportEeprom
@@ -41,7 +41,7 @@ type AppPacket =
    | AppMemoryManageModeStart
    | AppMemoryManageModeEnd
    | AppImportMediaStart
-   | AppImportMedia        ByteString
+   | AppImportMedia        ByteArray
    | AppImportMediaEnd
    | AppReadFlashNode      FlashAddress
    | AppWriteFlashNode     FlashAddress Byte ByteString
@@ -175,6 +175,7 @@ toInts : AppPacket -> List Int
 toInts msg =
     -- the packet format is [payload-size, message-type, payload ... ]
     let byteString msgType s = String.length s::msgType::stringToInts s
+        byteArray msgType a  = List.length a::msgType::a
         byteStringNull msgType s =
             (String.length s + 1)::msgType::stringToInts s ++ [0]
         zeroSize msgType     = [0, msgType]
@@ -208,7 +209,7 @@ toInts msg =
                                          FlashUserSpace     -> 0x00
                                          FlashGraphicsSpace -> 0x01
                                      ]
-        AppImportFlash  s        -> byteString 0x33 s
+        AppImportFlash  s        -> byteArray 0x33 s
         AppImportFlashEnd        -> zeroSize 0x34
         AppExportEeprom          -> zeroSize 0x35
         AppExportEepromEnd       -> zeroSize 0x36
@@ -221,7 +222,7 @@ toInts msg =
         AppMemoryManageModeStart -> zeroSize 0x50
         AppMemoryManageModeEnd   -> zeroSize 0x51
         AppImportMediaStart      -> zeroSize 0x52
-        AppImportMedia  s        -> byteString 0x53 s
+        AppImportMedia  a        -> byteArray 0x53 a
         AppImportMediaEnd        -> zeroSize 0x54
         AppReadFlashNode (a1,a2) -> [2, 0x55, a1, a2]
         AppWriteFlashNode (a1,a2) n s       ->

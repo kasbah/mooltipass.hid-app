@@ -37,7 +37,26 @@ decode message =
 encode : BackgroundState -> (ToDeviceMessage, BackgroundAction)
 encode s =
     let e = emptyToDeviceMessage
+        activeImport = case s.mediaImport of
+            NoMediaImport             -> False
+            MediaImportError _        -> False
+            MediaImportSuccess        -> False
+            MediaImportStartWaiting _ -> False
+            MediaImportWaiting _      -> False
+            _ -> True
     in if | not s.deviceConnected -> ({e | connect <- Just ()}, NoOp)
+          | activeImport ->
+                case s.mediaImport of
+                    MediaImportStart ps ->
+                        ({e | sendCommand <- Just (toInts AppImportMediaStart)}
+                        , SetMediaImport (MediaImportStartWaiting ps))
+                    MediaImport (p::ps) ->
+                        ({e | sendCommand <- Just (toInts p)}
+                        , SetMediaImport (MediaImportWaiting (p::ps)))
+                    MediaImport [] ->
+                        ({e | sendCommand <- Just (toInts AppImportMediaEnd)}
+                        , SetMediaImport (MediaImportWaiting []))
+                    _ -> (e, NoOp)
           -- this is taken care of with keep-alive
           | s.common.connected /= Common.Connected -> (e, NoOp)
           | s.deviceVersion == Nothing ->
@@ -49,18 +68,6 @@ encode s =
                     (Maybe.map
                         (CommonAction << AppendToLog)
                         (extensionRequestToLog s.extRequest)))
-          | s.mediaImport /= NoMediaImport ->
-                case s.mediaImport of
-                    MediaImportStart _ ->
-                        ({e | sendCommand <- Just (toInts AppImportMediaStart)}
-                        , NoOp)
-                    MediaImport (p::ps) ->
-                        ({e | sendCommand <- Just (toInts p)}
-                        , NoOp)
-                    MediaImport [] ->
-                        ({e | sendCommand <- Just (toInts AppImportMediaEnd)}
-                        , NoOp)
-                    _ -> (e, NoOp)
           | otherwise -> (e,NoOp)
 
 toPacket : String -> ExtensionRequest -> Maybe AppPacket

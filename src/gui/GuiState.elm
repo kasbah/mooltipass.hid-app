@@ -46,7 +46,7 @@ disabledTabs : Common.ConnectState -> List Tab
 disabledTabs s =
     case s of
         Common.Connected    -> []
-        Common.NotConnected -> [Settings, Manage, Developer]
+        Common.NotConnected -> [Settings, Manage]
         Common.NoCard       -> [Settings, Manage]
         Common.NoPin        -> [Settings, Manage]
 

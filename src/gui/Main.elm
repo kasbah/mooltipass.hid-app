@@ -25,10 +25,7 @@ port fromBackground : Signal ToGuiMessage
     should bubble back up throught the 'port fromBackground'. -}
 port toBackground : Signal FromGuiMessage
 port toBackground =
-    merge
         (map FromGuiMessage.encode (subscribe commonActions))
-        <| map (\(_,m,_) -> m) output
-
 
 port toChrome : Signal ToChromeMessage
 port toChrome = map (\(m,_,_) -> m) output

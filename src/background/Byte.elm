@@ -18,7 +18,7 @@ toByte x = if (x >= 0) && (x < 256)
 type alias ByteString = String
 
 {-| We make sure the length (size) is right and values are between 0 and 255
-    when we convert to a bytestring. -}
+    when we convert Ints to a bytestring. -}
 toByteString : Int -> List Int -> Result Error ByteString
 toByteString size ints =
     if size > List.length ints || size <= 0
@@ -28,12 +28,14 @@ toByteString size ints =
          then Ok <| String.fromList (List.map Char.fromCode (List.take size ints))
          else Err "Invalid char given to byte conversion (unicode?)"
 
-{-| We make sure values are between 0 and 255 when we convert to a bytestring.
-    -}
+{-| We make sure values are between 0 and 255 when we convert a String to a
+    bytestring. -}
 byteString : String -> Result Error ByteString
 byteString s =
     toByteString (String.length s)
     <| List.map Char.toCode (String.toList s)
+
+type alias ByteArray = List Byte
 
 {-| Our error type is just a string that explains the error. -}
 type alias Error = String

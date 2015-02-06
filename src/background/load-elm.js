@@ -17,6 +17,7 @@ var elm = Elm.worker(
     { fromGUI       : emptyFromGuiMessage
     , fromDevice    : emptyFromDeviceMessage
     , fromExtension : emptyFromExtensionMessage
+    , fromChrome    : {readFile: []}
     }
 );
 
@@ -34,11 +35,14 @@ elm.ports.toDevice.subscribe(function(message) {
     if (message.connect !== null) {
         device.connect();
     } else if (message.sendCommand !== null) {
+        if (message.sendCommand[1] !== 112)
+            console.log("app:", message.sendCommand);
         sendMsg(message.sendCommand);
     }
 });
 
 elm.ports.toChrome.subscribe(function(message) {
+    console.log(message);
     if (message.readFile !== null && (! readingFile)) {
         readingFile = true;
         chrome.fileSystem.restoreEntry(message.readFile, function(entry) {
@@ -49,7 +53,22 @@ elm.ports.toChrome.subscribe(function(message) {
                     readingFile = false;
                 };
                 reader.onloadend = function(e) {
-                    console.log(e);
+                    var bytes = new Uint8Array(reader.result);
+                    var ints = [];
+                    var pages = [];
+                    var packets = [];
+                    for (var i = 0, len = bytes.length; i < len; i++) {
+                        ints[i] = bytes[i];
+                    }
+                    for (var i = 0, len = ints.length; i < len; i+=264) {
+                        pages.push(ints.slice(i,i+264));
+                    }
+                    for (var i = 0, len = pages.length; i < len; i+=1) {
+                        for (var j = 0, len2 = pages[i].length; j < len2; j+=62) {
+                            packets.push(pages[i].slice(j,j+62));
+                        }
+                    }
+                    elm.ports.fromChrome.send({readFile:packets});
                     readingFile = false;
                 }
                 reader.readAsArrayBuffer(file);
@@ -82,6 +101,8 @@ deviceSendToElm = function (message) {
             messageWithNulls[prop] = emptyFromDeviceMessage[prop];
         }
     }
+    if (message.receiveCommand != undefined && message.receiveCommand[1] !== 112)
+        console.log("device:", message.receiveCommand);
     elm.ports.fromDevice.send(messageWithNulls);
 };
 
