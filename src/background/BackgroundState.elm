@@ -260,7 +260,7 @@ setMediaInfo imp s =
         MediaImportError str -> updateCommon (TransferError str)
         MediaImportRequested id -> updateCommon (ImportRequested id)
         MediaImportStart ps  -> case s.common.transferInfo of
-            ImportRequested id -> updateCommon (Importing id 0 (length ps))
+            ImportRequested id -> updateCommon (Importing id (length ps) (length ps))
             _ -> updateCommon (TransferError ("Internal state error MediaImportStart"))
         MediaImport ps       -> case s.common.transferInfo of
             Importing id _ t -> updateCommon (Importing id (length ps) t)

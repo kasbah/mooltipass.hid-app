@@ -41,6 +41,9 @@ darkGrey = Color.rgb 0x10 0x10 0x10
 cyan : Color.Color
 cyan = Color.rgb 0x00 0xff 0xd8
 
+blue : Color.Color
+blue = Color.rgb 0x00 0x84 0xff
+
 text : String -> Text
 text str = Text.style {defaultStyle | typeface <- ["DejaVu Sans Mono"]
                                     , color <- Color.white
@@ -64,7 +67,7 @@ button' aspect src msg str =
         wDown = round (toFloat hDown * aspect)
         img w' h' t = image w' h' ("images/" ++ src ++ "-" ++ t ++ ".svg")
         txt w' th = Element.width w' <| centered <| Text.height th <| text str
-        centeredText w' h' th = container (w' - 4) h' middle (txt w' th)
+        centeredText w' h' th = container (w' - 2) h' middle (txt w' th)
         up     = layers [img w h "up"   , centeredText w h 11]
         hover  = layers [img w h "hover", centeredText w h 11]
         down   = container w h middle <| layers [img wDown hDown "hover", centeredText wDown hDown 10]

@@ -36,7 +36,7 @@ default : GuiState
 default =
     { activeTab   = Log
     , iconClicked = 0
-    , devEnabled  = True
+    , devEnabled  = False
     , importMedia = NotRequested
     , common      = Common.default
     }
@@ -46,9 +46,9 @@ disabledTabs : Common.ConnectState -> List Tab
 disabledTabs s =
     case s of
         Common.Connected    -> []
-        Common.NotConnected -> [Settings, Manage]
+        Common.NotConnected -> [Settings, Manage, Developer]
         Common.NoCard       -> [Settings, Manage]
-        Common.NoPin        -> [Settings, Manage]
+        Common.NoPin        -> [Settings, Manage, Developer]
 
 {-| Transform the state to a new state according to an action -}
 update : Action -> GuiState -> GuiState
@@ -61,9 +61,9 @@ update action s =
                          then { s | iconClicked <- 0
                                   , devEnabled  <- not s.devEnabled
                                   , activeTab   <-
-                                     if s.activeTab == Developer
-                                         && s.devEnabled
-                                     then Log else s.activeTab
+                                     if | s.activeTab == Developer && s.devEnabled -> Log
+                                        | not s.devEnabled -> Developer
+                                        | otherwise -> s.activeTab
                               }
                          else {s | iconClicked <- s.iconClicked + 1}
         SetImportMedia r   -> case r of

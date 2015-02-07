@@ -37,7 +37,6 @@ infoText : TransferInfo -> String
 infoText t = case t of
     ImportRequested id -> "importing " ++ fileName id
     Importing id _ _   -> "importing " ++ fileName id
-    --Importing id todo total   -> "importing " ++ toString (total - todo) ++ "/" ++ toString total
     Imported id        -> "sucessfully imported " ++ fileName id
     TransferError str  -> "import error: " ++ str
     _                  -> ""
@@ -52,16 +51,16 @@ widget (w,h) t =
                <| 5
            ]
         progressBar' prog c = collage (round (progToWidth prog)) h
-           [ alpha 0.5 <| filled c
+           [ filled c
                <| roundedRect (progToWidth prog) h'
                <| 5
            ]
         progressBar = case t of
             ImportRequested id -> Element.empty
-            Importing id todo total ->
-                progressBar' (toFloat (total - todo)/toFloat total) cyan
+            Importing id td ttl ->
+                progressBar' (toFloat (ttl - td)/toFloat ttl) blue
             Imported id        -> progressBar' 1.0 cyan
             TransferError str  -> progressBar' 1.0 Color.red
             _                  -> Element.empty
-        txt s = container w h middle <| leftAligned (text s)
+        txt s = container w h middle <| leftAligned (text' s)
     in layers [bg, progressBar, txt (infoText t) ]
