@@ -75,13 +75,6 @@ elm.ports.toChrome.subscribe(function(message) {
     }
 });
 
-messageHasValue = function (message) {
-    var hasValue = false;
-    for (var prop in message) {
-        hasValue |= message[prop] !== null;
-    }
-    return hasValue;
-}
 
 elm.ports.toExtension.subscribe(function(message) {
     if (extensionId != null && messageHasValue(message)) {

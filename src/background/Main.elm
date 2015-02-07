@@ -27,21 +27,8 @@ port toGUI = map (ToGuiMessage.encode << .common) state
 
 port fromDevice : Signal FromDeviceMessage
 
-tick = mergeMany
-    [ map (\_ -> ()) (every (100*millisecond))
-    , map (\_ -> ()) fromDevice
-    --, map (\_ -> ()) fromGUI
-    --, map (\_ -> ()) fromExtension
-    ]
-
 port toDevice : Signal ToDeviceMessage
-port toDevice = map (\(m,_,_) -> m) (sampleOn tick output)
-        -- <| map2
-        --     (\_ s -> if s.deviceConnected
-        --              then sendCommand AppGetStatus
-        --              else {emptyToDeviceMessage | connect <- Just ()})
-        --     (every second)
-        --     state
+port toDevice = map (\(m,_,_) -> m) output
 
 port toChrome : Signal ToChromeMessage
 port toChrome = map ChromeBgMessage.encode state
@@ -53,8 +40,8 @@ state = map (\(_,_,s) -> s) output
 
 output : Signal (ToDeviceMessage, ToExtensionMessage, BackgroundState)
 output =
-    let go inputActions (dm,em,s) =
-        let s'                  = apply inputActions s
+    let go ias (dm,em,s) =
+        let s'                  = apply ias s
             (deviceMessage, a1s) = DeviceMessage.encode s'
             s''                 = apply a1s s'
             (extMessage, a2)    = ExtensionMessage.encode s''
@@ -72,4 +59,5 @@ inputActions = mergeMany
     , map (\m -> [ExtensionMessage.decode m]) fromExtension
     , map (\m -> [ChromeBgMessage.decode m]) fromChrome
     , map DeviceMessage.decode fromDevice
+    , map (\_ -> []) (every (200*millisecond))
     ]

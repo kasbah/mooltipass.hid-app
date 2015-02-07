@@ -20,7 +20,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 chrome.runtime.sendMessage({toBackground:{setLog:null, getState:[], startImportMedia:null}});
 
 gui.ports.toBackground.subscribe(function(message) {
-    chrome.runtime.sendMessage({toBackground: message});
+    if (messageHasValue(message)) {
+        chrome.runtime.sendMessage({toBackground: message});
+    }
 });
 
 gui.ports.toChrome.subscribe(function(message) {
