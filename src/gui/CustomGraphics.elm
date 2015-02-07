@@ -46,6 +46,11 @@ text str = Text.style {defaultStyle | typeface <- ["DejaVu Sans Mono"]
                                     , color <- Color.white
                       } (fromString str)
 
+text' : String -> Text
+text' str = Text.style {defaultStyle | typeface <- ["DejaVu Sans Mono"]
+                                    , color <- Color.black
+                      } (fromString str)
+
 button : Signal.Message -> String -> Element
 button msg str = button' 2.96658357613427 "button" msg str
 

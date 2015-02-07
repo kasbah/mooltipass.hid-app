@@ -1,5 +1,6 @@
 module DeveloperTab where
 
+import Graphics.Element as Element
 import Graphics.Element (..)
 import Graphics.Collage (..)
 import Signal (..)
@@ -36,39 +37,31 @@ infoText : TransferInfo -> String
 infoText t = case t of
     ImportRequested id -> "importing " ++ fileName id
     Importing id _ _   -> "importing " ++ fileName id
-    Imported id        -> "successfully imported " ++ fileName id
+    --Importing id todo total   -> "importing " ++ toString (total - todo) ++ "/" ++ toString total
+    Imported id        -> "sucessfully imported " ++ fileName id
     TransferError str  -> "import error: " ++ str
     _                  -> ""
 
 widget : (Int, Int) -> TransferInfo -> Element
 widget (w,h) t =
     let (w',h') = (toFloat w, toFloat h)
-        pcToWidth x = w' * (toFloat x)/100
+        progToWidth x = w' * x
         bg = collage w h
            [ filled grey
                <| roundedRect w' h'
                <| 5
            ]
-        progress pc c = collage (round (pcToWidth pc)) h
+        progressBar' prog c = collage (round (progToWidth prog)) h
            [ alpha 0.5 <| filled c
-               <| roundedRect (pcToWidth pc) h'
+               <| roundedRect (progToWidth prog) h'
                <| 5
            ]
-        txt s = container w h midLeft
-            <| flow right [spacer 16 1, leftAligned (text s)]
-    in case t of
-        _ -> layers [bg,progress 25 cyan,txt (infoText t) ]
-  --      ImportRequested p ->
-  --      Importing p i
-  --      Imported p
-  --      TransferError str
-  --      NoTransfer
-
-  --      background = collage w h
-  --      foreground = collage w h
-  --             [
-  --             ]
-  --
-  --  in layers [ background
-  --            , container w h midLeft txt
-  --            ]
+        progressBar = case t of
+            ImportRequested id -> Element.empty
+            Importing id todo total ->
+                progressBar' (toFloat (total - todo)/toFloat total) cyan
+            Imported id        -> progressBar' 1.0 cyan
+            TransferError str  -> progressBar' 1.0 Color.red
+            _                  -> Element.empty
+        txt s = container w h middle <| leftAligned (text s)
+    in layers [bg, progressBar, txt (infoText t) ]
