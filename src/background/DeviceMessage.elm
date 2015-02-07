@@ -91,5 +91,8 @@ toPacket cc extRequest =
         ExtWantsToWrite {context, login, password} ->
             if cc == context then Just (AppSetLogin login)
             else Just (AppSetContext context)
+        ExtNeedsToWritePassword {context, password} ->
+            if cc == context then Just (AppSetPassword password)
+            else Just (AppSetContext context)
         _ -> Nothing
 
