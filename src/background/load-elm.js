@@ -42,7 +42,6 @@ elm.ports.toDevice.subscribe(function(message) {
 });
 
 elm.ports.toChrome.subscribe(function(message) {
-    console.log(message);
     if (message.readFile !== null && (! readingFile)) {
         readingFile = true;
         chrome.fileSystem.restoreEntry(message.readFile, function(entry) {

@@ -24,8 +24,7 @@ port fromBackground : Signal ToGuiMessage
 {-| Any actions to the common state are first passed to the background. They
     should bubble back up throught the 'port fromBackground'. -}
 port toBackground : Signal FromGuiMessage
-port toBackground =
-        (map FromGuiMessage.encode (subscribe commonActions))
+port toBackground = map (\(_,m,_) -> m) output
 
 port toChrome : Signal ToChromeMessage
 port toChrome = map (\(m,_,_) -> m) output
