@@ -13,14 +13,14 @@ import Actions (..)
 import CommonState (..)
 import GuiState (..)
 
-developerTab : (Int, Int) -> Transfer -> Element
+developerTab : (Int, Int) -> TransferInfo -> Element
 developerTab (w,h) t =
     let screenH = h - 32
         screenW = w - 64
         screen' = container w screenH middle <| screen (screenW, screenH) t
     in container w h middle screen'
 
-screen : (Int, Int) -> Transfer -> Element
+screen : (Int, Int) -> TransferInfo -> Element
 screen (w,h) t =
     container w h midTop
         <| flow down
@@ -31,7 +31,7 @@ screen (w,h) t =
                     "import media"
             ]
 
-widget : (Int, Int) -> Transfer -> Element
+widget : (Int, Int) -> TransferInfo -> Element
 widget (w,h) t =
     let (w',h') = (toFloat w, toFloat h)
         pcToWidth x = w' * (toFloat x)/100

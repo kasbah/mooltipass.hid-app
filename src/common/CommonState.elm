@@ -8,26 +8,26 @@ import List
 type alias CommonState =
     { connected : ConnectState
     , log       : List String
-    , transferMedia  : Transfer
+    , transferInfo  : TransferInfo
     }
 
 default : CommonState
 default =
     { connected = NotConnected
     , log       = []
-    , transferMedia  = NoTransfer
+    , transferInfo = NoTransfer
     }
 
 type ConnectState = NotConnected | Connected | NoCard | NoPin
 
-type Transfer =
-      ImportRequested FilePath
-    | Importing FilePath Int
-    | Imported FilePath
+type TransferInfo =
+      ImportRequested FileId
+    | Importing FileId Int
+    | Imported FileId
     | TransferError String
     | NoTransfer
 
-type alias FilePath = String
+type alias FileId = String
 
 connectToLog : ConnectState -> String
 connectToLog c = case c of
@@ -41,8 +41,8 @@ type CommonAction = SetLog (List String)
                   | SetConnected ConnectState
                   | AppendToLog String
                   | GetState
-                  | SetTransferMedia Transfer
-                  | StartImportMedia String
+                  | SetTransferInfo TransferInfo
+                  | StartImportMedia FileId
                   | CommonNoOp
 
 {-| Transform the state to a new state according to an action -}
@@ -53,12 +53,12 @@ update action s =
         (AppendToLog str)  -> {s | log <- str::s.log}
         (SetConnected c)   -> {s | connected <- c}
         GetState           -> s
-        SetTransferMedia t -> {s | transferMedia <- t}
-        StartImportMedia p ->
-            case s.transferMedia of
-                NoTransfer      -> {s | transferMedia <- ImportRequested p}
-                Imported _      -> {s | transferMedia <- ImportRequested p}
-                TransferError _ -> {s | transferMedia <- ImportRequested p}
+        SetTransferInfo i -> {s | transferInfo <- i}
+        StartImportMedia id ->
+            case s.transferInfo of
+                NoTransfer      -> {s | transferInfo <- ImportRequested id}
+                Imported _      -> {s | transferInfo <- ImportRequested id}
+                TransferError _ -> {s | transferInfo <- ImportRequested id}
                 _ -> s
         CommonNoOp         -> s
 

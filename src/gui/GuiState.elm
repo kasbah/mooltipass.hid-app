@@ -12,7 +12,7 @@ type Tab = Log | Settings | Manage | Developer
 type TransferRequest =
       Requested
     | Waiting
-    | RequestFile FilePath
+    | RequestFile FileId
     | NotRequested
 
 {-| The entire GUI state -}

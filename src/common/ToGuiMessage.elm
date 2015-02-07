@@ -5,7 +5,7 @@ import CommonState (..)
 
 type alias ToGuiMessage = { setLog           : (List String)
                           , setConnected     : Int
-                          , setTransferMedia : (Int,String,Int)
+                          , setTransferInfo : (Int,String,Int)
                           }
 
 encode : CommonState -> ToGuiMessage
@@ -16,7 +16,7 @@ encode s =
                     Connected    -> 1
                     NoCard       -> 2
                     NoPin        -> 3
-    , setTransferMedia = case s.transferMedia of
+    , setTransferInfo = case s.transferInfo of
         NoTransfer        -> (0,"",0)
         ImportRequested p -> (1,p,0)
         Importing p i     -> (2,p,i)
@@ -32,7 +32,7 @@ decode msg=
             1 -> Connected
             2 -> NoCard
             3 -> NoPin
-        setTransfer = case msg.setTransferMedia of
+        setTransferInfo = case msg.setTransferInfo of
            (0,"",0) -> NoTransfer
            (1,p,0)  -> ImportRequested p
            (2,p,i)  -> Importing p i
@@ -40,5 +40,5 @@ decode msg=
            (4,s,0)  -> TransferError s
     in  [ SetLog msg.setLog
         , SetConnected setConnected
-        , SetTransferMedia setTransfer
+        , SetTransferInfo setTransferInfo
         ]

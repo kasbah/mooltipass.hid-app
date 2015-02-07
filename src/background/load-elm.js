@@ -1,6 +1,5 @@
 /* This file loads the Elm application and sets up communication with the
    gui through chrome.runtime. */
-console.log("loaded");
 var emptyFromDeviceMessage = { setHidConnected : null
                              , receiveCommand  : null
                              , appendToLog     : null
