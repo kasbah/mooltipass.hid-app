@@ -11,25 +11,25 @@ import CommonState (..)
 import DevicePacket (..)
 import Byte (..)
 
-type alias BackgroundState = { deviceConnected : Bool
-                             , deviceVersion   : Maybe MpVersion
+type alias BackgroundState = { deviceConnected  : Bool
+                             , deviceVersion    : Maybe MpVersion
                              , waitingForDevice : Bool
-                             , currentContext  : ByteString
-                             , extAwaitingPing : Bool
-                             , extRequest      : ExtensionRequest
-                             , mediaImport     : MediaImport
-                             , common          : CommonState
+                             , currentContext   : ByteString
+                             , extAwaitingPing  : Bool
+                             , extRequest       : ExtensionRequest
+                             , mediaImport      : MediaImport
+                             , common           : CommonState
                              }
 
 default : BackgroundState
-default = { deviceConnected = False
-          , deviceVersion   = Nothing
+default = { deviceConnected  = False
+          , deviceVersion    = Nothing
           , waitingForDevice = False
-          , currentContext  = ""
-          , extAwaitingPing = False
-          , extRequest      = NoRequest
-          , mediaImport     = NoMediaImport
-          , common          = Common.default
+          , currentContext   = ""
+          , extAwaitingPing  = False
+          , extRequest       = NoRequest
+          , mediaImport      = NoMediaImport
+          , common           = Common.default
           }
 
 type MediaImport =
