@@ -27,16 +27,16 @@ port toGUI = map (ToGuiMessage.encode << .common) state
 
 port fromDevice : Signal FromDeviceMessage
 
+tick = merge (map (\_ -> ()) (every (100*millisecond))) (map (\_ -> ()) fromDevice)
+
 port toDevice : Signal ToDeviceMessage
-port toDevice =
-    merge
-        (map (\(m,_,_) -> m) output)
-        <| map2
-            (\_ s -> if s.deviceConnected
-                     then sendCommand AppGetStatus
-                     else {emptyToDeviceMessage | connect <- Just ()})
-            (every second)
-            state
+port toDevice = map (\(m,_,_) -> m) (sampleOn tick output)
+        -- <| map2
+        --     (\_ s -> if s.deviceConnected
+        --              then sendCommand AppGetStatus
+        --              else {emptyToDeviceMessage | connect <- Just ()})
+        --     (every second)
+        --     state
 
 port toChrome : Signal ToChromeMessage
 port toChrome = map ChromeBgMessage.encode state

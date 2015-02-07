@@ -64,8 +64,7 @@ encode s =
                             [SetMediaImport (MediaImportWaiting [])]
                     _ -> (e, [])
           | s.deviceVersion == Nothing -> sendCommand' AppGetVersion []
-          | s.common.connected /= Common.Connected -> (e, [])
-          | s.extRequest /= NoRequest ->
+          | s.extRequest /= NoRequest && s.common.connected == Connected ->
               ({e | sendCommand <-
                     Maybe.map toInts (toPacket s.currentContext s.extRequest)}
               , [ Maybe.withDefault NoOp
@@ -75,7 +74,7 @@ encode s =
                 , SetWaitingForDevice True
                 ]
               )
-          | otherwise -> (e,[])
+          | otherwise -> sendCommand' AppGetStatus []
 
 sendCommand' : AppPacket
             -> (List BackgroundAction)
