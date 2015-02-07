@@ -27,7 +27,12 @@ port toGUI = map (ToGuiMessage.encode << .common) state
 
 port fromDevice : Signal FromDeviceMessage
 
-tick = merge (map (\_ -> ()) (every (100*millisecond))) (map (\_ -> ()) fromDevice)
+tick = mergeMany
+    [ map (\_ -> ()) (every (100*millisecond))
+    , map (\_ -> ()) fromDevice
+    --, map (\_ -> ()) fromGUI
+    --, map (\_ -> ()) fromExtension
+    ]
 
 port toDevice : Signal ToDeviceMessage
 port toDevice = map (\(m,_,_) -> m) (sampleOn tick output)

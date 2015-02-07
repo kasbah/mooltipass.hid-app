@@ -1,5 +1,6 @@
 /* This file loads the Elm application and sets up communication with the
    gui through chrome.runtime. */
+console.log("loaded");
 var emptyFromDeviceMessage = { setHidConnected : null
                              , receiveCommand  : null
                              , appendToLog     : null
@@ -35,8 +36,6 @@ elm.ports.toDevice.subscribe(function(message) {
     if (message.connect !== null) {
         device.connect();
     } else if (message.sendCommand !== null) {
-        //if (message.sendCommand[1] !== 112)
-            console.log("app:", message.sendCommand);
         sendMsg(message.sendCommand);
     }
 });
@@ -101,7 +100,8 @@ deviceSendToElm = function (message) {
         }
     }
     if (message.receiveCommand != undefined)
-        console.log("device:", message.receiveCommand);
+        if (message.receiveCommand[1] != 112)
+            console.log("device:", message.receiveCommand);
     elm.ports.fromDevice.send(messageWithNulls);
 };
 

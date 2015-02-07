@@ -64,6 +64,8 @@ function sendMsg(msg)
 {
     if (device.waitingForMessage)
         return;
+    if (msg[1] != 112)
+        console.log("app:", msg);
     device.waitingForMessage = true;
     //Buffer creation is a bit awkward because windows doesn't like us using
     //the Uint8Array.buffer directly (or maybe it's something to do with the
