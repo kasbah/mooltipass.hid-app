@@ -3,6 +3,7 @@ module CommonState where
 -- Elm standard library
 import List ((::))
 import List
+import String
 
 {-| The background state excluding gui components -}
 type alias CommonState =
@@ -29,6 +30,11 @@ type TransferInfo =
 
 type alias FileId = String
 
+fileName : FileId -> String
+fileName id = case String.split ":" id of
+    [_,name] -> name
+    _ -> ""
+
 connectToLog : ConnectState -> String
 connectToLog c = case c of
     NotConnected -> "device disconnected"
@@ -54,12 +60,7 @@ update action s =
         (SetConnected c)   -> {s | connected <- c}
         GetState           -> s
         SetTransferInfo i -> {s | transferInfo <- i}
-        StartImportMedia id ->
-            case s.transferInfo of
-                NoTransfer      -> {s | transferInfo <- ImportRequested id}
-                Imported _      -> {s | transferInfo <- ImportRequested id}
-                TransferError _ -> {s | transferInfo <- ImportRequested id}
-                _ -> s
+        StartImportMedia id -> {s | transferInfo <- ImportRequested id}
         CommonNoOp         -> s
 
 apply : List CommonAction -> CommonState -> CommonState

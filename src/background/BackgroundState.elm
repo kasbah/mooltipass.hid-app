@@ -120,7 +120,7 @@ update action s =
             else {s | deviceConnected <- True}
         SetExtAwaitingPing b -> {s | extAwaitingPing <- b}
         SetExtRequest d -> {s | extRequest <- d}
-        SetMediaImport t -> {s | mediaImport <- t}
+        SetMediaImport t -> set t
         SetWaitingForDevice b -> {s | waitingForDevice <- b}
         CommonAction (SetConnected c) ->
             let s' = {s | common <- updateCommon (SetConnected c)}
@@ -137,7 +137,7 @@ update action s =
                else s
         CommonAction (StartImportMedia p) ->
             if not (mediaImportActive s)
-            then {s | mediaImport <- MediaImportRequested p}
+            then set (MediaImportRequested p)
             else s
         CommonAction a -> {s | common <- updateCommon a}
         Receive (DeviceGetLogin ml) -> case ml of
@@ -258,15 +258,16 @@ setMediaInfo imp s =
         updateCommon i = {s' | common <- updateCommon' i}
     in case imp of
         MediaImportError str -> updateCommon (TransferError str)
+        MediaImportRequested id -> updateCommon (ImportRequested id)
         MediaImportStart ps  -> case s.common.transferInfo of
             ImportRequested id -> updateCommon (Importing id 0 (length ps))
-            _ -> updateCommon (TransferError "Internal state error")
+            _ -> updateCommon (TransferError ("Internal state error MediaImportStart"))
         MediaImport ps       -> case s.common.transferInfo of
             Importing id _ t -> updateCommon (Importing id (length ps) t)
-            _ -> updateCommon (TransferError "Internal state error")
+            _ -> updateCommon (TransferError ("Internal state error MediaImport"))
         MediaImportSuccess -> case s.common.transferInfo of
             Importing id _ _  -> updateCommon (Imported id)
-            _ -> updateCommon (TransferError "Internal state error")
+            _ -> updateCommon (TransferError "Internal state error MediaImportSuccess")
         _ -> s'
 
 fromPacket :  (Result Error DevicePacket) -> BackgroundAction

@@ -5,6 +5,7 @@ import Graphics.Collage (..)
 import Signal (..)
 import Signal
 import Text (..)
+import String
 
 import Color
 import Layout (..)
@@ -31,6 +32,14 @@ screen (w,h) t =
                     "import media"
             ]
 
+infoText : TransferInfo -> String
+infoText t = case t of
+    ImportRequested id -> "importing " ++ fileName id
+    Importing id _ _   -> "importing " ++ fileName id
+    Imported id        -> "successfully imported " ++ fileName id
+    TransferError str  -> "import error: " ++ str
+    _                  -> ""
+
 widget : (Int, Int) -> TransferInfo -> Element
 widget (w,h) t =
     let (w',h') = (toFloat w, toFloat h)
@@ -48,7 +57,7 @@ widget (w,h) t =
         txt s = container w h midLeft
             <| flow right [spacer 16 1, leftAligned (text s)]
     in case t of
-        _ -> layers [bg,progress 25 cyan,txt "importing /home/kaspar/projects/bundle.img" ]
+        _ -> layers [bg,progress 25 cyan,txt (infoText t) ]
   --      ImportRequested p ->
   --      Importing p i
   --      Imported p
