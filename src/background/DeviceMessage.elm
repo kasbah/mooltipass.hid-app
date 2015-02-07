@@ -44,24 +44,23 @@ encode s =
             MediaImportSuccess        -> False
             MediaImportStartWaiting _ -> False
             MediaImportWaiting _      -> False
-            _ -> True
+            _                         -> True
     in if | not s.deviceConnected -> ({e | connect <- Just ()}, NoOp)
           | activeImport ->
                 case s.mediaImport of
                     MediaImportStart ps ->
-                        ({e | sendCommand <- Just (toInts AppImportMediaStart)}
+                        ( sendCommand AppImportMediaStart
                         , SetMediaImport (MediaImportStartWaiting ps))
                     MediaImport (p::ps) ->
-                        ({e | sendCommand <- Just (toInts p)}
+                        ( sendCommand p
                         , SetMediaImport (MediaImportWaiting (p::ps)))
                     MediaImport [] ->
-                        ({e | sendCommand <- Just (toInts AppImportMediaEnd)}
+                        ( sendCommand AppImportMediaEnd
                         , SetMediaImport (MediaImportWaiting []))
                     _ -> (e, NoOp)
           -- this is taken care of with keep-alive
           | s.common.connected /= Common.Connected -> (e, NoOp)
-          | s.deviceVersion == Nothing ->
-              ({e | sendCommand <- Just (toInts AppGetVersion)}, NoOp)
+          | s.deviceVersion == Nothing -> (sendCommand AppGetVersion, NoOp)
           | s.extRequest /= NoRequest ->
               ({e | sendCommand <-
                     Maybe.map toInts (toPacket s.currentContext s.extRequest)}
