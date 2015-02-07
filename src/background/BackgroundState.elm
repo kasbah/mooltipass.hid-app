@@ -3,6 +3,7 @@ module BackgroundState where
 -- Elm standard library
 import Maybe
 import List ((::))
+import List
 
 -- local source
 import CommonState as Common
@@ -12,6 +13,7 @@ import Byte (..)
 
 type alias BackgroundState = { deviceConnected : Bool
                              , deviceVersion   : Maybe MpVersion
+                             , waitingForDevice : Bool
                              , currentContext  : ByteString
                              , extAwaitingPing : Bool
                              , extRequest      : ExtensionRequest
@@ -22,6 +24,7 @@ type alias BackgroundState = { deviceConnected : Bool
 default : BackgroundState
 default = { deviceConnected = False
           , deviceVersion   = Nothing
+          , waitingForDevice = False
           , currentContext  = ""
           , extAwaitingPing = False
           , extRequest      = NoRequest
@@ -88,6 +91,7 @@ extensionRequestToLog d = case d of
     _ -> Nothing
 
 type BackgroundAction = SetHidConnected    Bool
+                      | SetWaitingForDevice Bool
                       | SetExtAwaitingPing Bool
                       | SetExtRequest      ExtensionRequest
                       | SetMediaImport     MediaImport
@@ -108,6 +112,7 @@ update action s =
         SetExtAwaitingPing b -> {s | extAwaitingPing <- b}
         SetExtRequest d -> {s | extRequest <- d}
         SetMediaImport t -> {s | mediaImport <- t}
+        SetWaitingForDevice b -> {s | waitingForDevice <- b}
         CommonAction (SetConnected c) ->
             let s' = {s | common <- updateCommon (SetConnected c)}
             in if c /= s.common.connected
@@ -235,5 +240,8 @@ fromPacket :  (Result Error DevicePacket) -> BackgroundAction
 fromPacket r = case r of
     Err err -> appendToLog ("HID Error: " ++ err)
     Ok p    -> Receive p
+
+apply : List BackgroundAction -> BackgroundState -> BackgroundState
+apply actions state = List.foldr update state actions
 
 appendToLog s = CommonAction (AppendToLog s)

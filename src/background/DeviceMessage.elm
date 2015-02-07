@@ -35,7 +35,7 @@ decode message =
             ]
     in Maybe.withDefault NoOp (decode' message)
 
-encode : BackgroundState -> (ToDeviceMessage, BackgroundAction)
+encode : BackgroundState -> (ToDeviceMessage, List BackgroundAction)
 encode s =
     let e = emptyToDeviceMessage
         activeImport = case s.mediaImport of
@@ -45,30 +45,40 @@ encode s =
             MediaImportStartWaiting _ -> False
             MediaImportWaiting _      -> False
             _                         -> True
-    in if | not s.deviceConnected -> ({e | connect <- Just ()}, NoOp)
+    in if | not s.deviceConnected -> ({e | connect <- Just ()}, [])
+          | s.waitingForDevice -> (e, [])
           | activeImport ->
                 case s.mediaImport of
                     MediaImportStart ps ->
-                        ( sendCommand AppImportMediaStart
-                        , SetMediaImport (MediaImportStartWaiting ps))
+                        sendCommand'
+                            AppImportMediaStart
+                            [SetMediaImport (MediaImportStartWaiting ps)]
                     MediaImport (p::ps) ->
-                        ( sendCommand p
-                        , SetMediaImport (MediaImportWaiting (p::ps)))
+                        sendCommand' p
+                            [SetMediaImport (MediaImportWaiting (p::ps))]
                     MediaImport [] ->
-                        ( sendCommand AppImportMediaEnd
-                        , SetMediaImport (MediaImportWaiting []))
-                    _ -> (e, NoOp)
-          -- this is taken care of with keep-alive
-          | s.common.connected /= Common.Connected -> (e, NoOp)
-          | s.deviceVersion == Nothing -> (sendCommand AppGetVersion, NoOp)
+                        sendCommand'
+                            AppImportMediaEnd
+                            [SetMediaImport (MediaImportWaiting [])]
+                    _ -> (e, [])
+          | s.deviceVersion == Nothing -> sendCommand' AppGetVersion []
+          | s.common.connected /= Common.Connected -> (e, [])
           | s.extRequest /= NoRequest ->
               ({e | sendCommand <-
                     Maybe.map toInts (toPacket s.currentContext s.extRequest)}
-              , Maybe.withDefault NoOp
+              , [ Maybe.withDefault NoOp
                     (Maybe.map
                         (CommonAction << AppendToLog)
-                        (extensionRequestToLog s.extRequest)))
-          | otherwise -> (e,NoOp)
+                        ( extensionRequestToLog s.extRequest))
+                , SetWaitingForDevice True
+                ]
+              )
+          | otherwise -> (e,[])
+
+sendCommand' : AppPacket
+            -> (List BackgroundAction)
+            -> (ToDeviceMessage, List BackgroundAction)
+sendCommand' p a = (sendCommand p, SetWaitingForDevice True::a)
 
 toPacket : String -> ExtensionRequest -> Maybe AppPacket
 toPacket cc extRequest =
