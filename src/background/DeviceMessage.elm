@@ -25,7 +25,7 @@ sendCommand p = {emptyToDeviceMessage | sendCommand <- Just (toInts p)}
 
 emptyToDeviceMessage = {connect = Nothing, sendCommand = Nothing}
 
-decode : FromDeviceMessage -> BackgroundAction
+decode : FromDeviceMessage -> List BackgroundAction
 decode message =
     let decode' {setHidConnected, receiveCommand, appendToLog} =
         Maybe.oneOf
@@ -33,7 +33,9 @@ decode message =
             , Maybe.map SetHidConnected setHidConnected
             , Maybe.map (fromPacket << fromInts) receiveCommand
             ]
-    in Maybe.withDefault NoOp (decode' message)
+    in case Maybe.withDefault NoOp (decode' message) of
+        NoOp -> []
+        a -> [SetWaitingForDevice False, a]
 
 encode : BackgroundState -> (ToDeviceMessage, List BackgroundAction)
 encode s =

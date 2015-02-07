@@ -3,6 +3,7 @@ module Background where
 -- Elm standard library
 import Signal (..)
 import Time (..)
+import List ((::))
 
 -- local source
 import ToGuiMessage
@@ -48,7 +49,7 @@ state = map (\(_,_,s) -> s) output
 output : Signal (ToDeviceMessage, ToExtensionMessage, BackgroundState)
 output =
     let go inputActions (dm,em,s) =
-        let s'                  = update inputActions s
+        let s'                  = apply inputActions s
             (deviceMessage, a1s) = DeviceMessage.encode s'
             s''                 = apply a1s s'
             (extMessage, a2)    = ExtensionMessage.encode s''
@@ -60,10 +61,10 @@ port fromExtension : Signal FromExtensionMessage
 port toExtension : Signal ToExtensionMessage
 port toExtension = map (\(_,m,_) -> m) output
 
-inputActions : Signal BackgroundAction
+inputActions : Signal (List BackgroundAction)
 inputActions = mergeMany
-    [ map DeviceMessage.decode fromDevice
-    , map (CommonAction << FromGuiMessage.decode) fromGUI
-    , map ExtensionMessage.decode fromExtension
-    , map ChromeBgMessage.decode fromChrome
+    [ map (\m -> [CommonAction (FromGuiMessage.decode m)]) fromGUI
+    , map (\m -> [ExtensionMessage.decode m]) fromExtension
+    , map (\m -> [ChromeBgMessage.decode m]) fromChrome
+    , map DeviceMessage.decode fromDevice
     ]
