@@ -1,4 +1,4 @@
-module ChromeMessage where
+module ChromeBgMessage where
 
 -- Elm standard library
 import List

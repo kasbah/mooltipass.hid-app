@@ -9,6 +9,7 @@ import CommonState as Common
 import BackgroundState (..)
 import DevicePacket (..)
 import Util (..)
+import List ((::))
 
 type alias FromDeviceMessage = { setHidConnected : Maybe Bool
                                , receiveCommand  : Maybe (List Int)

@@ -16,8 +16,8 @@ import BackgroundState (..)
 import ExtensionMessage (..)
 import ExtensionMessage
 import DevicePacket (..)
-import ChromeMessage
-import ChromeMessage (..)
+import ChromeBgMessage
+import ChromeBgMessage (..)
 
 port fromGUI : Signal FromGuiMessage
 
@@ -38,7 +38,7 @@ port toDevice =
             state
 
 port toChrome : Signal ToChromeMessage
-port toChrome = map ChromeMessage.encode state
+port toChrome = map ChromeBgMessage.encode state
 
 port fromChrome : Signal FromChromeMessage
 
@@ -65,5 +65,5 @@ inputActions = mergeMany
     [ map DeviceMessage.decode fromDevice
     , map (CommonAction << FromGuiMessage.decode) fromGUI
     , map ExtensionMessage.decode fromExtension
-    , map ChromeMessage.decode fromChrome
+    , map ChromeBgMessage.decode fromChrome
     ]
