@@ -32,6 +32,14 @@ default = { deviceConnected  = False
           , common           = Common.default
           }
 
+mediaImportActive : BackgroundState -> Bool
+mediaImportActive s =
+    case s.mediaImport of
+        NoMediaImport             -> False
+        MediaImportError _        -> False
+        MediaImportSuccess        -> False
+        _                         -> True
+
 type MediaImport =
       NoMediaImport
     | MediaImportRequested    String
@@ -126,9 +134,10 @@ update action s =
                                             else s.deviceVersion
                     }
                else s
-        CommonAction (StartImportMedia p) -> case s.mediaImport of
-            NoMediaImport -> {s | mediaImport <- MediaImportRequested p}
-            _             -> s
+        CommonAction (StartImportMedia p) ->
+            if not (mediaImportActive s)
+            then {s | mediaImport <- MediaImportRequested p}
+            else s
         CommonAction a -> {s | common <- updateCommon a}
         Receive (DeviceGetLogin ml) -> case ml of
             Just l ->

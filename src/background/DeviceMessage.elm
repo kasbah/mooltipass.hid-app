@@ -23,6 +23,9 @@ type alias ToDeviceMessage   = { connect     : Maybe ()
 sendCommand : AppPacket -> ToDeviceMessage
 sendCommand p = {emptyToDeviceMessage | sendCommand <- Just (toInts p)}
 
+connect : ToDeviceMessage
+connect = {emptyToDeviceMessage | connect <- Just ()}
+
 emptyToDeviceMessage = {connect = Nothing, sendCommand = Nothing}
 
 decode : FromDeviceMessage -> List BackgroundAction
@@ -40,16 +43,9 @@ decode message =
 encode : BackgroundState -> (ToDeviceMessage, List BackgroundAction)
 encode s =
     let e = emptyToDeviceMessage
-        activeImport = case s.mediaImport of
-            NoMediaImport             -> False
-            MediaImportError _        -> False
-            MediaImportSuccess        -> False
-            MediaImportStartWaiting _ -> False
-            MediaImportWaiting _      -> False
-            _                         -> True
-    in if | not s.deviceConnected -> ({e | connect <- Just ()}, [])
+    in if | not s.deviceConnected -> (connect, [])
           | s.waitingForDevice -> (e, [])
-          | activeImport ->
+          | mediaImportActive s ->
                 case s.mediaImport of
                     MediaImportStart ps ->
                         sendCommand'
@@ -74,7 +70,7 @@ encode s =
                 , SetWaitingForDevice True
                 ]
               )
-          | otherwise -> sendCommand' AppGetStatus []
+          | otherwise -> (e, [])
 
 sendCommand' : AppPacket
             -> (List BackgroundAction)
