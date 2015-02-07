@@ -110,17 +110,47 @@ type BackgroundAction = SetHidConnected     Bool
 update : BackgroundAction -> BackgroundState -> BackgroundState
 update action s =
     let updateCommon a = Common.update a s.common
-        set a = setMediaInfo a s
+        setMedia imp =
+            let c             = s.common
+                s'            = {s | mediaImport <- imp}
+                updateInfo' i =
+                    {s' | common <- updateCommon (SetTransferInfo i)}
+            in case imp of
+                MediaImportError str    -> updateInfo' (TransferError str)
+                MediaImportRequested id -> updateInfo' (ImportRequested id)
+                MediaImportStart ps     -> case s.common.transferInfo of
+                    ImportRequested id ->
+                        updateInfo' (Importing id (length ps) (length ps))
+                    _ -> updateInfo'
+                        (TransferError
+                            "Internal state error MediaImportStart")
+                MediaImport ps          -> case s.common.transferInfo of
+                    Importing id _ t   ->
+                        updateInfo' (Importing id (length ps) t)
+                    _ -> updateInfo'
+                            (TransferError
+                                "Internal state error MediaImport")
+                MediaImportSuccess      -> case s.common.transferInfo of
+                    Importing id _ _
+                        -> updateInfo' (Imported id)
+                    _ -> updateInfo'
+                            (TransferError
+                                "Internal state error MediaImportSuccess")
+                _ -> s'
     in case action of
         SetHidConnected b ->
             if not b
-            then update
-               (CommonAction (SetConnected NotConnected))
+            then apply
+               [ CommonAction (SetConnected NotConnected)
+               , if mediaImportActive s
+                 then SetMediaImport (MediaImportError "device disconnected")
+                 else NoOp
+               ]
                {s | deviceConnected <-  False}
             else {s | deviceConnected <- True}
         SetExtAwaitingPing b -> {s | extAwaitingPing <- b}
         SetExtRequest d -> {s | extRequest <- d}
-        SetMediaImport t -> set t
+        SetMediaImport t -> setMedia t
         SetWaitingForDevice b -> {s | waitingForDevice <- b}
         CommonAction (SetConnected c) ->
             let s' = {s | common <- updateCommon (SetConnected c)}
@@ -137,7 +167,7 @@ update action s =
                else s
         CommonAction (StartImportMedia p) ->
             if not (mediaImportActive s)
-            then set (MediaImportRequested p)
+            then setMedia (MediaImportRequested p)
             else s
         CommonAction a -> {s | common <- updateCommon a}
         Receive (DeviceGetLogin ml) -> case ml of
@@ -225,23 +255,23 @@ update action s =
             case s.mediaImport of
                 MediaImportStartWaiting ps ->
                     if r == Done
-                    then set (MediaImport ps)
-                    else set (MediaImportError "Import start failed")
-                _ -> set (MediaImportError "Received unexpected start import confirmation from device")
+                    then setMedia (MediaImport ps)
+                    else setMedia (MediaImportError "Import start failed")
+                _ -> setMedia (MediaImportError "Received unexpected start import confirmation from device")
         Receive (DeviceImportMedia r) ->
             case s.mediaImport of
                 MediaImportWaiting (p::ps) ->
                     if r == Done
-                    then set (MediaImport ps)
-                    else set (MediaImportError "Import write failed")
-                _ -> set (MediaImportError "Received unexpected imported data confirmation from device")
+                    then setMedia (MediaImport ps)
+                    else setMedia (MediaImportError "Import write failed")
+                _ -> setMedia (MediaImportError "Received unexpected imported data confirmation from device")
         Receive (DeviceImportMediaEnd r) ->
             case s.mediaImport of
                 MediaImportWaiting [] ->
                     if r == Done
-                    then set MediaImportSuccess
-                    else set (MediaImportError "Import end-write failed")
-                _ -> set (MediaImportError "Received unexpected end import confirmation from device")
+                    then setMedia MediaImportSuccess
+                    else setMedia (MediaImportError "Import end-write failed")
+                _ -> setMedia (MediaImportError "Received unexpected end import confirmation from device")
         Receive x ->
             update
                 (appendToLog
@@ -250,25 +280,6 @@ update action s =
                 s
         NoOp -> s
 
-setMediaInfo : MediaImport -> BackgroundState -> BackgroundState
-setMediaInfo imp s =
-    let c              = s.common
-        s'             = {s | mediaImport <- imp}
-        updateCommon' i = Common.update (SetTransferInfo i) s'.common
-        updateCommon i = {s' | common <- updateCommon' i}
-    in case imp of
-        MediaImportError str -> updateCommon (TransferError str)
-        MediaImportRequested id -> updateCommon (ImportRequested id)
-        MediaImportStart ps  -> case s.common.transferInfo of
-            ImportRequested id -> updateCommon (Importing id (length ps) (length ps))
-            _ -> updateCommon (TransferError ("Internal state error MediaImportStart"))
-        MediaImport ps       -> case s.common.transferInfo of
-            Importing id _ t -> updateCommon (Importing id (length ps) t)
-            _ -> updateCommon (TransferError ("Internal state error MediaImport"))
-        MediaImportSuccess -> case s.common.transferInfo of
-            Importing id _ _  -> updateCommon (Imported id)
-            _ -> updateCommon (TransferError "Internal state error MediaImportSuccess")
-        _ -> s'
 
 fromPacket :  (Result Error DevicePacket) -> BackgroundAction
 fromPacket r = case r of
