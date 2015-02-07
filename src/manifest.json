@@ -1,6 +1,6 @@
 {
     "name": "Mooltipass App",
-    "description": "Configure the Mooltipass and connect it with the extension",
+    "description": "Configure the Mooltipass and connect it to the extension",
     "version": @version,
     "app": {
         "background": {

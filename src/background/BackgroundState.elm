@@ -155,7 +155,11 @@ update action s =
         CommonAction (SetConnected c) ->
             let s' = {s | common <- updateCommon (SetConnected c)}
             in if c /= s.common.connected
-               then {s' | common <-
+               then update
+                        ( if mediaImportActive s && (c == NoPin || c == NotConnected)
+                          then SetMediaImport (MediaImportError "interrupted by device")
+                          else NoOp )
+                    {s' | common <-
                             Common.update
                                 (AppendToLog (connectToLog c))
                                 s'.common

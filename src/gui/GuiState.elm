@@ -62,7 +62,7 @@ update action s =
                                   , devEnabled  <- not s.devEnabled
                                   , activeTab   <-
                                      if | s.activeTab == Developer && s.devEnabled -> Log
-                                        | not s.devEnabled -> Developer
+                                        | not s.devEnabled && not (Developer `List.member` disabledTabs s.common.connected) -> Developer
                                         | otherwise -> s.activeTab
                               }
                          else {s | iconClicked <- s.iconClicked + 1}
