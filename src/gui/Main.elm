@@ -24,7 +24,10 @@ port fromBackground : Signal ToGuiMessage
 {-| Any actions to the common state are first passed to the background. They
     should bubble back up throught the 'port fromBackground'. -}
 port toBackground : Signal FromGuiMessage
-port toBackground = map (\(_,m,_) -> m) output
+port toBackground =
+    merge
+        (map (\(_,m,_) -> m) output)
+        (map FromGuiMessage.encode (subscribe commonActions))
 
 port toChrome : Signal ToChromeMessage
 port toChrome = map (\(m,_,_) -> m) output
@@ -47,8 +50,8 @@ forbg s =
 
 output : Signal (ToChromeMessage, FromGuiMessage, GuiState)
 output =
-    let go inputActions (_,_,s) =
-        let s'        = apply inputActions s
+    let go ias (_,_,s) =
+        let s'        = apply ias s
             (tcm, a1) = ChromeMessage.encode s'
             s''       = update a1 s'
             (fgm, a2) = forbg s''

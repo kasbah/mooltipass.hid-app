@@ -93,7 +93,6 @@ deviceSendToElm = function (message) {
         }
     }
     if (message.receiveCommand != undefined)
-        if (message.receiveCommand[1] != 112)
             console.log("device:", message.receiveCommand);
     elm.ports.fromDevice.send(messageWithNulls);
 };

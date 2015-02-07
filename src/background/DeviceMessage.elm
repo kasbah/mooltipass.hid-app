@@ -63,7 +63,7 @@ encode s =
                             AppImportMediaEnd
                             [SetMediaImport (MediaImportWaiting [])]
                     _ -> (e, [])
-          | s.deviceVersion == Nothing -> sendCommand' AppGetVersion []
+          | s.deviceVersion == Nothing && s.common.connected == Connected -> sendCommand' AppGetVersion []
           | s.extRequest /= NoRequest && s.common.connected == Connected ->
               ({e | sendCommand <-
                     Maybe.map toInts (toPacket s.currentContext s.extRequest)}
