@@ -98,13 +98,13 @@ extensionRequestToLog d = case d of
     ExtCredentials   _  -> Just "credentials retrieved"
     _ -> Nothing
 
-type BackgroundAction = SetHidConnected    Bool
+type BackgroundAction = SetHidConnected     Bool
                       | SetWaitingForDevice Bool
-                      | SetExtAwaitingPing Bool
-                      | SetExtRequest      ExtensionRequest
-                      | SetMediaImport     MediaImport
-                      | Receive            DevicePacket
-                      | CommonAction       CommonAction
+                      | SetExtAwaitingPing  Bool
+                      | SetExtRequest       ExtensionRequest
+                      | SetMediaImport      MediaImport
+                      | Receive             DevicePacket
+                      | CommonAction        CommonAction
                       | NoOp
 
 update : BackgroundAction -> BackgroundState -> BackgroundState
@@ -146,7 +146,7 @@ update action s =
                               ExtNeedsPassword {c | login = l}
                           _ -> NoRequest
                 }
-            Nothing -> { s | extRequest <- ExtNoCredentials }
+            Nothing -> {s | extRequest <- ExtNoCredentials}
         Receive (DeviceGetPassword mp) -> case mp of
             Just p ->
                 {s | extRequest <- case s.extRequest of
@@ -154,7 +154,7 @@ update action s =
                               ExtCredentials {c | password = p}
                           _ -> NoRequest
                 }
-            Nothing -> { s | extRequest <- ExtNoCredentials }
+            Nothing -> {s | extRequest <- ExtNoCredentials}
         Receive (DeviceSetLogin r) ->
             {s | extRequest <- case s.extRequest of
                      ExtWantsToWrite c ->
@@ -223,25 +223,42 @@ update action s =
         Receive (DeviceImportMediaStart r) ->
             update (appendToLog "DeviceImportMediaStart")
             { s | mediaImport <- case s.mediaImport of
-                MediaImportStartWaiting ps -> if r == Done then MediaImport ps else MediaImportError "Start failed"
-                MediaImportWaiting ps -> if r == Done then MediaImport ps else MediaImportError "Start failed"
-                _ -> MediaImportError "Received unexpected start import confirmation from device"
+                MediaImportStartWaiting ps ->
+                    if r == Done
+                    then MediaImport ps
+                    else MediaImportError "Start failed"
+                MediaImportWaiting ps ->
+                    if r == Done
+                    then MediaImport ps
+                    else MediaImportError "Start failed"
+                _ -> MediaImportError "Received unexpected start import
+                                       confirmation from device"
             }
         Receive (DeviceImportMedia r) ->
             update (appendToLog "DeviceImportMedia")
             { s | mediaImport <- case s.mediaImport of
-                MediaImportWaiting (p::ps) -> if r == Done then MediaImport ps else MediaImportError "Write failed"
-                _ -> MediaImportError "Received unexpected imported data confirmation from device"
+                MediaImportWaiting (p::ps) ->
+                    if r == Done
+                    then MediaImport ps
+                    else MediaImportError "Write failed"
+                _ -> MediaImportError "Received unexpected imported data
+                                       confirmation from device"
             }
         Receive (DeviceImportMediaEnd r) ->
             update (appendToLog "DeviceImportMediaEnd")
             { s | mediaImport <- case s.mediaImport of
-                MediaImportWaiting [] -> if r == Done then MediaImportSuccess else MediaImportError "End not succeeded"
-                _ -> MediaImportError "Received unexpected end import confirmation from device"
+                MediaImportWaiting [] ->
+                    if r == Done
+                    then MediaImportSuccess
+                    else MediaImportError "End not succeeded"
+                _ -> MediaImportError "Received unexpected end import
+                                       confirmation from device"
             }
         Receive x ->
             update
-                (appendToLog ("Error: received unhandled packet " ++ toString x))
+                (appendToLog
+                    ("Error: received unhandled packet "
+                        ++ toString x))
                 s
         NoOp -> s
 
