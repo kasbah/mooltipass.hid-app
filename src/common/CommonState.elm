@@ -22,7 +22,7 @@ type ConnectState = NotConnected | Connected | NoCard | NoPin
 
 type TransferInfo =
       ImportRequested FileId
-    | Importing FileId Int
+    | Importing FileId Int Int
     | Imported FileId
     | TransferError String
     | NoTransfer

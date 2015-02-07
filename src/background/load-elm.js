@@ -8,7 +8,7 @@ var emptyFromExtensionMessage  = { ping      : null
                                  , getInputs : null
                                  , update    : null
                                  };
-var guiOpen = false;
+var guiOpen     = false;
 var extensionId = null;
 var readingFile = false;
 

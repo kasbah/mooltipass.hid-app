@@ -2,7 +2,7 @@ module BackgroundState where
 
 -- Elm standard library
 import Maybe
-import List ((::))
+import List ((::),length)
 import List
 
 -- local source
@@ -42,7 +42,7 @@ mediaImportActive s =
 
 type MediaImport =
       NoMediaImport
-    | MediaImportRequested    String
+    | MediaImportRequested    FileId
     | MediaImportStart        (List AppPacket)
     | MediaImportStartWaiting (List AppPacket)
     | MediaImport             (List AppPacket)
@@ -110,6 +110,7 @@ type BackgroundAction = SetHidConnected     Bool
 update : BackgroundAction -> BackgroundState -> BackgroundState
 update action s =
     let updateCommon a = Common.update a s.common
+        set a = setMediaInfo a s
     in case action of
         SetHidConnected b ->
             if not b
@@ -221,39 +222,26 @@ update action s =
                         ++ "MBit"))
                 {s | deviceVersion <- Just v}
         Receive (DeviceImportMediaStart r) ->
-            update (appendToLog "DeviceImportMediaStart")
-            { s | mediaImport <- case s.mediaImport of
+            case s.mediaImport of
                 MediaImportStartWaiting ps ->
                     if r == Done
-                    then MediaImport ps
-                    else MediaImportError "Start failed"
-                MediaImportWaiting ps ->
-                    if r == Done
-                    then MediaImport ps
-                    else MediaImportError "Start failed"
-                _ -> MediaImportError "Received unexpected start import
-                                       confirmation from device"
-            }
+                    then set (MediaImport ps)
+                    else set (MediaImportError "Import start failed")
+                _ -> set (MediaImportError "Received unexpected start import confirmation from device")
         Receive (DeviceImportMedia r) ->
-            update (appendToLog "DeviceImportMedia")
-            { s | mediaImport <- case s.mediaImport of
+            case s.mediaImport of
                 MediaImportWaiting (p::ps) ->
                     if r == Done
-                    then MediaImport ps
-                    else MediaImportError "Write failed"
-                _ -> MediaImportError "Received unexpected imported data
-                                       confirmation from device"
-            }
+                    then set (MediaImport ps)
+                    else set (MediaImportError "Import write failed")
+                _ -> set (MediaImportError "Received unexpected imported data confirmation from device")
         Receive (DeviceImportMediaEnd r) ->
-            update (appendToLog "DeviceImportMediaEnd")
-            { s | mediaImport <- case s.mediaImport of
+            case s.mediaImport of
                 MediaImportWaiting [] ->
                     if r == Done
-                    then MediaImportSuccess
-                    else MediaImportError "End not succeeded"
-                _ -> MediaImportError "Received unexpected end import
-                                       confirmation from device"
-            }
+                    then set MediaImportSuccess
+                    else set (MediaImportError "Import end-write failed")
+                _ -> set (MediaImportError "Received unexpected end import confirmation from device")
         Receive x ->
             update
                 (appendToLog
@@ -261,6 +249,25 @@ update action s =
                         ++ toString x))
                 s
         NoOp -> s
+
+setMediaInfo : MediaImport -> BackgroundState -> BackgroundState
+setMediaInfo imp s =
+    let c              = s.common
+        s'             = {s | mediaImport <- imp}
+        updateCommon' i = Common.update (SetTransferInfo i) s'.common
+        updateCommon i = {s' | common <- updateCommon' i}
+    in case imp of
+        MediaImportError str -> updateCommon (TransferError str)
+        MediaImportStart ps  -> case s.common.transferInfo of
+            ImportRequested id -> updateCommon (Importing id 0 (length ps))
+            _ -> updateCommon (TransferError "Internal state error")
+        MediaImport ps       -> case s.common.transferInfo of
+            Importing id _ t -> updateCommon (Importing id (length ps) t)
+            _ -> updateCommon (TransferError "Internal state error")
+        MediaImportSuccess -> case s.common.transferInfo of
+            Importing id _ _  -> updateCommon (Imported id)
+            _ -> updateCommon (TransferError "Internal state error")
+        _ -> s'
 
 fromPacket :  (Result Error DevicePacket) -> BackgroundAction
 fromPacket r = case r of

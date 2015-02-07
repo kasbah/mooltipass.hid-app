@@ -1,4 +1,4 @@
-var emptyToGuiMessage = {setLog:[], setConnected:0, setTransferInfo:[0,"",0]};
+var emptyToGuiMessage = {setLog:[], setConnected:0, setTransferInfo:[0,"",0,0]};
 var emptyFromGuiMessage = {setLog:null, getState:null, startImportMedia: null};
 
 messageHasValue = function (message) {
