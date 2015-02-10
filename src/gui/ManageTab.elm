@@ -35,7 +35,9 @@ favorites (w,h) i =
         title' = collage w heights.manageTitle
            [ dome lightGrey w' heights.manageTitle 5
            ]
-        txt s = container w heights.manageTitle middle <| leftAligned (text s)
+        txt s =
+            container w heights.manageTitle middle
+                <| leftAligned (whiteText s)
         title = layers [title', txt "Favorites"]
         bg =  collage w h
            [ filled grey
@@ -49,7 +51,7 @@ credentials (w,h) i =
         title' = collage w heights.manageTitle
            [ dome lightGrey w' heights.manageTitle 5
            ]
-        txt s = container w heights.manageTitle middle <| leftAligned (text s)
+        txt s = container w heights.manageTitle middle <| leftAligned (whiteText s)
         title = layers [title', txt "Credentials"]
         bg =  collage w h
            [ filled grey

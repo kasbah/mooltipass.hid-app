@@ -58,5 +58,5 @@ widget (w,h) t =
             Imported id        -> progressBar' 1.0 cyan
             TransferError str  -> progressBar' 1.0 Color.red
             _                  -> Element.empty
-        txt s = container w h middle <| leftAligned (text' s)
+        txt s = container w h middle <| leftAligned (text s)
     in layers [bg, progressBar, txt (infoText t) ]
