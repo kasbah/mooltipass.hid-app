@@ -1,5 +1,6 @@
 module DeveloperTab where
 
+-- Elm standard library
 import Graphics.Element as Element
 import Graphics.Element (..)
 import Graphics.Collage (..)
@@ -8,6 +9,7 @@ import Signal
 import Text (..)
 import String
 
+-- local source
 import Color
 import Layout (..)
 import CustomGraphics (..)

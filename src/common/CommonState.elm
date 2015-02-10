@@ -7,16 +7,39 @@ import String
 
 {-| The background state excluding gui components -}
 type alias CommonState =
-    { connected : ConnectState
-    , log       : List String
-    , transferInfo  : TransferInfo
+    { connected    : ConnectState
+    , log          : List String
+    , transferInfo : TransferInfo
+    , memoryInfo   : MemoryInfo
     }
 
 default : CommonState
 default =
-    { connected = NotConnected
-    , log       = []
+    { connected    = NotConnected
+    , log          = []
     , transferInfo = NoTransfer
+    , memoryInfo   = exampleMemoryInfo
+    }
+
+type alias MemoryInfo =
+    { credentials : List (String, String)
+    , favorites   : List (String, String)
+    }
+
+emptyMemoryInfo =
+    { credentials = []
+    , favorites   = []
+    }
+
+exampleMemoryInfo =
+    { credentials = [ ("github.com", "kasbah")
+                    , ("github.com", "monostable")
+                    , ("oshpark.com", "kaspar.emanuel@gmail.com")
+                    , ("amazon.com" , "kaspar.bumke+nu-server@gmail.com")
+                    ]
+    , favorites   = [ ("github.com", "kasbah")
+                    , ("oshpark.com", "kaspar.emanuel@gmail.com")
+                    ]
     }
 
 type ConnectState = NotConnected | Connected | NoCard | NoPin
