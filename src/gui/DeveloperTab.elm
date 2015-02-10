@@ -47,16 +47,10 @@ widget : (Int, Int) -> TransferInfo -> Element
 widget (w,h) t =
     let (w',h') = (toFloat w, toFloat h)
         progToWidth x = w' * x
-        bg = collage w h
-           [ filled grey
-               <| roundedRect w' h'
-               <| 5
-           ]
-        progressBar' prog c = collage (round (progToWidth prog)) h
-           [ filled c
-               <| roundedRect (progToWidth prog) h'
-               <| 5
-           ]
+        bg = collage w h [filled grey <| roundedRect w' h' 5]
+        progressBar' prog c =
+            collage (round (progToWidth prog)) h
+                [filled c <| roundedRect (progToWidth prog) h' 5]
         progressBar = case t of
             ImportRequested id -> Element.empty
             Importing id td ttl ->
