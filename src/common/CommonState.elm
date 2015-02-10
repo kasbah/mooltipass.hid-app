@@ -39,6 +39,9 @@ exampleMemoryInfo =
                     ]
     , favorites   = [ ("github.com", "kasbah")
                     , ("oshpark.com", "kaspar.emanuel@gmail.com")
+                    , ("amazon.com" , "kaspar.bumke+nu-server@gmail.com")
+                    , ("amazon.com" , "kaspar.bumke+nu-server@gmail.com")
+                    , ("amazon.com" , "kaspar.bumke+nu-server@gmail.com")
                     ]
     }
 
