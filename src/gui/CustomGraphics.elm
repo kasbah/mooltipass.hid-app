@@ -25,11 +25,16 @@ roundedRect : Float -> Float -> Float -> Shape
 roundedRect w h r =
   let hw = w/2
       hh = h/2
-  in (arc (0-hw+r, 0-hh+r) (r, r) (270 |> degrees, 180 |> degrees)) ++
-     (arc (0-hw+r, hh-r) (r, r) (180 |> degrees, 90 |> degrees)) ++
-     (arc (hw-r, hh-r) (r, r) (90 |> degrees, 0 |> degrees)) ++
-     (arc (hw-r, 0-hh+r) (r, r) (0 |> degrees, -90 |> degrees)) ++
-     [(0-hw+r, 0-hh)]
+  in (arc (0-hw+r, 0-hh+r) (r, r) (270 |> degrees, 180 |> degrees))
+     ++ (arc (0-hw+r, hh-r) (r, r) (180 |> degrees, 90 |> degrees))
+     ++ (arc (hw-r, hh-r) (r, r) (90 |> degrees, 0 |> degrees))
+     ++ (arc (hw-r, 0-hh+r) (r, r) (0 |> degrees, -90 |> degrees))
+     ++ [(0-hw+r, 0-hh)]
+
+
+{-| A rectangle with a rounded top -}
+dome : Color.Color -> Float -> Float -> Float -> Form
+dome c w h r = group [move (0, 10) <| filled c <| roundedRect w 10 r , rect w (h - 10) |> filled c]
 
 -- Basic colourscheme
 grey : Color.Color
@@ -37,6 +42,9 @@ grey = Color.rgb 0x1A 0x1A 0x1A
 
 darkGrey : Color.Color
 darkGrey = Color.rgb 0x10 0x10 0x10
+
+lightGrey : Color.Color
+lightGrey = Color.rgb 0x30 0x30 0x30
 
 cyan : Color.Color
 cyan = Color.rgb 0x00 0xff 0xd8
