@@ -43,6 +43,9 @@ grey = Color.rgb 0x1A 0x1A 0x1A
 darkGrey : Color.Color
 darkGrey = Color.rgb 0x10 0x10 0x10
 
+darkGrey' : Color.Color
+darkGrey' = Color.rgb 0x20 0x20 0x20
+
 lightGrey : Color.Color
 lightGrey = Color.rgb 0x30 0x30 0x30
 

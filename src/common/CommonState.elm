@@ -22,7 +22,7 @@ default =
     }
 
 type alias MemoryInfo =
-    { credentials : List (String, String)
+    { credentials : List (String, List String)
     , favorites   : List (String, String)
     }
 
@@ -32,10 +32,9 @@ emptyMemoryInfo =
     }
 
 exampleMemoryInfo =
-    { credentials = [ ("github.com", "kasbah")
-                    , ("github.com", "monostable")
-                    , ("oshpark.com", "kaspar.emanuel@gmail.com")
-                    , ("amazon.com" , "kaspar.bumke+nu-server@gmail.com")
+    { credentials = [ ("github.com", ["kasbah", "monostable"])
+                    , ("oshpark.com",[ "kaspar.emanuel@gmail.com"])
+                    , ("amazon.com" ,[ "kaspar.bumke+nu-server@gmail.com"])
                     ]
     , favorites   = [ ("github.com", "kasbah")
                     , ("oshpark.com", "kaspar.emanuel@gmail.com")
