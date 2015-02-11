@@ -11,5 +11,5 @@ heights =
     , logTabToolbar = 48
     , marginBottom  = 3
     , manageTitle   = 32
-    , manageSpacer  = 24
+    , manageSpacer  = 12
     }
