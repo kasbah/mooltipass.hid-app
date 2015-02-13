@@ -48,10 +48,6 @@ roundedRectShape side  w h r =
            else [(hw,0),(hw,-hh),(0,-hh)]
   in aa ++ bb ++ cc ++ dd
 
-{-| A rectangle with a rounded top -}
-dome : Color.Color -> Float -> Float -> Float -> Form
-dome c w h r =  filled c <| roundedRectShape Top w h r
-
 -- Basic colourscheme
 grey : Color.Color
 grey = Color.rgb 0x1A 0x1A 0x1A

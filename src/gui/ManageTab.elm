@@ -44,9 +44,9 @@ screen (w,h) i =
 favorites : (Int, Int) -> MemoryInfo -> Element
 favorites (w,h) i =
     let (w',h') = (toFloat w, toFloat h)
-        title' = collage w heights.manageTitle
-           [ dome lightGrey w' heights.manageTitle 5
-           ]
+        ht = heights.manageTitle
+        title' = collage w ht
+           [filled lightGrey <| roundedRectShape Top w' (toFloat ht) 5]
         txt s =
             container w heights.manageTitle middle
                 <| leftAligned (whiteText s)
@@ -57,8 +57,9 @@ favorites (w,h) i =
 credentials : (Int, Int) -> MemoryInfo -> Element
 credentials (w,h) i =
     let (w',h') = (toFloat w, toFloat h)
-        titleBg = collage w heights.manageTitle
-           [dome lightGrey w' heights.manageTitle 5]
+        ht = heights.manageTitle
+        titleBg = collage w ht
+           [filled lightGrey <| roundedRectShape Top w' (toFloat ht) 5]
         txt s = container w heights.manageTitle middle
             <| leftAligned (whiteText s)
         title = layers [titleBg, txt "Credentials"]
@@ -67,27 +68,27 @@ credentials (w,h) i =
             Html.Attributes.style
                 [ ("overflow-y", "auto")
                 , ("width", toString (w - 16) ++ "px")
-                , ("height", toString (h - (heightOf title) - 10) ++ "px")
+                , ("height", toString (h - (heightOf title) - 20) ++ "px")
                 ]
         content = Html.div [style]
                     (intersperse (Html.fromElement (spacer 1 5))
-                        (map (credential maxLoginW (w - 48)) i.credentials)
+                        (map (service maxLoginW (w - 48)) i.credentials)
                     )
                 |> Html.toElement (w - 32) (h - 32)
         maxLoginW' ls = foldr (\str z -> max (widthOf (loginElem str)) z) 0 ls
         maxLoginW = foldr (\(_,ls) z -> max (maxLoginW' ls) z) 0 i.credentials
-    in layers [bg, flow down [title, flow right [spacer 16 1, content]]]
+    in layers [bg, flow down [title, spacer 1 10, flow right [spacer 16 1, content]]]
 
-credential : Int -> Int -> (String, List String) -> Html.Html
-credential maxLoginW w (contextString, loginStrings) =
+service : Int -> Int -> (String, List String) -> Html.Html
+service maxLoginW w (serviceString, loginStrings) =
     let bg = roundedRect w l lightGrey
-        context' = leftAligned <| Text.height 14 <| whiteText contextString
-        cw = widthOf context' + 32
-        ch = heightOf context' + 10
+        service' = leftAligned <| Text.height 14 <| whiteText serviceString
+        cw = widthOf service' + 32
+        ch = heightOf service' + 10
         (cw',ch') = (toFloat cw, toFloat ch)
-        contextBg = roundedRect cw ch lightGrey'
-        context   = layers [contextBg, container cw ch middle context']
-        title  = flow right [ spacer 8 1, context ]
+        serviceBg = roundedRect cw ch lightGrey'
+        service   = layers [serviceBg, container cw ch middle service']
+        title  = flow right [spacer 8 1, service ]
         logins = flow right [spacer 32 1, flow down (intersperse (spacer 5 5 ) (map (login maxLoginW w) loginStrings))]
         l = ch + (length loginStrings) * (32 + 5) + 5
     in Html.div [Html.Attributes.style [("position", "relative")]] [Html.fromElement <| layers [bg, container w l topLeft <| flow down [title, spacer 1 5, logins]]]
