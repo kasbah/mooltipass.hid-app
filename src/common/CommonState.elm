@@ -34,7 +34,7 @@ emptyMemoryInfo =
 exampleMemoryInfo =
     { credentials = [ ("github.com", ["kasbah", "monostable"])
                     , ("oshpark.com",[ "kaspar.emanuel@gmail.com"])
-                    , ("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaamazon.com" ,[ "kaspar.bumke+nu-server@gmail.com"])
+                    , ("amazon.com" ,[ "kaspar.bumke+nu-server@gmail.com"])
                     , ("oshpark.com",[ "kaspar.emanuel@gmail.com"])
                     , ("oshpark.com",[ "kaspar.emanuel@gmail.com"])
                     , ("oshpark.com",[ "kaspar.emanuel@gmail.com"])

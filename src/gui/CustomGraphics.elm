@@ -20,21 +20,37 @@ arc (cx, cy) (a, b) (startAngle, endAngle) =
       f i = (cx + a * cos (t*i + startAngle), cy + b * sin (t*i + startAngle))
   in List.map f [0..n-1]
 
-{-| A rounded rec tangle with a given width, height and corner radius. -}
-roundedRect : Float -> Float -> Float -> Shape
-roundedRect w h r =
+{-| A rounded rectangle element with a given width, height and a 5 degree
+    corner radius -}
+roundedRect : Int -> Int -> Color.Color -> Element
+roundedRect w h c =
+    collage w h [filled c <| roundedRectShape All (toFloat w) (toFloat h) 5]
+
+type RoundedSide = Top | Left | Right | Bottom | All
+
+roundedRectShape : RoundedSide -> Float -> Float -> Float -> Shape
+roundedRectShape side  w h r =
   let hw = w/2
       hh = h/2
-  in (arc (0-hw+r, 0-hh+r) (r, r) (270 |> degrees, 180 |> degrees))
-     ++ (arc (0-hw+r, hh-r) (r, r) (180 |> degrees, 90 |> degrees))
-     ++ (arc (hw-r, hh-r) (r, r) (90 |> degrees, 0 |> degrees))
-     ++ (arc (hw-r, 0-hh+r) (r, r) (0 |> degrees, -90 |> degrees))
-     ++ [(0-hw+r, 0-hh)]
-
+      (a,b,c,d) = case side of
+        Top    -> (False,True ,True ,False)
+        Bottom -> (True ,False,False,True)
+        Left   -> (True ,True ,False,False)
+        Right  -> (False,False,True ,True)
+        _      -> (True ,True ,True ,True)
+      aa = if a then (arc (0-hw+r, 0-hh+r) (r, r) (270 |> degrees, 180 |> degrees))
+           else [(0,-hh),(-hw,-hh),(-hw,0)]
+      bb = if b then (arc (0-hw+r, hh-r) (r, r) (180 |> degrees, 90 |> degrees))
+           else [(-hw,0),(-hw,hh),(0,hh)]
+      cc = if c then (arc (hw-r, hh-r) (r, r) (90 |> degrees, 0 |> degrees))
+           else [(0,hh),(hw,hh),(hw,0)]
+      dd = if d then (arc (hw-r, 0-hh+r) (r, r) (0 |> degrees, -90 |> degrees))
+           else [(hw,0),(hw,-hh),(0,-hh)]
+  in aa ++ bb ++ cc ++ dd
 
 {-| A rectangle with a rounded top -}
 dome : Color.Color -> Float -> Float -> Float -> Form
-dome c w h r = group [move (0, 10) <| filled c <| roundedRect w 10 r , rect w (h - 10) |> filled c]
+dome c w h r =  filled c <| roundedRectShape Top w h r
 
 -- Basic colourscheme
 grey : Color.Color

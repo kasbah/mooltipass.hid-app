@@ -29,8 +29,7 @@ logTab (w,h) log =
 {-| The screen that displays the log. -}
 screen : (Int, Int) -> List String -> Element
 screen (w,h) log =
-    let (w',h')    = (toFloat w, toFloat h)
-        background = collage w h [filled grey <| roundedRect w' h' 5]
+    let background = roundedRect w h grey
         style =
             Html.Attributes.style
                 [ ("color", "white")

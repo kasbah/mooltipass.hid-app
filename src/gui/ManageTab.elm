@@ -51,10 +51,7 @@ favorites (w,h) i =
             container w heights.manageTitle middle
                 <| leftAligned (whiteText s)
         title = layers [title', txt "Favorites"]
-        bg =  collage w h
-           [ filled grey
-               <| roundedRect w' h' 5
-           ]
+        bg =  roundedRect w h grey
     in layers [bg, title]
 
 credentials : (Int, Int) -> MemoryInfo -> Element
@@ -65,8 +62,7 @@ credentials (w,h) i =
         txt s = container w heights.manageTitle middle
             <| leftAligned (whiteText s)
         title = layers [titleBg, txt "Credentials"]
-        bg =  collage w h
-           [filled darkGrey' <| roundedRect w' h' 5]
+        bg = roundedRect w h darkGrey'
         style =
             Html.Attributes.style
                 [ ("overflow-y", "auto")
@@ -84,20 +80,17 @@ credentials (w,h) i =
 
 credential : Int -> Int -> (String, List String) -> Html.Html
 credential maxLoginW w (contextString, loginStrings) =
-    let bg = roundedRect' w l lightGrey
+    let bg = roundedRect w l lightGrey
         context' = leftAligned <| Text.height 14 <| whiteText contextString
         cw = widthOf context' + 32
         ch = heightOf context' + 10
         (cw',ch') = (toFloat cw, toFloat ch)
-        contextBg = collage cw ch [roundedRect cw' ch' (ch'/4) |> filled lightGrey']
+        contextBg = roundedRect cw ch lightGrey'
         context   = layers [contextBg, container cw ch middle context']
         title  = flow right [ spacer 8 1, context ]
         logins = flow right [spacer 32 1, flow down (intersperse (spacer 5 5 ) (map (login maxLoginW w) loginStrings))]
         l = ch + (length loginStrings) * (32 + 5) + 5
     in Html.div [Html.Attributes.style [("position", "relative")]] [Html.fromElement <| layers [bg, container w l topLeft <| flow down [title, spacer 1 5, logins]]]
-
-
-roundedRect' w h c = collage w h [filled c <| roundedRect (toFloat w) (toFloat h) 5]
 
 login : Int -> Int -> String -> Element
 login maxL w loginString =
@@ -113,8 +106,7 @@ login maxL w loginString =
         password' = leftAligned <| whiteText "********"
         password = container (widthOf password') lh midLeft password'
         bar = collage 2 lh [rect 2 lh |> filled lightGrey]
-        bg = collage lw lh
-            [ filled lightGrey' <| roundedRect (toFloat lw) (toFloat lh) 5]
+        bg = roundedRect lw lh lightGrey'
         txts = flow right [spacer 5 1, login', spacer pad 1, bar, spacer 5 1, password]
         sp = spacer (lw - (widthOf txts) - (widthOf icons)) 1
     in layers [bg, flow right [txts, sp, icons]]
