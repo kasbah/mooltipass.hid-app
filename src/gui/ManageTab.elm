@@ -10,6 +10,10 @@ import Text (..)
 import Text
 import Signal (send)
 
+-- extra libraries
+import Html
+import Html.Attributes
+
 -- local source
 import CommonState (..)
 import CustomGraphics (..)
@@ -63,15 +67,22 @@ credentials (w,h) i =
         title = layers [titleBg, txt "Credentials"]
         bg =  collage w h
            [filled darkGrey' <| roundedRect w' h' 5]
-        content = container w (h - heights.manageTitle) midTop
-            <| flow down
-            <| intersperse (spacer 1 10)
-            <| map (credential maxLoginW (w - 16)) i.credentials
+        style =
+            Html.Attributes.style
+                [ ("overflow-y", "auto")
+                , ("width", toString (w - 16) ++ "px")
+                , ("height", toString (h - (heightOf title) - 10) ++ "px")
+                ]
+        content = Html.div [style]
+                    (intersperse (Html.fromElement (spacer 1 5))
+                        (map (credential maxLoginW (w - 48)) i.credentials)
+                    )
+                |> Html.toElement (w - 32) (h - 32)
         maxLoginW' ls = foldr (\str z -> max (widthOf (loginElem str)) z) 0 ls
         maxLoginW = foldr (\(_,ls) z -> max (maxLoginW' ls) z) 0 i.credentials
-    in layers [bg, flow down [title,content]]
+    in layers [bg, flow down [title, flow right [spacer 16 1, content]]]
 
-credential : Int -> Int -> (String, List String) -> Element
+credential : Int -> Int -> (String, List String) -> Html.Html
 credential maxLoginW w (contextString, loginStrings) =
     let bg = roundedRect' w l lightGrey
         context' = leftAligned <| Text.height 14 <| whiteText contextString
@@ -83,7 +94,7 @@ credential maxLoginW w (contextString, loginStrings) =
         title  = flow right [ spacer 8 1, context ]
         logins = flow right [spacer 32 1, flow down (intersperse (spacer 5 5 ) (map (login maxLoginW w) loginStrings))]
         l = ch + (length loginStrings) * (32 + 5) + 5
-    in layers [bg, container w l topLeft <| flow down [title, spacer 1 5, logins]]
+    in Html.div [Html.Attributes.style [("position", "relative")]] [Html.fromElement <| layers [bg, container w l topLeft <| flow down [title, spacer 1 5, logins]]]
 
 
 roundedRect' w h c = collage w h [filled c <| roundedRect (toFloat w) (toFloat h) 5]
