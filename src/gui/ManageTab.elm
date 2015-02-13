@@ -78,7 +78,7 @@ credential maxLoginW w (contextString, loginStrings) =
         cw = widthOf context' + 32
         ch = heightOf context' + 10
         (cw',ch') = (toFloat cw, toFloat ch)
-        contextBg = collage cw ch [roundedRect cw' ch' (ch'/4) |> filled lightGrey]
+        contextBg = collage cw ch [roundedRect cw' ch' (ch'/4) |> filled lightGrey']
         context   = layers [contextBg, container cw ch middle context']
         title  = flow right [ spacer 8 1, context ]
         logins = flow right [spacer 32 1, flow down (intersperse (spacer 5 5 ) (map (login maxLoginW w) loginStrings))]
@@ -90,17 +90,22 @@ roundedRect' w h c = collage w h [filled c <| roundedRect (toFloat w) (toFloat h
 
 login : Int -> Int -> String -> Element
 login maxL w loginString =
-    let login' = loginElem loginString
+    let login'' = loginElem loginString
+        login' = container (widthOf login'') lh midLeft login''
         llw = widthOf login' + 16
         llh = heightOf login' + 4
         pad = (maxL + 16) - llw + 5
         lw = w - 64
         lh = 32
         lightning = image 18 18 "images/lightning.svg"
-        icons = flow left [spacer 16 1, lightning]
-        password = leftAligned <| whiteText "********"
+        icons = flow left [container lh lh middle lightning, bar]
+        password' = leftAligned <| whiteText "********"
+        password = container (widthOf password') lh midLeft password'
+        bar = collage 2 lh [rect 2 lh |> filled lightGrey]
         bg = collage lw lh
             [ filled lightGrey' <| roundedRect (toFloat lw) (toFloat lh) 5]
-    in layers [bg, container lw lh midLeft <| flow right [spacer 5 1, login', spacer pad 1, collage 1 lh [rect 1 lh |> filled Color.black], password], container lw lh midRight icons]
+        txts = flow right [spacer 5 1, login', spacer pad 1, bar, spacer 5 1, password]
+        sp = spacer (lw - (widthOf txts) - (widthOf icons)) 1
+    in layers [bg, flow right [txts, sp, icons]]
 
 loginElem str =  flow right [spacer 5 5 , leftAligned <| whiteText str]
