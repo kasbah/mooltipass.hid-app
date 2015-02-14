@@ -110,10 +110,11 @@ service w (serviceString, loginStrings) =
 
 login : Int -> String -> Bool -> Element
 login w loginString fav =
-    let username = Input.customButton (send guiActions NoOp) uUp uHover uDown
+    let username = uUp
+        --username = Input.customButton (send guiActions NoOp) uUp uHover uDown
         uUp      = layers [ubg lightGrey', utxt]
-        uHover   = layers [ubg lightGrey'', utxt]
-        uDown    = uUp
+        --uHover   = layers [ubg lightGrey'', utxt]
+        --uDown    = uUp
         uw       = (w//2) - spw
         uw'      = toFloat uw
         ubg c    = collage uw lh
@@ -121,11 +122,12 @@ login w loginString fav =
         utxt'    = flow right
             [spacer 5 5 , leftAligned <| whiteText loginString]
         utxt     = container uw lh midLeft utxt'
-        password = Input.customButton (send guiActions NoOp) pUp pHover pDown
+        password = pUp -- disabled for beta release
+        --password = Input.customButton (send guiActions NoOp) pUp pHover pDown
         pUp      = layers [pbg lightGrey', ptxt]
-        pHover   = layers [pbg lightGrey'', ptxt]
-        pDown    = pUp
-        pw       = (w//2) - spw - iw
+        --pHover   = layers [pbg lightGrey'', ptxt]
+        --pDown    = pUp
+        pw       = (w//2) - (2*spw) - (2*iw)
         pw'      = toFloat pw
         pbg c    = collage pw lh [rect pw' lh' |> filled c]
         ptxt'    = flow right
@@ -133,20 +135,30 @@ login w loginString fav =
         ptxt     = container pw lh midLeft ptxt'
         lh       = heights.manageLogin
         lh'      = toFloat lh
-        icon     = Input.customButton (send guiActions NoOp) iUp iHover iDown
-        iifav    = if fav then icon' "blue" else icon' "white"
-        iUp      = layers [ibg lightGrey' , iifav]
-        iHover   = layers [ibg lightGrey'', iifav]
-        iDown    = layers [ibg lightGrey'', icon' "blue" ]
-        iw       = 32
-        iw'      = toFloat iw
-        ibg  c   = collage iw lh
-            [roundedRectShape Right iw' lh' 5 |> filled c]
-        icon' c  = container iw lh middle
+        favIcon     = Input.customButton
+            (send guiActions NoOp) iFavUp iFavHover iFavDown
+        iFavC    = if fav then favIcon' "blue" else favIcon' "white"
+        iFavUp      = layers [iFavBg lightGrey' , iFavC]
+        iFavHover   = layers [iFavBg lightGrey'', iFavC]
+        iFavDown    = layers [iFavBg lightGrey'', favIcon' "blue" ]
+        favIcon' c  = container iw lh middle
             <| image 18 18 ("images/lightning-" ++ c ++ ".svg")
+        delIcon     = Input.customButton
+            (send guiActions NoOp) iDelUp iDelHover iDelDown
+        iDelUp      = layers [iDelBg lightGrey' , delIcon']
+        iDelHover   = layers [iDelBg lightGrey'', delIcon']
+        iDelDown    = layers [iDelBg lightGrey'', delIcon']
+        delIcon' = container iw lh middle
+            <| image 18 18 ("images/cross.svg")
+        iFavBg  c   = collage iw lh
+            [roundedRectShape Right iw' lh' 5 |> filled c]
+        iDelBg  c  = collage iw lh
+            [rect iw' lh' |> filled c]
         sp       = spacer spw 1
         spw      = 2
-    in flow right [username, sp, password, sp, icon]
+        iw       = 32
+        iw'      = toFloat iw
+    in flow right [username, sp, password, sp, delIcon, sp, favIcon]
 
 title : Int -> String -> Element
 title w str =
