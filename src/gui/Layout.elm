@@ -12,4 +12,5 @@ heights =
     , marginBottom  = 3
     , manageTitle   = 32
     , manageSpacer  = 12
+    , manageLogin   = 32
     }

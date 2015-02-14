@@ -72,15 +72,13 @@ credentials (w,h) i =
                 ]
         content = Html.div [style]
                     (intersperse (Html.fromElement (spacer 1 5))
-                        (map (service maxLoginW (w - 48)) i.credentials)
+                        (map (service (w - 48)) i.credentials)
                     )
                 |> Html.toElement (w - 32) (h - 32)
-        maxLoginW' ls = foldr (\str z -> max (widthOf (loginElem str)) z) 0 ls
-        maxLoginW = foldr (\(_,ls) z -> max (maxLoginW' ls) z) 0 i.credentials
     in layers [bg, flow down [title, spacer 1 10, flow right [spacer 16 1, content]]]
 
-service : Int -> Int -> (String, List String) -> Html.Html
-service maxLoginW w (serviceString, loginStrings) =
+service : Int -> (String, List String) -> Html.Html
+service w (serviceString, loginStrings) =
     let bg = roundedRect w l lightGrey
         service' = leftAligned <| Text.height 14 <| whiteText serviceString
         cw = widthOf service' + 32
@@ -88,28 +86,45 @@ service maxLoginW w (serviceString, loginStrings) =
         (cw',ch') = (toFloat cw, toFloat ch)
         serviceBg = roundedRect cw ch lightGrey'
         service   = layers [serviceBg, container cw ch middle service']
-        title  = flow right [spacer 8 1, service ]
-        logins = flow right [spacer 32 1, flow down (intersperse (spacer 5 5 ) (map (login maxLoginW w) loginStrings))]
+        title  = flow right [spacer 8 1, service]
+        logins = flow right
+            [ spacer 32 1
+            , flow down
+                (intersperse
+                    (spacer 5 5)
+                    (map (login (w - 64)) loginStrings)
+                )
+            ]
         l = ch + (length loginStrings) * (32 + 5) + 5
     in Html.div [Html.Attributes.style [("position", "relative")]] [Html.fromElement <| layers [bg, container w l topLeft <| flow down [title, spacer 1 5, logins]]]
 
-login : Int -> Int -> String -> Element
-login maxL w loginString =
-    let login'' = loginElem loginString
-        login' = container (widthOf login'') lh midLeft login''
-        llw = widthOf login' + 16
-        llh = heightOf login' + 4
-        pad = (maxL + 16) - llw + 5
-        lw = w - 64
-        lh = 32
-        lightning = image 18 18 "images/lightning.svg"
-        icons = flow left [container lh lh middle lightning, bar]
-        password' = leftAligned <| whiteText "********"
-        password = container (widthOf password') lh midLeft password'
-        bar = collage 2 lh [rect 2 lh |> filled lightGrey]
-        bg = roundedRect lw lh lightGrey'
-        txts = flow right [spacer 5 1, login', spacer pad 1, bar, spacer 5 1, password]
-        sp = spacer (lw - (widthOf txts) - (widthOf icons)) 1
-    in layers [bg, flow right [txts, sp, icons]]
+login : Int -> String -> Element
+login w loginString =
+    let username = layers [ubg, utxt]
+        uw       = (w//2) - spw
+        uw'      = toFloat uw
+        ubg      = collage uw lh
+            [roundedRectShape Left uw' lh' 5 |> filled lightGrey']
+        utxt'    = loginElem loginString
+        utxt     = container uw lh midLeft utxt'
+        password = layers [pbg, ptxt]
+        pw       = (w//2) - spw - iw
+        pw'      = toFloat pw
+        pbg      = collage pw lh
+            [rect pw' lh' |> filled lightGrey']
+        ptxt'    = flow right [spacer 5 1, leftAligned <| whiteText "********"]
+        ptxt     = container pw lh midLeft ptxt'
+        lh       = heights.manageLogin
+        lh'      = toFloat lh
+        icon     = layers [ibg,icon']
+        iw       = 32
+        iw'      = toFloat iw
+        ibg      = collage iw lh
+            [roundedRectShape Right iw' lh' 5 |> filled lightGrey']
+        icon'    = container iw lh middle <| image 18 18 "images/lightning.svg"
+        sp       = spacer spw 1
+        spw      = 2
+    in flow right [username, sp, password, sp, icon]
+
 
 loginElem str =  flow right [spacer 5 5 , leftAligned <| whiteText str]
