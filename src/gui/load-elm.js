@@ -3,21 +3,22 @@
 
 var emptyFromChromeMessage = {pickedMediaFile: null};
 
-
 var gui = Elm.fullscreen(Elm.GUI,
     { fromBackground: emptyToGuiMessage
     , fromChrome: emptyFromChromeMessage
     }
 );
 
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.toGUI !== undefined) {
-        gui.ports.fromBackground.send(request.toGUI);
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    if (message.toGUI !== undefined) {
+        gui.ports.fromBackground.send(message.toGUI);
     }
 });
 
 //get the current state
-chrome.runtime.sendMessage({toBackground:{setLog:null, getState:[], startImportMedia:null}});
+chrome.runtime.sendMessage({
+    toBackground:{setLog:null, getState:[], startImportMedia:null}
+});
 
 gui.ports.toBackground.subscribe(function(message) {
     if (messageHasValue(message)) {
