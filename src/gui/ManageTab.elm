@@ -74,13 +74,13 @@ credentials (w,h) i =
                 ]
         credentials' = Html.div [style]
                     (intersperse (Html.fromElement (spacer 1 5))
-                        (map (service (w - 48)) i.credentials)
+                        (map (service (w - 48) i.favorites ) i.credentials)
                     )
                 |> Html.toElement (w - 32) (h - 32)
     in box (w,h) "Credentials" <| flow down [spacer 1 10, flow right [spacer 16 1, credentials']]
 
-service : Int -> (String, List String) -> Html.Html
-service w (serviceString, loginStrings) =
+service : Int -> List (String,String) -> (String, List String) -> Html.Html
+service w favs (serviceString, loginStrings) =
     let bg = roundedRect w h lightGrey
         service' = leftAligned <| Text.height 14 <| whiteText serviceString
         cw = widthOf service' + 32
@@ -94,7 +94,10 @@ service w (serviceString, loginStrings) =
             , flow down
                 (intersperse
                     (spacer 5 5)
-                    (map (\l -> login (w - 64) l False) loginStrings)
+                    (map
+                        (\l -> login (w - 64) l ((serviceString,l) `member` favs))
+                        loginStrings
+                    )
                 )
             ]
         h = ch + (length loginStrings) * (32 + 5) + 5
@@ -110,7 +113,7 @@ service w (serviceString, loginStrings) =
 
 login : Int -> String -> Bool -> Element
 login w loginString fav =
-    let username = uUp
+    let username = uUp -- button disabled for beta release
         --username = Input.customButton (send guiActions NoOp) uUp uHover uDown
         uUp      = layers [ubg lightGrey', utxt]
         --uHover   = layers [ubg lightGrey'', utxt]
@@ -122,7 +125,7 @@ login w loginString fav =
         utxt'    = flow right
             [spacer 5 5 , leftAligned <| whiteText loginString]
         utxt     = container uw lh midLeft utxt'
-        password = pUp -- disabled for beta release
+        password = pUp -- button disabled for beta release
         --password = Input.customButton (send guiActions NoOp) pUp pHover pDown
         pUp      = layers [pbg lightGrey', ptxt]
         --pHover   = layers [pbg lightGrey'', ptxt]
