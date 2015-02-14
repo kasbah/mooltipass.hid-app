@@ -86,9 +86,9 @@ bigButton : Signal.Message -> String -> Element
 bigButton msg str = button' 6.018072289156627 "bigButton" msg str
 
 button' aspect src msg str =
-    let h = heights.logTabButton
+    let h = heights.button
         w = round (toFloat h * aspect)
-        hDown = heights.logTabButton - 2
+        hDown = heights.button - 2
         wDown = round (toFloat hDown * aspect)
         img w' h' t = image w' h' ("images/" ++ src ++ "-" ++ t ++ ".svg")
         txt w' th = Element.width w'
