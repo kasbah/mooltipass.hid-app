@@ -106,17 +106,18 @@ credentials (w,h) i =
             <| leftAligned (whiteText s)
         title = layers [titleBg, txt "Credentials"]
         bg = roundedRect w h darkGrey'
+        ch = h - ht - 20
         style =
             Html.Attributes.style
                 [ ("overflow-y", "auto")
                 , ("width", toString (w - 16) ++ "px")
-                , ("height", toString (h - (heightOf title) - 20) ++ "px")
+                , ("height", toString ch ++ "px")
                 ]
         credentials' = Html.div [style]
                     (intersperse (Html.fromElement (spacer 1 5))
                         (map (service (w - 48) i.favorites ) i.credentials)
                     )
-                |> Html.toElement (w - 32) (h - 32)
+                |> Html.toElement (w - 32) ch
     in box (w,h) "Credentials" <| flow down [spacer 1 10, flow right [spacer 16 1, credentials']]
 
 service : Int -> List (String,String) -> (String, List String) -> Html.Html

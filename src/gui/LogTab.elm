@@ -21,10 +21,10 @@ import Actions (..)
 logTab : (Int, Int) -> List String -> Element
 logTab (w,h) log =
     let toolbar = container w heights.logTabToolbar middle clearButton
-        screenH = h - heights.logTabToolbar - 32
+        screenH = h - heights.logTabToolbar - 32 - 16
         screenW = w - 64
         screen' = container w screenH middle <| screen (screenW, screenH) log
-    in container w h middle <| flow down [screen', toolbar]
+    in container w h middle <| flow down [screen', spacer 1 16, toolbar]
 
 {-| The screen that displays the log -}
 screen : (Int, Int) -> List String -> Element

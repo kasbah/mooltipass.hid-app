@@ -17,7 +17,7 @@ import ManageTab (..)
     element that is below the tab navigation. -}
 content : (Int, Int) -> GuiState -> Element
 content (w,h) state =
-    let h' = h - heights.marginTop - heights.nav - heights.marginBottom
+    let h' = h - heights.marginTop - heights.nav
         background =
             collage w h' [filled darkGrey <| rect (toFloat w) (toFloat h)]
         withBackground e = layers [background, e]
