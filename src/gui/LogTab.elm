@@ -26,7 +26,7 @@ logTab (w,h) log =
         screen' = container w screenH middle <| screen (screenW, screenH) log
     in container w h middle <| flow down [screen', toolbar]
 
-{-| The screen that displays the log. -}
+{-| The screen that displays the log -}
 screen : (Int, Int) -> List String -> Element
 screen (w,h) log =
     let background = roundedRect w h grey

@@ -4,6 +4,7 @@ module ManageTab where
 import Graphics.Element as Element
 import Graphics.Element (..)
 import Graphics.Collage (..)
+import Graphics.Input as Input
 import List (..)
 import Color
 import Text (..)
@@ -16,6 +17,7 @@ import Html.Attributes
 
 -- local source
 import CommonState (..)
+import GuiState (..)
 import CustomGraphics (..)
 import Layout (..)
 import Actions (..)
@@ -92,7 +94,7 @@ service w (serviceString, loginStrings) =
             , flow down
                 (intersperse
                     (spacer 5 5)
-                    (map (login (w - 64)) loginStrings)
+                    (map (\l -> login (w - 64) l False) loginStrings)
                 )
             ]
         h = ch + (length loginStrings) * (32 + 5) + 5
@@ -106,33 +108,42 @@ service w (serviceString, loginStrings) =
                 ]
        ]
 
-login : Int -> String -> Element
-login w loginString =
-    let username = layers [ubg, utxt]
+login : Int -> String -> Bool -> Element
+login w loginString fav =
+    let username = Input.customButton (send guiActions NoOp) uUp uHover uDown
+        uUp      = layers [ubg lightGrey', utxt]
+        uHover   = layers [ubg lightGrey'', utxt]
+        uDown    = uUp
         uw       = (w//2) - spw
         uw'      = toFloat uw
-        ubg      = collage uw lh
-            [roundedRectShape Left uw' lh' 5 |> filled lightGrey']
+        ubg c    = collage uw lh
+            [roundedRectShape Left uw' lh' 5 |> filled c]
         utxt'    = flow right
             [spacer 5 5 , leftAligned <| whiteText loginString]
         utxt     = container uw lh midLeft utxt'
-        password = layers [pbg, ptxt]
+        password = Input.customButton (send guiActions NoOp) pUp pHover pDown
+        pUp      = layers [pbg lightGrey', ptxt]
+        pHover   = layers [pbg lightGrey'', ptxt]
+        pDown    = pUp
         pw       = (w//2) - spw - iw
         pw'      = toFloat pw
-        pbg      = collage pw lh
-            [rect pw' lh' |> filled lightGrey']
+        pbg c    = collage pw lh [rect pw' lh' |> filled c]
         ptxt'    = flow right
             [spacer 5 1, leftAligned <| whiteText "********"]
         ptxt     = container pw lh midLeft ptxt'
         lh       = heights.manageLogin
         lh'      = toFloat lh
-        icon     = layers [ibg,icon']
+        icon     = Input.customButton (send guiActions NoOp) iUp iHover iDown
+        iifav    = if fav then icon' "blue" else icon' "white"
+        iUp      = layers [ibg lightGrey' , iifav]
+        iHover   = layers [ibg lightGrey'', iifav]
+        iDown    = layers [ibg lightGrey'', icon' "blue" ]
         iw       = 32
         iw'      = toFloat iw
-        ibg      = collage iw lh
-            [roundedRectShape Right iw' lh' 5 |> filled lightGrey']
-        icon'    = container iw lh middle
-            <| image 18 18 "images/lightning.svg"
+        ibg  c   = collage iw lh
+            [roundedRectShape Right iw' lh' 5 |> filled c]
+        icon' c  = container iw lh middle
+            <| image 18 18 ("images/lightning-" ++ c ++ ".svg")
         sp       = spacer spw 1
         spw      = 2
     in flow right [username, sp, password, sp, icon]

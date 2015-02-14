@@ -64,6 +64,9 @@ lightGrey = Color.rgb 0x30 0x30 0x30
 lightGrey' : Color.Color
 lightGrey' = Color.rgb 0x40 0x40 0x40
 
+lightGrey'' : Color.Color
+lightGrey'' = Color.rgb 0x50 0x50 0x50
+
 cyan : Color.Color
 cyan = Color.rgb 0x00 0xff 0xd8
 
