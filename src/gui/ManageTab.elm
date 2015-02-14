@@ -55,7 +55,47 @@ content (w,h) info =
         ]
 
 favorites : (Int, Int) -> MemoryInfo -> Element
-favorites (w,h) info = box (w,h) "Favorites" Element.empty
+favorites (w,h) info =
+    let cw = ((w - (spw*3))//2)
+        spw = 5
+    in box (w,h) "Favorites"
+        <| flow right
+            [ spacer spw 1
+            , favoritesColumn cw (take 8 info.favorites)
+            , spacer spw 1
+            , favoritesColumn cw (drop 8 info.favorites)
+            , spacer spw 1
+            ]
+
+favoritesColumn : Int  -> List (String, String) -> Element
+favoritesColumn w favs =
+    flow down
+    <| [spacer 1 5]
+        ++ (intersperse (spacer 1 5) (map (favorite w) favs))
+
+favorite : Int -> (String, String) -> Element
+favorite w (serviceString, loginString) =
+    let service = layers [sBg lightGrey, sTxt]
+        fh      = heights.manageLogin
+        fh'     = toFloat fh
+        sw      = (2 * w)//5 - spw
+        sw'     = toFloat sw
+        sBg c   = collage sw fh
+            [roundedRectShape Left sw' fh' 5 |> filled c]
+        sTxt    = container sw fh midLeft sTxt'
+        sTxt' = flow right
+            [spacer 5 1, leftAligned <| whiteText serviceString]
+        login   = layers [lBg lightGrey, lTxt]
+        lBg c   = collage lw fh [rect lw' fh' |> filled c]
+        iw = 32
+        lw       = ((3 * w)//5) - spw - iw
+        lw'      = toFloat lw
+        lTxt'    = flow right
+            [spacer 5 1, leftAligned <| whiteText loginString]
+        lTxt     = container lw fh midLeft lTxt'
+        sp       = spacer spw 1
+        spw      = 2
+    in flow right [service, sp, login, sp, favIcon True]
 
 credentials : (Int, Int) -> MemoryInfo -> Element
 credentials (w,h) i =
@@ -138,14 +178,6 @@ login w loginString fav =
         ptxt     = container pw lh midLeft ptxt'
         lh       = heights.manageLogin
         lh'      = toFloat lh
-        favIcon     = Input.customButton
-            (send guiActions NoOp) iFavUp iFavHover iFavDown
-        iFavC    = if fav then favIcon' "blue" else favIcon' "white"
-        iFavUp      = layers [iFavBg lightGrey' , iFavC]
-        iFavHover   = layers [iFavBg lightGrey'', iFavC]
-        iFavDown    = layers [iFavBg lightGrey'', favIcon' "blue" ]
-        favIcon' c  = container iw lh middle
-            <| image 18 18 ("images/lightning-" ++ c ++ ".svg")
         delIcon     = Input.customButton
             (send guiActions NoOp) iDelUp iDelHover iDelDown
         iDelUp      = layers [iDelBg lightGrey' , delIcon']
@@ -153,15 +185,30 @@ login w loginString fav =
         iDelDown    = layers [iDelBg lightGrey'', delIcon']
         delIcon' = container iw lh middle
             <| image 18 18 ("images/cross.svg")
-        iFavBg  c   = collage iw lh
-            [roundedRectShape Right iw' lh' 5 |> filled c]
         iDelBg  c  = collage iw lh
             [rect iw' lh' |> filled c]
         sp       = spacer spw 1
         spw      = 2
         iw       = 32
         iw'      = toFloat iw
-    in flow right [username, sp, password, sp, delIcon, sp, favIcon]
+    in flow right [username, sp, password, sp, delIcon, sp, favIcon fav]
+
+
+favIcon isFav         =
+    let iFavC fav     = if fav then favIcon' "blue" else favIcon' "white"
+        iFavUp fav    = layers [iFavBg lightGrey' , iFavC fav]
+        iFavHover fav = layers [iFavBg lightGrey'', iFavC fav]
+        iFavDown      = layers [iFavBg lightGrey'', favIcon' "blue" ]
+        iFavBg  c     = collage iw lh
+            [roundedRectShape Right iw' lh' 5 |> filled c]
+        favIcon' c    = container iw lh middle
+            <| image 18 18 ("images/lightning-" ++ c ++ ".svg")
+        lh            = heights.manageLogin
+        lh'           = toFloat lh
+        iw       = 32
+        iw'      = toFloat iw
+    in Input.customButton
+       (send guiActions NoOp) (iFavUp isFav) (iFavHover isFav) iFavDown
 
 title : Int -> String -> Element
 title w str =
