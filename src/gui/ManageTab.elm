@@ -121,8 +121,8 @@ favorite w (n,maybeF) =
                else flow right
                    [ service
                    , sp, login
-                   , sp, icon upIcon (n /= 15)
-                   , sp, icon downIcon (n /= 1)
+                   , sp, icon upIcon (n /= 1)
+                   , sp, icon downIcon (n /= 15)
                    , sp, favIcon True (serviceString,loginString)
                    ]
     in Html.div
