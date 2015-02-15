@@ -36,10 +36,8 @@ manageTab (w,h) i =
 content : (Int, Int) -> MemoryInfo -> Element
 content (w,h) info =
     let favHeight = 37 * 5 + heights.manageTitle + 5
-        saveButton = container w
-            (heights.button + 4)
-            middle
-            <| button (send commonActions CommonNoOp) "save"
+        saveButton = button (send commonActions CommonNoOp) "save"
+        cancelButton = button (send commonActions CommonNoOp) "cancel"
     in container w h midTop <| flow down
         [ favorites (w,favHeight) info
         , spacer 1 heights.manageSpacer
@@ -51,7 +49,8 @@ content (w,h) info =
                 - heights.manageSpacer)
             info
         , spacer 1 heights.manageSpacer
-        , saveButton
+        , container w (heights.button + 4) middle
+            <| flow right [cancelButton, spacer 16 1, saveButton]
         ]
 
 favorites : (Int, Int) -> MemoryInfo -> Element
