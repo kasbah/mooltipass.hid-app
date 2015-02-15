@@ -33,18 +33,19 @@ emptyMemoryInfo =
 
 exampleMemoryInfo =
     { credentials = [ ("github.com", ["kasbah", "monostable"])
-                    , ("oshpark.com",[ "kaspar.emanuel@gmail.com"])
-                    , ("amazon.com" ,[ "kaspar.bumke+nu-server@gmail.com"])
-                    , ("oshpark.com",[ "kaspar.emanuel@gmail.com"])
-                    , ("oshpark.com",[ "kaspar.emanuel@gmail.com"])
-                    , ("oshpark.com",[ "kaspar.emanuel@gmail.com"])
-                    , ("oshpark.com",[ "kaspar.emanuel@gmail.com"])
+                    , ("oshpark.com",["kaspar.emanuel@gmail.com"])
+                    , ("amazon.com" ,["kaspar.bumke+nu-server@gmail.com"])
+                    , ("oshpark.com",["kaspar.emanuel@gmail.com"])
+                    , ("seafile.cc" ,["kaspar.bumke@gmail.com"])
+                    , ("example.com" ,[ "me@example.com"])
+                    , ("eggsample.com" , ["eggs@sample.com"])
                     ]
     , favorites   = [ Just ("github.com", "kasbah")
                     , Just ("oshpark.com", "kaspar.emanuel@gmail.com")
-                    , Nothing
                     , Just ("amazon.com" , "kaspar.bumke+nu-server@gmail.com")
-                    , Just ("amazon.com" , "kaspar.bumke+nu-server@gmail.com")
+                    , Just ("seafile.cc" , "kaspar.bumke@gmail.com")
+                    , Just ("example.com" , "me@example.com")
+                    , Just ("eggsample.com" , "eggs@sample.com")
                     ]
     }
 

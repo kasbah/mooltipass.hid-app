@@ -14,6 +14,7 @@ import Maybe
 
 -- extra libraries
 import Html
+import Html (Html)
 import Html.Attributes
 
 -- local source
@@ -35,15 +36,14 @@ manageTab (w,h) i =
 
 content : (Int, Int) -> MemoryInfo -> Element
 content (w,h) info =
-    let favHeight = 37 * 5 + heights.manageTitle + 5
-        saveButton = button (send commonActions CommonNoOp) "save"
+    let saveButton = button (send commonActions CommonNoOp) "save"
         cancelButton = button (send commonActions CommonNoOp) "cancel"
     in container w h midTop <| flow down
-        [ favorites (w,favHeight) info
+        [ favorites w info
         , spacer 1 heights.manageSpacer
         , credentials
             ( w
-            , h - favHeight
+            , h - (heightOf (favorites w info))
                 - heights.manageSpacer
                 - (heights.button + 4)
                 - heights.manageSpacer)
@@ -53,24 +53,27 @@ content (w,h) info =
             <| flow right [cancelButton, spacer 16 1, saveButton]
         ]
 
-favorites : (Int, Int) -> MemoryInfo -> Element
-favorites (w,h) info =
-    let cw = w - (2*spw)
-        spw = 5
-    in box (w,h) "Favorites"
-        <| flow right
-            [ spacer spw 1
-            , favoritesColumn cw info.favorites
-            , spacer spw 1
+favorites : Int -> MemoryInfo -> Element
+favorites w info =
+    let style =
+            Html.Attributes.style
+                [ ("overflow-y", "auto")
+                , ("width", toString (w - 16) ++ "px")
+                , ("height", toString ch ++ "px")
+                ]
+        favorites' = Html.div [style]
+                    (intersperse (Html.fromElement (spacer 1 5))
+                        (map (favorite (w - 48)) (map2 (,) [1..15] info.favorites))
+                    )
+                |> Html.toElement (w - 32) ch
+        ch = heights.manageLogin * 5 + (5*6)
+    in box (w, ch + 20 + heights.manageTitle) "Favorites"
+        <| flow down
+            [ spacer 1 10
+            , flow right [spacer 16 1, favorites']
             ]
 
-favoritesColumn : Int  -> List (Maybe (String, String)) -> Element
-favoritesColumn w favs =
-    flow down
-    <| [spacer 1 5]
-        ++ (intersperse (spacer 1 5) (map (favorite w) (map2 (,) [1..15] favs)))
-
-favorite : Int -> (Int, Maybe (String, String)) -> Element
+favorite : Int -> (Int, Maybe (String, String)) -> Html
 favorite w (n,maybeF) =
     let service = layers [sBg lightGrey', sTxt]
         fh      = heights.manageLogin
@@ -114,14 +117,17 @@ favorite w (n,maybeF) =
         rect' w h c = collage w h [rect (toFloat w) (toFloat h) |> filled c]
         (serviceString, loginString) = Maybe.withDefault ("","") maybeF
         icon f b = if b then f else rect' iw fh lightGrey'
-    in  if maybeF == Nothing then spacer w fh
-        else flow right
-            [ service, sp
-            , login, sp
-            , icon upIcon (n /= 15), sp
-            , icon downIcon (n /= 1), sp
-            , favIcon True
-            ]
+        elem = if maybeF == Nothing then spacer w fh
+               else flow right
+                   [ service, sp
+                   , login, sp
+                   , icon upIcon (n /= 15), sp
+                   , icon downIcon (n /= 1), sp
+                   , favIcon True
+                   ]
+    in Html.div
+       [Html.Attributes.style [("position", "relative")]]
+       [Html.fromElement elem]
 
 credentials : (Int, Int) -> MemoryInfo -> Element
 credentials (w,h) i =
@@ -149,7 +155,7 @@ credentials (w,h) i =
             , flow right [spacer 16 1, credentials']
             ]
 
-service : Int -> List (Maybe (String,String)) -> (String, List String) -> Html.Html
+service : Int -> List (Maybe (String,String)) -> (String, List String) -> Html
 service w favs (serviceString, loginStrings) =
     let bg = roundedRect w h lightGrey
         service' = leftAligned <| Text.height 14 <| whiteText serviceString
