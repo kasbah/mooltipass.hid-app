@@ -22,6 +22,7 @@ import GuiState (..)
 import CustomGraphics (..)
 import Layout (..)
 import Actions (..)
+import Util (..)
 
 
 manageTab : (Int, Int) -> MemoryInfo -> Element
@@ -64,11 +65,11 @@ favorites (w,h) info =
             , spacer spw 1
             ]
 
-favoritesColumn : Int  -> List (String, String) -> Element
+favoritesColumn : Int  -> List (Maybe (String, String)) -> Element
 favoritesColumn w favs =
     flow down
     <| [spacer 1 5]
-        ++ (intersperse (spacer 1 5) (map (favorite w) (map2 (\i f -> if i == 2 then (i,Nothing) else (i, Just f)) [1..15] favs)))
+        ++ (intersperse (spacer 1 5) (map (favorite w) (map2 (,) [1..15] favs)))
 
 favorite : Int -> (Int, Maybe (String, String)) -> Element
 favorite w (n,maybeF) =
@@ -149,7 +150,7 @@ credentials (w,h) i =
             , flow right [spacer 16 1, credentials']
             ]
 
-service : Int -> List (String,String) -> (String, List String) -> Html.Html
+service : Int -> List (Maybe (String,String)) -> (String, List String) -> Html.Html
 service w favs (serviceString, loginStrings) =
     let bg = roundedRect w h lightGrey
         service' = leftAligned <| Text.height 14 <| whiteText serviceString
@@ -165,7 +166,7 @@ service w favs (serviceString, loginStrings) =
                 (intersperse
                     (spacer 5 5)
                     (map
-                        (\l -> login (w - 64) l ((serviceString,l) `member` favs))
+                        (\l -> login (w - 64) l ((serviceString,l) `member` (justs favs)))
                         loginStrings
                     )
                 )
