@@ -17,7 +17,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 
 //get the current state
 chrome.runtime.sendMessage({
-    toBackground:{setLog:null, getState:[], startImportMedia:null}
+    toBackground:emptyFromGuiMessage
 });
 
 gui.ports.toBackground.subscribe(function(message) {

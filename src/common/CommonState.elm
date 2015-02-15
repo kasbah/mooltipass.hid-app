@@ -87,8 +87,8 @@ type CommonAction = SetLog (List String)
                   | GetState
                   | SetTransferInfo TransferInfo
                   | StartImportMedia FileId
-                  | AddToFavorites (String, String)
-                  | RemoveFromFavorites (String, String)
+                  | AddToFavs (String, String)
+                  | RemoveFromFavs (String, String)
                   | CommonNoOp
 
 {-| Transform the state to a new state according to an action -}
@@ -102,17 +102,17 @@ update action s =
         SetTransferInfo i     -> {s | transferInfo <- i}
         StartImportMedia id   -> {s | transferInfo <- ImportRequested id}
         CommonNoOp            -> s
-        AddToFavorites f      -> {s | memoryInfo <- addToFavorites f s.memoryInfo}
-        RemoveFromFavorites f -> {s | memoryInfo <- removeFromFavorites f s.memoryInfo}
+        AddToFavs f      -> {s | memoryInfo <- addToFavs f s.memoryInfo}
+        RemoveFromFavs f -> {s | memoryInfo <- removeFromFavs f s.memoryInfo}
 
-removeFromFavorites : (String, String) -> MemoryInfo -> MemoryInfo
-removeFromFavorites f info =
+removeFromFavs : (String, String) -> MemoryInfo -> MemoryInfo
+removeFromFavs f info =
     {info | favorites <-
         map (\x -> if x == (Just f) then Nothing else x) info.favorites
     }
 
-addToFavorites : (String, String) -> MemoryInfo -> MemoryInfo
-addToFavorites f info =
+addToFavs : (String, String) -> MemoryInfo -> MemoryInfo
+addToFavs f info =
     let replace =
         foldl
             (\x z -> if x == Nothing then z ++ [(Just f)] else z ++ [x])

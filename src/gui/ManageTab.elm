@@ -244,10 +244,11 @@ favIcon isFav credential =
         iw       = 32
         iw'      = toFloat iw
     in Input.customButton
-       (send commonActions (if isFav then RemoveFromFavorites credential else AddToFavorites credential))
-       (iFavUp isFav)
-       (iFavHover isFav)
-       iFavDown
+        (send commonActions
+            (if isFav then RemoveFromFavs credential else AddToFavs credential))
+        (iFavUp isFav)
+        (iFavHover isFav)
+        iFavDown
 
 title : Int -> String -> Element
 title w str =
