@@ -33,8 +33,8 @@ type Action = ChangeTab Tab
             | ClickIcon
             | SetImportMedia TransferRequest
             | CommonAction CommonAction
-            | AddToFavs (String, String)
-            | RemoveFromFavs (String, String)
+            | AddFav (String, String)
+            | RemoveFav (String, String)
             | NoOp
 
 {-| The initial state -}
@@ -78,9 +78,9 @@ update action s =
                              then {s | importMedia <- r}
                              else s
             _ -> {s | importMedia <- r}
-        AddToFavs f        ->
+        AddFav f        ->
             {s | unsavedMemInfo <- Maybe.map (addToFavs f) s.unsavedMemInfo}
-        RemoveFromFavs f   ->
+        RemoveFav f   ->
             {s | unsavedMemInfo <- Maybe.map (removeFromFavs f) s.unsavedMemInfo}
         -- An action on the common state can have an affect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
