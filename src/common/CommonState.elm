@@ -4,6 +4,9 @@ module CommonState where
 import List (..)
 import String
 
+-- local source
+import Util (..)
+
 {-| The background state excluding gui components -}
 type alias CommonState =
     { connected    : ConnectState

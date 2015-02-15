@@ -63,7 +63,7 @@ favorites w info =
                 ]
         favorites' = Html.div [style]
                     (intersperse (Html.fromElement (spacer 1 5))
-                        (map (favorite (w - 48)) (map2 (,) [1..15] info.favorites))
+                        (map (favorite (w - 48)) (map2 (,) [1..15] (stripNothing info.favorites)))
                     )
                 |> Html.toElement (w - 32) ch
         ch = heights.manageLogin * 5 + (5*6)
