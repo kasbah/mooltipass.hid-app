@@ -34,6 +34,8 @@ type Action = ChangeTab Tab
             | CommonAction CommonAction
             | AddFav (String, String)
             | RemoveFav (String, String)
+            | MoveFavUp (String, String)
+            | MoveFavDown (String, String)
             | NoOp
 
 {-| The initial state -}
@@ -81,6 +83,10 @@ update action s =
             {s | unsavedMemInfo <- Maybe.map (addToFavs f) s.unsavedMemInfo}
         RemoveFav f   ->
             {s | unsavedMemInfo <- Maybe.map (removeFromFavs f) s.unsavedMemInfo}
+        MoveFavUp f   ->
+            {s | unsavedMemInfo <- Maybe.map (moveFavUp f) s.unsavedMemInfo}
+        MoveFavDown f   ->
+            {s | unsavedMemInfo <- Maybe.map (moveFavDown f) s.unsavedMemInfo}
         -- An action on the common state can have an affect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
         -- connected state for instance.
@@ -109,6 +115,22 @@ removeFromFavs f info =
 
 addToFavs : (String, String) -> MemoryInfo -> MemoryInfo
 addToFavs f info = {info | favorites <- replaceFirst Nothing (Just f) info.favorites}
+
+moveFavUp : (String, String) -> MemoryInfo -> MemoryInfo
+moveFavUp f info =
+    {info | favorites <-
+        reverse <| foldl (switchFav f) [] info.favorites
+    }
+
+moveFavDown : (String, String) -> MemoryInfo -> MemoryInfo
+moveFavDown f info =
+    {info | favorites <-
+        foldr (switchFav f) [] info.favorites
+    }
+
+switchFav f x zs = if | zs == []   -> [x]
+                   | x == (Just f) -> head zs::x::(tail zs)
+                   | otherwise     -> x::head zs::(tail zs)
 
 {-| Apply 'update' to a list of actions -}
 apply : List Action -> GuiState -> GuiState

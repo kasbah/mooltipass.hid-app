@@ -97,7 +97,7 @@ favorite w (n,maybeF) =
         sp       = spacer spw 1
         spw      = 2
         upIcon     = Input.customButton
-            (send guiActions NoOp) iUpUp iUpHover iUpDown
+            (send guiActions (MoveFavUp (serviceString, loginString))) iUpUp iUpHover iUpDown
         iUpUp      = layers [iUpBg lightGrey' , upIcon']
         iUpHover   = layers [iUpBg lightGrey'', upIcon']
         iUpDown    = layers [iUpBg lightGrey'', upIcon']
@@ -106,7 +106,7 @@ favorite w (n,maybeF) =
         iUpBg  c  = collage iw fh
             [rect iw' fh' |> filled c]
         downIcon     = Input.customButton
-            (send guiActions NoOp) iDownUp iDownHover iDownDown
+            (send guiActions (MoveFavDown (serviceString, loginString))) iDownUp iDownHover iDownDown
         iDownUp      = layers [iDownBg lightGrey' , downIcon']
         iDownHover   = layers [iDownBg lightGrey'', downIcon']
         iDownDown    = layers [iDownBg lightGrey'', downIcon']
