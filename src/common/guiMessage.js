@@ -1,4 +1,12 @@
-var emptyToGuiMessage = {setLog:[], setConnected:0, setTransferInfo:[0,"",0,0]};
+var emptyMemoryInfo = { favorites: [], credentials: []}
+
+var emptyToGuiMessage =
+    { setLog:[]
+    , setConnected:0
+    , setTransferInfo:[0,"",0,0]
+    , setMemoryInfo: emptyMemoryInfo
+};
+
 var emptyFromGuiMessage =
     { setLog           : null
     , startImportMedia : null

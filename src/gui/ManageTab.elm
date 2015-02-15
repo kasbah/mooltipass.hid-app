@@ -119,11 +119,11 @@ favorite w (n,maybeF) =
         icon f b = if b then f else rect' iw fh lightGrey'
         elem = if maybeF == Nothing then spacer w fh
                else flow right
-                   [ service, sp
-                   , login, sp
-                   , icon upIcon (n /= 15), sp
-                   , icon downIcon (n /= 1), sp
-                   , favIcon True (serviceString,loginString)
+                   [ service
+                   , sp, login
+                   , sp, icon upIcon (n /= 15)
+                   , sp, icon downIcon (n /= 1)
+                   , sp, favIcon True (serviceString,loginString)
                    ]
     in Html.div
        [Html.Attributes.style [("position", "relative")]]

@@ -3,9 +3,10 @@ module ToGuiMessage where
 -- local source
 import CommonState (..)
 
-type alias ToGuiMessage = { setLog           : (List String)
-                          , setConnected     : Int
+type alias ToGuiMessage = { setLog          : (List String)
+                          , setConnected    : Int
                           , setTransferInfo : (Int,FileId,Int,Int)
+                          , setMemoryInfo   : MemoryInfo
                           }
 
 encode : CommonState -> ToGuiMessage
@@ -22,6 +23,7 @@ encode s =
         Importing id i1 i2 -> (2,id,i1,i2)
         Imported id        -> (3,id,0,0)
         TransferError s    -> (4,s ,0,0)
+    , setMemoryInfo = s.memoryInfo
     }
 
 decode : ToGuiMessage -> List CommonAction
@@ -41,4 +43,5 @@ decode msg=
     in  [ SetLog msg.setLog
         , SetConnected setConnected
         , SetTransferInfo setTransferInfo
+        , SetMemoryInfo msg.setMemoryInfo
         ]

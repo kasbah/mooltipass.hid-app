@@ -88,6 +88,7 @@ type CommonAction = SetLog (List String)
                   | StartImportMedia FileId
                   | AddToFavs (String, String)
                   | RemoveFromFavs (String, String)
+                  | SetMemoryInfo MemoryInfo
                   | CommonNoOp
 
 {-| Transform the state to a new state according to an action -}
@@ -102,6 +103,7 @@ update action s =
         CommonNoOp            -> s
         AddToFavs f      -> {s | memoryInfo <- addToFavs f s.memoryInfo}
         RemoveFromFavs f -> {s | memoryInfo <- removeFromFavs f s.memoryInfo}
+        SetMemoryInfo i  -> {s | memoryInfo <- i}
 
 removeFromFavs : (String, String) -> MemoryInfo -> MemoryInfo
 removeFromFavs f info =
@@ -110,13 +112,7 @@ removeFromFavs f info =
     }
 
 addToFavs : (String, String) -> MemoryInfo -> MemoryInfo
-addToFavs f info =
-    let replace =
-        foldl
-            (\x z -> if x == Nothing then z ++ [(Just f)] else z ++ [x])
-            []
-            info.favorites
-    in {info | favorites <- replace}
+addToFavs f info = {info | favorites <- replace info.favorites Nothing (Just f)}
 
 apply : List CommonAction -> CommonState -> CommonState
 apply actions state = foldr update state actions
