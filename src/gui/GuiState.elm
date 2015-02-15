@@ -21,6 +21,7 @@ type alias GuiState =
     , iconClicked : Int
     , devEnabled  : Bool
     , importMedia : TransferRequest
+    , unsavedMemInfo : Maybe MemoryInfo
     , common      : CommonState
     }
 
@@ -38,6 +39,7 @@ default =
     , iconClicked = 0
     , devEnabled  = False
     , importMedia = NotRequested
+    , unsavedMemInfo = Nothing
     , common      = Common.default
     }
 
@@ -82,6 +84,12 @@ update action s =
                                         then Log else s.activeTab
                                     , common <- updateCommon a
                                 }
+                            (Common.SetMemoryInfo i) ->
+                                if i /= s.common.memoryInfo || s.unsavedMemInfo == Nothing
+                                then {s | unsavedMemInfo <- Just i
+                                        , common <- updateCommon a
+                                     }
+                                else s
                             _ -> {s | common <- updateCommon a}
         NoOp -> s
 

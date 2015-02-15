@@ -4,6 +4,7 @@ module Content where
 import Color
 import Graphics.Collage (..)
 import Graphics.Element (..)
+import Maybe
 
 -- local source
 import CustomGraphics (..)
@@ -12,6 +13,7 @@ import GuiState (..)
 import LogTab (..)
 import DeveloperTab (..)
 import ManageTab (..)
+import CommonState (..)
 
 {-| Renders the window the window dimensions and application state to the
     element that is below the tab navigation. -}
@@ -24,5 +26,5 @@ content (w,h) state =
     in case state.activeTab of
         Log       -> withBackground <| logTab (w, h') state.common.log
         Developer -> withBackground <| developerTab (w, h') state.common.transferInfo
-        Manage    -> withBackground <| manageTab (w, h') state.common.memoryInfo
+        Manage    -> withBackground <| manageTab (w, h') (Maybe.withDefault emptyMemoryInfo state.unsavedMemInfo)
         _         -> empty

@@ -52,10 +52,10 @@ state = map (\(_,_,s) -> s) output
 output : Signal (ToDeviceMessage, ToExtensionMessage, BackgroundState)
 output =
     let go ias (dm,em,s) =
-        let s'                  = apply ias s
+        let s'                   = apply ias s
             (deviceMessage, a1s) = DeviceMessage.encode s'
-            s''                 = apply a1s s'
-            (extMessage, a2)    = ExtensionMessage.encode s''
+            s''                  = apply a1s s'
+            (extMessage, a2)     = ExtensionMessage.encode s''
         in (deviceMessage, extMessage, update a2 s'')
     in foldp go (emptyToDeviceMessage, emptyToExtensionMessage, default) inputActions
 
