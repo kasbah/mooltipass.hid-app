@@ -21,9 +21,5 @@ replace items old new =
     in mapOnce check items
 
 stripNothing : List (Maybe a) -> List (Maybe a)
-stripNothing xs =
-    let (xs',_) = foldr (\x (z,c) -> if | c && x == Nothing -> (z,True)
-                                        | otherwise         -> (x::z,False) )
-                   ([],True)
-                   xs
-    in xs'
+stripNothing =
+    foldr (\x z -> if z == [] && x == Nothing then z else x::z) []
