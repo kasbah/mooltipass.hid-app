@@ -15,8 +15,8 @@ mapOnce f (x::xs) = case f x of
         Nothing -> x :: if xs /= [] then mapOnce f xs else []
         Just y  -> y :: xs
 
-replace : List a -> a -> a -> List a
-replace items old new =
+replaceFirst : a -> a -> List a -> List a
+replaceFirst old new items =
     let check item = if item == old then Just new else Nothing
     in mapOnce check items
 

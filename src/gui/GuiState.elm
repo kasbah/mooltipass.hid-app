@@ -108,7 +108,7 @@ removeFromFavs f info =
     }
 
 addToFavs : (String, String) -> MemoryInfo -> MemoryInfo
-addToFavs f info = {info | favorites <- replace info.favorites Nothing (Just f)}
+addToFavs f info = {info | favorites <- replaceFirst Nothing (Just f) info.favorites}
 
 {-| Apply 'update' to a list of actions -}
 apply : List Action -> GuiState -> GuiState
