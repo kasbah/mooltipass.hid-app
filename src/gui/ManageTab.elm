@@ -10,6 +10,7 @@ import Color
 import Text (..)
 import Text
 import Signal (send)
+import Maybe
 
 -- extra libraries
 import Html
@@ -33,9 +34,7 @@ manageTab (w,h) i =
 
 content : (Int, Int) -> MemoryInfo -> Element
 content (w,h) info =
-    let favHeight =
-            (min 5 (length info.favorites)) * 48
-            + heights.manageTitle
+    let favHeight = 37 * 5 + heights.manageTitle + 5
         saveButton = container w
             (heights.button + 4)
             middle
@@ -56,14 +55,12 @@ content (w,h) info =
 
 favorites : (Int, Int) -> MemoryInfo -> Element
 favorites (w,h) info =
-    let cw = ((w - (spw*3))//2)
+    let cw = w - (2*spw)
         spw = 5
     in box (w,h) "Favorites"
         <| flow right
             [ spacer spw 1
-            , favoritesColumn cw (take 8 info.favorites)
-            , spacer spw 1
-            , favoritesColumn cw (drop 8 info.favorites)
+            , favoritesColumn cw info.favorites
             , spacer spw 1
             ]
 
@@ -71,31 +68,60 @@ favoritesColumn : Int  -> List (String, String) -> Element
 favoritesColumn w favs =
     flow down
     <| [spacer 1 5]
-        ++ (intersperse (spacer 1 5) (map (favorite w) favs))
+        ++ (intersperse (spacer 1 5) (map (favorite w) (map2 (\i f -> if i == 2 then (i,Nothing) else (i, Just f)) [1..15] favs)))
 
-favorite : Int -> (String, String) -> Element
-favorite w (serviceString, loginString) =
-    let service = layers [sBg lightGrey, sTxt]
+favorite : Int -> (Int, Maybe (String, String)) -> Element
+favorite w (n,maybeF) =
+    let service = layers [sBg lightGrey', sTxt]
         fh      = heights.manageLogin
         fh'     = toFloat fh
-        sw      = (2 * w)//5 - spw
+        sw      = (2 * w)//5 - (2 * spw) - iw
         sw'     = toFloat sw
         sBg c   = collage sw fh
             [roundedRectShape Left sw' fh' 5 |> filled c]
         sTxt    = container sw fh midLeft sTxt'
         sTxt' = flow right
             [spacer 5 1, leftAligned <| whiteText serviceString]
-        login   = layers [lBg lightGrey, lTxt]
+        login   = layers [lBg lightGrey', lTxt]
         lBg c   = collage lw fh [rect lw' fh' |> filled c]
         iw = 32
-        lw       = ((3 * w)//5) - spw - iw
+        iw' = toFloat iw
+        lw       = ((3 * w)//5) - (2 * spw) - (2 * iw)
         lw'      = toFloat lw
         lTxt'    = flow right
             [spacer 5 1, leftAligned <| whiteText loginString]
         lTxt     = container lw fh midLeft lTxt'
         sp       = spacer spw 1
         spw      = 2
-    in flow right [service, sp, login, sp, favIcon True]
+        upIcon     = Input.customButton
+            (send guiActions NoOp) iUpUp iUpHover iUpDown
+        iUpUp      = layers [iUpBg lightGrey' , upIcon']
+        iUpHover   = layers [iUpBg lightGrey'', upIcon']
+        iUpDown    = layers [iUpBg lightGrey'', upIcon']
+        upIcon' = container iw fh middle
+            <| image 18 18 ("images/arrow-up.svg")
+        iUpBg  c  = collage iw fh
+            [rect iw' fh' |> filled c]
+        downIcon     = Input.customButton
+            (send guiActions NoOp) iDownUp iDownHover iDownDown
+        iDownUp      = layers [iDownBg lightGrey' , downIcon']
+        iDownHover   = layers [iDownBg lightGrey'', downIcon']
+        iDownDown    = layers [iDownBg lightGrey'', downIcon']
+        downIcon' = container iw fh middle
+            <| image 18 18 ("images/arrow-down.svg")
+        iDownBg  c  = collage iw fh
+            [rect iw' fh' |> filled c]
+        rect' w h c = collage w h [rect (toFloat w) (toFloat h) |> filled c]
+        (serviceString, loginString) = Maybe.withDefault ("","") maybeF
+        icon f b = if b then f else rect' iw fh lightGrey'
+    in  if maybeF == Nothing then spacer w fh
+        else flow right
+            [ service, sp
+            , login, sp
+            , icon upIcon (n /= 15), sp
+            , icon downIcon (n /= 1), sp
+            , favIcon True
+            ]
 
 credentials : (Int, Int) -> MemoryInfo -> Element
 credentials (w,h) i =
@@ -104,7 +130,6 @@ credentials (w,h) i =
            [filled lightGrey <| roundedRectShape Top (toFloat w) (toFloat ht) 5]
         txt s = container w heights.manageTitle middle
             <| leftAligned (whiteText s)
-        title = layers [titleBg, txt "Credentials"]
         bg = roundedRect w h darkGrey'
         ch = h - ht - 20
         style =
@@ -118,7 +143,11 @@ credentials (w,h) i =
                         (map (service (w - 48) i.favorites ) i.credentials)
                     )
                 |> Html.toElement (w - 32) ch
-    in box (w,h) "Credentials" <| flow down [spacer 1 10, flow right [spacer 16 1, credentials']]
+    in box (w,h) "All Credentials"
+        <| flow down
+            [ spacer 1 10
+            , flow right [spacer 16 1, credentials']
+            ]
 
 service : Int -> List (String,String) -> (String, List String) -> Html.Html
 service w favs (serviceString, loginStrings) =
