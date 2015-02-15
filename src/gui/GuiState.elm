@@ -1,7 +1,6 @@
 module GuiState where
 
 -- Elm standard library
-import List
 import List (..)
 import Maybe
 
@@ -69,7 +68,7 @@ update action s =
                                   , devEnabled  <- not s.devEnabled
                                   , activeTab   <-
                                      if | s.activeTab == Developer && s.devEnabled -> Log
-                                        | not s.devEnabled && not (Developer `List.member` disabledTabs s.common.connected) -> Developer
+                                        | not s.devEnabled && not (Developer `member` disabledTabs s.common.connected) -> Developer
                                         | otherwise -> s.activeTab
                               }
                          else {s | iconClicked <- s.iconClicked + 1}
@@ -86,14 +85,15 @@ update action s =
         -- state as well. The activeTab may become disabled due to setting the
         -- connected state for instance.
         (CommonAction a) -> case a of
-                            (Common.SetConnected c) ->
+                            (SetConnected c) ->
                                 { s | activeTab <-
-                                        if s.activeTab `List.member` (disabledTabs c)
+                                        if s.activeTab `member` (disabledTabs c)
                                         then Log else s.activeTab
                                     , common <- updateCommon a
                                 }
-                            (Common.SetMemoryInfo i) ->
-                                if s.unsavedMemInfo == Nothing || i /= s.common.memoryInfo
+                            (SetMemoryInfo i) ->
+                                if s.unsavedMemInfo == Nothing
+                                   || i /= s.common.memoryInfo
                                 then {s | unsavedMemInfo <- Just i
                                         , common <- updateCommon a
                                      }
@@ -112,4 +112,4 @@ addToFavs f info = {info | favorites <- replaceFirst Nothing (Just f) info.favor
 
 {-| Apply 'update' to a list of actions -}
 apply : List Action -> GuiState -> GuiState
-apply actions state = List.foldr update state actions
+apply actions state = foldr update state actions
