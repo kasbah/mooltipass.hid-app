@@ -1,8 +1,7 @@
 module CommonState where
 
 -- Elm standard library
-import List ((::))
-import List
+import List (..)
 import String
 
 {-| The background state excluding gui components -}
@@ -46,6 +45,15 @@ exampleMemoryInfo =
                     , Just ("seafile.cc" , "kaspar.bumke@gmail.com")
                     , Just ("example.com" , "me@example.com")
                     , Just ("eggsample.com" , "eggs@sample.com")
+                    , Nothing
+                    , Nothing
+                    , Nothing
+                    , Nothing
+                    , Nothing
+                    , Nothing
+                    , Nothing
+                    , Nothing
+                    , Nothing
                     ]
     }
 
@@ -79,19 +87,38 @@ type CommonAction = SetLog (List String)
                   | GetState
                   | SetTransferInfo TransferInfo
                   | StartImportMedia FileId
+                  | AddToFavorites (String, String)
+                  | RemoveFromFavorites (String, String)
                   | CommonNoOp
 
 {-| Transform the state to a new state according to an action -}
 update : CommonAction -> CommonState -> CommonState
 update action s =
     case action of
-        (SetLog l)         -> {s | log <- l}
-        (AppendToLog str)  -> {s | log <- str::s.log}
-        (SetConnected c)   -> {s | connected <- c}
-        GetState           -> s
-        SetTransferInfo i -> {s | transferInfo <- i}
-        StartImportMedia id -> {s | transferInfo <- ImportRequested id}
-        CommonNoOp         -> s
+        (SetLog l)            -> {s | log <- l}
+        (AppendToLog str)     -> {s | log <- str::s.log}
+        (SetConnected c)      -> {s | connected <- c}
+        GetState              -> s
+        SetTransferInfo i     -> {s | transferInfo <- i}
+        StartImportMedia id   -> {s | transferInfo <- ImportRequested id}
+        CommonNoOp            -> s
+        AddToFavorites f      -> {s | memoryInfo <- addToFavorites f s.memoryInfo}
+        RemoveFromFavorites f -> {s | memoryInfo <- removeFromFavorites f s.memoryInfo}
+
+removeFromFavorites : (String, String) -> MemoryInfo -> MemoryInfo
+removeFromFavorites f info =
+    {info | favorites <-
+        map (\x -> if x == (Just f) then Nothing else x) info.favorites
+    }
+
+addToFavorites : (String, String) -> MemoryInfo -> MemoryInfo
+addToFavorites f info =
+    let replace =
+        foldl
+            (\x z -> if x == Nothing then z ++ [(Just f)] else z ++ [x])
+            []
+            info.favorites
+    in {info | favorites <- replace}
 
 apply : List CommonAction -> CommonState -> CommonState
-apply actions state = List.foldr update state actions
+apply actions state = foldr update state actions

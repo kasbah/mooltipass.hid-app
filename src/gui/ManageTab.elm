@@ -123,7 +123,7 @@ favorite w (n,maybeF) =
                    , login, sp
                    , icon upIcon (n /= 15), sp
                    , icon downIcon (n /= 1), sp
-                   , favIcon True
+                   , favIcon True (serviceString,loginString)
                    ]
     in Html.div
        [Html.Attributes.style [("position", "relative")]]
@@ -171,7 +171,7 @@ service w favs (serviceString, loginStrings) =
                 (intersperse
                     (spacer 5 5)
                     (map
-                        (\l -> login (w - 64) l ((serviceString,l) `member` (justs favs)))
+                        (\l -> login (w - 64) (serviceString,l) ((serviceString,l) `member` (justs favs)))
                         loginStrings
                     )
                 )
@@ -187,8 +187,8 @@ service w favs (serviceString, loginStrings) =
                 ]
        ]
 
-login : Int -> String -> Bool -> Element
-login w loginString fav =
+login : Int -> (String,String) -> Bool -> Element
+login w (serviceString,loginString) fav =
     let username = uUp -- button disabled for beta release
         --username = Input.customButton (send guiActions NoOp) uUp uHover uDown
         uUp      = layers [ubg lightGrey', utxt]
@@ -227,10 +227,10 @@ login w loginString fav =
         spw      = 2
         iw       = 32
         iw'      = toFloat iw
-    in flow right [username, sp, password, sp, delIcon, sp, favIcon fav]
+    in flow right [username, sp, password, sp, delIcon, sp, favIcon fav (serviceString,loginString)]
 
 
-favIcon isFav         =
+favIcon isFav credential =
     let iFavC fav     = if fav then favIcon' "blue" else favIcon' "white"
         iFavUp fav    = layers [iFavBg lightGrey' , iFavC fav]
         iFavHover fav = layers [iFavBg lightGrey'', iFavC fav]
@@ -244,7 +244,10 @@ favIcon isFav         =
         iw       = 32
         iw'      = toFloat iw
     in Input.customButton
-       (send guiActions NoOp) (iFavUp isFav) (iFavHover isFav) iFavDown
+       (send commonActions (if isFav then RemoveFromFavorites credential else AddToFavorites credential))
+       (iFavUp isFav)
+       (iFavHover isFav)
+       iFavDown
 
 title : Int -> String -> Element
 title w str =
