@@ -5,7 +5,6 @@ import List (..)
 import String
 
 -- local source
-import Util (..)
 
 {-| The background state excluding gui components -}
 type alias CommonState =
@@ -89,8 +88,6 @@ type CommonAction = SetLog (List String)
                   | AppendToLog String
                   | SetTransferInfo TransferInfo
                   | StartImportMedia FileId
-                  | AddToFavs (String, String)
-                  | RemoveFromFavs (String, String)
                   | SetMemoryInfo MemoryInfo
                   | CommonNoOp
 
@@ -98,24 +95,13 @@ type CommonAction = SetLog (List String)
 update : CommonAction -> CommonState -> CommonState
 update action s =
     case action of
-        (SetLog l)            -> {s | log <- l}
-        (AppendToLog str)     -> {s | log <- str::s.log}
-        (SetConnected c)      -> {s | connected <- c}
-        SetTransferInfo i     -> {s | transferInfo <- i}
-        StartImportMedia id   -> {s | transferInfo <- ImportRequested id}
-        CommonNoOp            -> s
-        AddToFavs f      -> {s | memoryInfo <- addToFavs f s.memoryInfo}
-        RemoveFromFavs f -> {s | memoryInfo <- removeFromFavs f s.memoryInfo}
-        SetMemoryInfo i  -> {s | memoryInfo <- i}
-
-removeFromFavs : (String, String) -> MemoryInfo -> MemoryInfo
-removeFromFavs f info =
-    {info | favorites <-
-        map (\x -> if x == (Just f) then Nothing else x) info.favorites
-    }
-
-addToFavs : (String, String) -> MemoryInfo -> MemoryInfo
-addToFavs f info = {info | favorites <- replace info.favorites Nothing (Just f)}
+        (SetLog l)          -> {s | log <- l}
+        (AppendToLog str)   -> {s | log <- str::s.log}
+        (SetConnected c)    -> {s | connected <- c}
+        SetTransferInfo i   -> {s | transferInfo <- i}
+        StartImportMedia id -> {s | transferInfo <- ImportRequested id}
+        SetMemoryInfo i     -> {s | memoryInfo <- i}
+        CommonNoOp          -> s
 
 apply : List CommonAction -> CommonState -> CommonState
 apply actions state = foldr update state actions

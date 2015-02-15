@@ -244,7 +244,7 @@ favIcon isFav credential =
         iw       = 32
         iw'      = toFloat iw
     in Input.customButton
-        (send commonActions
+        (send guiActions
             (if isFav then RemoveFromFavs credential else AddToFavs credential))
         (iFavUp isFav)
         (iFavHover isFav)

@@ -1,17 +1,13 @@
-var emptyMemoryInfo = { favorites: [], credentials: []}
-
 var emptyToGuiMessage =
     { setLog:[]
     , setConnected:0
     , setTransferInfo:[0,"",0,0]
-    , setMemoryInfo: emptyMemoryInfo
+    , setMemoryInfo: { favorites: [], credentials: []}
 };
 
 var emptyFromGuiMessage =
     { setLog           : null
     , startImportMedia : null
-    , addToFavs        : null
-    , removeFromFavs   : null
     };
 
 messageHasValue = function (message) {

@@ -2,10 +2,13 @@ module GuiState where
 
 -- Elm standard library
 import List
+import List (..)
+import Maybe
 
 -- local source
 import CommonState as Common
 import CommonState (..)
+import Util (..)
 
 type Tab = Log | Settings | Manage | Developer
 
@@ -30,6 +33,8 @@ type Action = ChangeTab Tab
             | ClickIcon
             | SetImportMedia TransferRequest
             | CommonAction CommonAction
+            | AddToFavs (String, String)
+            | RemoveFromFavs (String, String)
             | NoOp
 
 {-| The initial state -}
@@ -73,7 +78,10 @@ update action s =
                              then {s | importMedia <- r}
                              else s
             _ -> {s | importMedia <- r}
-
+        AddToFavs f        ->
+            {s | unsavedMemInfo <- Maybe.map (addToFavs f) s.unsavedMemInfo}
+        RemoveFromFavs f   ->
+            {s | unsavedMemInfo <- Maybe.map (removeFromFavs f) s.unsavedMemInfo}
         -- An action on the common state can have an affect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
         -- connected state for instance.
@@ -85,13 +93,22 @@ update action s =
                                     , common <- updateCommon a
                                 }
                             (Common.SetMemoryInfo i) ->
-                                if i /= s.common.memoryInfo || s.unsavedMemInfo == Nothing
+                                if s.unsavedMemInfo == Nothing || i /= s.common.memoryInfo
                                 then {s | unsavedMemInfo <- Just i
                                         , common <- updateCommon a
                                      }
                                 else s
                             _ -> {s | common <- updateCommon a}
         NoOp -> s
+
+removeFromFavs : (String, String) -> MemoryInfo -> MemoryInfo
+removeFromFavs f info =
+    {info | favorites <-
+        map (\x -> if x == (Just f) then Nothing else x) info.favorites
+    }
+
+addToFavs : (String, String) -> MemoryInfo -> MemoryInfo
+addToFavs f info = {info | favorites <- replace info.favorites Nothing (Just f)}
 
 {-| Apply 'update' to a list of actions -}
 apply : List Action -> GuiState -> GuiState
