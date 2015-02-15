@@ -8,7 +8,6 @@ import CommonState (..)
 
 type alias FromGuiMessage =
     { setLog           : Maybe (List String)
-    , getState         : Maybe ()
     , startImportMedia : Maybe FileId
     , addToFavs        : Maybe (String, String)
     , removeFromFavs   : Maybe (String, String)
@@ -16,7 +15,6 @@ type alias FromGuiMessage =
 
 emptyFromGuiMessage =
     { setLog           = Nothing
-    , getState         = Nothing
     , startImportMedia = Nothing
     , addToFavs        = Nothing
     , removeFromFavs   = Nothing
