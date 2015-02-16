@@ -15,7 +15,7 @@ type alias ParentNodeData =
     { address    : FlashAddress
     , prevParent : ParentNode
     , nextParent : ParentNode
-    , nextChild  : ChildNode
+    , firstChild  : ChildNode
     , service    : ByteString
     }
 
@@ -40,6 +40,13 @@ type alias FlashFavorite =
     , childNode  : FlashAddress
     }
 
+emptyFav : FlashFavorite
+emptyFav = {parentNode = null, childNode = null}
+
+emptyFlashFavorites = [emptyFav,emptyFav,emptyFav,emptyFav,emptyFav
+                      ,emptyFav,emptyFav,emptyFav,emptyFav,emptyFav
+                      ,emptyFav,emptyFav,emptyFav,emptyFav,emptyFav]
+
 null : FlashAddress
 null = (0,0)
 
@@ -58,7 +65,7 @@ toCreds firstParent =
     let getLogins firstChild =
             foldChildren (\c z -> c.login::z) [] firstChild
     in foldParents
-            (\p z -> (p.service, getLogins p.nextChild)::z)
+            (\p z -> (p.service, getLogins p.firstChild)::z)
             []
             firstParent
 
@@ -70,15 +77,15 @@ toFavs ffs firstParent =
                     if f.parentNode == null then Nothing
                     else foldParents
                         (\p z -> if p.address == f.parentNode
-                                 then Just p.service else z)
+                                 then Just p else z)
                         Nothing
                         firstParent
-                child ps f =
+                child p f =
                     if f.childNode == null then Nothing
                     else foldChildren
                         (\c z -> if c.address == f.childNode
-                                 then Just (ps,c.login) else z)
+                                 then Just (p.service,c.login) else z)
                         Nothing
-                        firstParentData.nextChild
-            in map (\f -> parent f `andThen` (\ps -> child ps f)) ffs
+                        p.firstChild
+            in map (\f -> parent f `andThen` (\p -> child p f)) ffs
         EmptyParentNode -> emptyFavorites
