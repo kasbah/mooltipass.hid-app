@@ -8,27 +8,21 @@ import DevicePacket (..)
 import CommonState (..)
 import Util (..)
 
-type alias DeviceFlash =
-    { parentNodes : List ParentNode
-    , favorites   : List FavoriteSlot
-    }
-
-type Node = NodeP ParentNode | NodeC ChildNode
-
 type ParentNode =
     ParentNode
         { address    : FlashAddress
-        , prevParent : Maybe ParentNode
-        , nextParent : Maybe ParentNode
-        , nextChild  : Maybe ChildNode
+        , prevParent : ParentNode
+        , nextParent : ParentNode
+        , nextChild  : ChildNode
         , service    : ByteString
         }
+    | EmptyParentNode
 
 type ChildNode =
     ChildNode
         { address      : FlashAddress
-        , nextChild    : Maybe ChildNode
-        , prevChild    : Maybe ChildNode
+        , nextChild    : ChildNode
+        , prevChild    : ChildNode
         , ctr          : (Byte, Byte, Byte)
         , description  : ByteString
         , login        : ByteString
@@ -36,6 +30,7 @@ type ChildNode =
         , dateCreated  : (Byte, Byte)
         , dateLastUsed : (Byte, Byte)
         }
+    | EmptyChildNode
 
 type alias FavoriteSlot =
     { slotNumber : Byte
@@ -43,9 +38,30 @@ type alias FavoriteSlot =
     , childNode  : ChildNode
     }
 
---foldChildren : ({a | nextChild : Maybe ChildNode} -> b -> b) -> b -> {a | nextChild : Maybe ChildNode} -> b
-foldChildren f z n = if n.nextChild /= Nothing then f n (foldChildren (fromJust n.nextChild)) else f n z
+foldChildren' : (ChildNode -> a -> a) -> a -> ChildNode -> a
+foldChildren' f z n = case n of
+    ChildNode n'   -> f n (foldChildren' f z n'.nextChild)
+    EmptyChildNode -> z
 
+foldChildren : (ChildNode -> a -> a) -> a -> ParentNode -> a
+foldChildren f z n = case n of
+    ParentNode n' -> foldChildren' f z n'.nextChild
+    EmptyParentNode -> z
+
+foldParents : (ParentNode -> a -> a) -> a -> ParentNode -> a
+foldParents f z n = case n of
+    ParentNode n'   -> f n (foldParents f z n'.nextParent)
+    EmptyParentNode -> z
+
+--type alias MemoryInfo =
+--    { credentials : List (String, List String)
+--    , favorites   : List (Maybe (String, String))
+--    }
+
+getCreds : ParentNode -> List (String, List String)
+getCreds firstParent =
+    let getLogins parent = foldChildren (\(ChildNode c) z -> c.login::z) [] parent
+    in foldParents (\(ParentNode p) z -> (p.service, getLogins (ParentNode p))::z) [] firstParent
 
 --foldNode : (Node -> a -> a) -> a -> Node -> a
 --foldNode f z n =
@@ -85,8 +101,4 @@ null = (0,0)
 --
 --    in {credentials  = map services
 --
---type alias MemoryInfo =
---    { credentials : List (String, List String)
---    , favorites   : List (Maybe (String, String))
---    }
 
