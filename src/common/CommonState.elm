@@ -24,14 +24,20 @@ default =
     , forceUpdate  = True
     }
 
+type alias Favorite = Maybe (String, String)
+
+emptyFavorites = [Nothing,Nothing,Nothing,Nothing,Nothing
+                 ,Nothing,Nothing,Nothing,Nothing,Nothing
+                 ,Nothing,Nothing,Nothing,Nothing,Nothing]
+
 type alias MemoryInfo =
     { credentials : List (String, List String)
-    , favorites   : List (Maybe (String, String))
+    , favorites   : List Favorite
     }
 
 emptyMemoryInfo =
     { credentials = []
-    , favorites   = []
+    , favorites   = emptyFavorites
     }
 
 exampleMemoryInfo =

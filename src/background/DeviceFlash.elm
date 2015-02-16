@@ -1,6 +1,7 @@
 module DeviceFlash where
 
 import List (..)
+import Maybe (andThen, Maybe(..))
 
 -- local source
 import Byte (..)
@@ -18,6 +19,8 @@ type alias ParentNodeData =
     , service    : ByteString
     }
 
+pData (ParentNode data) = data
+
 type ChildNode = ChildNode ChildNodeData | EmptyChildNode
 
 type alias ChildNodeData =
@@ -33,9 +36,12 @@ type alias ChildNodeData =
     }
 
 type alias FlashFavorite =
-    { parentNode : ParentNode
-    , childNode  : ChildNode
+    { parentNode : FlashAddress
+    , childNode  : FlashAddress
     }
+
+null : FlashAddress
+null = (0,0)
 
 foldChildren : (ChildNodeData -> a -> a) -> a -> ChildNode -> a
 foldChildren f z n = case n of
@@ -52,3 +58,13 @@ toCreds firstParent =
     let getLogins firstChild = foldChildren (\c z -> c.login::z) [] firstChild
     in foldParents (\p z -> (p.service, getLogins p.nextChild)::z) [] firstParent
 
+toFavs : List FlashFavorite -> ParentNode -> List Favorite
+toFavs ffs firstParent =
+    case firstParent of
+        (ParentNode firstParentData) ->
+            let parent f = if f.parentNode == null then Nothing
+                           else foldParents (\p z -> if p.address == f.parentNode then Just p.service else z) Nothing firstParent
+                child ps f = if f.childNode == null then Nothing
+                             else foldChildren (\c z -> if c.address == f.childNode then Just (ps,c.login) else z) Nothing firstParentData.nextChild
+            in map (\f -> parent f `andThen` (\ps -> child ps f)) ffs
+        EmptyParentNode -> emptyFavorites
