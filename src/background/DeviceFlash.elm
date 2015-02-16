@@ -32,9 +32,8 @@ type alias ChildNodeData =
     , dateLastUsed : (Byte, Byte)
     }
 
-type alias FavoriteSlot =
-    { slotNumber : Byte
-    , parentNode : ParentNode
+type alias FlashFavorite =
+    { parentNode : ParentNode
     , childNode  : ChildNode
     }
 
@@ -52,3 +51,4 @@ toCreds : ParentNode -> List (String, List String)
 toCreds firstParent =
     let getLogins firstChild = foldChildren (\c z -> c.login::z) [] firstChild
     in foldParents (\p z -> (p.service, getLogins p.nextChild)::z) [] firstParent
+
