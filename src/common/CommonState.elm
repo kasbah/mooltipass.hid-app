@@ -86,6 +86,7 @@ connectToLog c = case c of
 type CommonAction = SetLog (List String)
                   | SetConnected ConnectState
                   | AppendToLog String
+                  | GetState
                   | SetTransferInfo TransferInfo
                   | StartImportMedia FileId
                   | SetMemoryInfo MemoryInfo
@@ -101,6 +102,7 @@ update action s =
         SetTransferInfo i   -> {s | transferInfo <- i}
         StartImportMedia id -> {s | transferInfo <- ImportRequested id}
         SetMemoryInfo i     -> {s | memoryInfo <- i}
+        GetState            -> s
         CommonNoOp          -> s
 
 apply : List CommonAction -> CommonState -> CommonState

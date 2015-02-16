@@ -8,11 +8,13 @@ import CommonState (..)
 
 type alias FromGuiMessage =
     { setLog           : Maybe (List String)
+    , getState         : Maybe ()
     , startImportMedia : Maybe FileId
     }
 
 emptyFromGuiMessage =
     { setLog           = Nothing
+    , getState         = Nothing
     , startImportMedia = Nothing
     }
 

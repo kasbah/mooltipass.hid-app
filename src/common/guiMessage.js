@@ -7,6 +7,7 @@ var emptyToGuiMessage =
 
 var emptyFromGuiMessage =
     { setLog           : null
+    , getState         : null
     , startImportMedia : null
     };
 
