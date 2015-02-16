@@ -7,6 +7,9 @@ isJust x = case x of
     (Just _) -> True
     Nothing  -> False
 
+fromJust : Maybe a -> a
+fromJust (Just a) = a
+
 justs : List (Maybe a) -> List a
 justs = filterMap (\x -> x)
 

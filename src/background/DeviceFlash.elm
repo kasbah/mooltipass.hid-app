@@ -6,44 +6,68 @@ import List (..)
 import Byte (..)
 import DevicePacket (..)
 import CommonState (..)
+import Util (..)
 
 type alias DeviceFlash =
     { parentNodes : List ParentNode
-    , childNodes  : List ChildNode
-    , favorites   : List Favorite
+    , favorites   : List FavoriteSlot
     }
 
-type alias ParentNode =
-    { address           : FlashAddress
-    , prevParentAddress : FlashAddress
-    , nextParentAddress : FlashAddress
-    , nextChildAddress  : FlashAddress
-    , service           : ByteString
-    }
+type Node = NodeP ParentNode | NodeC ChildNode
 
-type alias ChildNode =
-    { address          : FlashAddress
-    , nextChildAddress : FlashAddress
-    , prevChildAddress : FlashAddress
-    , ctr              : (Byte, Byte, Byte)
-    , description      : ByteString
-    , login            : ByteString
-    , password         : ByteArray
-    , dateCreated      : (Byte, Byte)
-    , dateLastUsed     : (Byte, Byte)
-    }
+type ParentNode =
+    ParentNode
+        { address    : FlashAddress
+        , prevParent : Maybe ParentNode
+        , nextParent : Maybe ParentNode
+        , nextChild  : Maybe ChildNode
+        , service    : ByteString
+        }
 
-type alias Favorite =
+type ChildNode =
+    ChildNode
+        { address      : FlashAddress
+        , nextChild    : Maybe ChildNode
+        , prevChild    : Maybe ChildNode
+        , ctr          : (Byte, Byte, Byte)
+        , description  : ByteString
+        , login        : ByteString
+        , password     : ByteArray
+        , dateCreated  : (Byte, Byte)
+        , dateLastUsed : (Byte, Byte)
+        }
+
+type alias FavoriteSlot =
     { slotNumber : Byte
-    , parentNode : FlashAddress
-    , childNode  : FlashAddress
+    , parentNode : ParentNode
+    , childNode  : ChildNode
     }
+
+--foldChildren : ({a | nextChild : Maybe ChildNode} -> b -> b) -> b -> {a | nextChild : Maybe ChildNode} -> b
+foldChildren f z n = if n.nextChild /= Nothing then f n (foldChildren (fromJust n.nextChild)) else f n z
+
+
+--foldNode : (Node -> a -> a) -> a -> Node -> a
+--foldNode f z n =
+--    let foldNode' z' n'' = case n''.nextChild of
+--        Nothing -> f n'' z'
+--        Just nC -> f (foldNode f z' n'') z'
+--    in case n of
+--        NodeP n' -> foldNode' z n'
+--        NodeC n' -> foldNode' z n'
+
+
 
 null : FlashAddress
 null = (0,0)
-
+--
 --toInfo : DeviceFlash -> MemoryInfo
 --toInfo fl =
+--    let getChildren : ParentNode -> List ChildNode
+--        getChildren p =
+--    in map getChildren fl.parentNodes
+
+
 --    let clearChildLess ns =
 --            foldl
 --                (\n z -> if n.nextChildAddress == null then z else n::z)
