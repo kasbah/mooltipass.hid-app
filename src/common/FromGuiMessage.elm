@@ -32,5 +32,6 @@ decode msg =
         Maybe.oneOf
             [ Maybe.map SetLog msg.setLog
             , Maybe.map StartImportMedia msg.startImportMedia
+            , Maybe.map (\_ -> GetState) msg.getState
             ]
     in Maybe.withDefault CommonNoOp decode'

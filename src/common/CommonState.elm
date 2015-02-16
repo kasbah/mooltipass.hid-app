@@ -12,6 +12,7 @@ type alias CommonState =
     , log          : List String
     , transferInfo : TransferInfo
     , memoryInfo   : MemoryInfo
+    , forceUpdate  : Bool
     }
 
 default : CommonState
@@ -20,6 +21,7 @@ default =
     , log          = []
     , transferInfo = NoTransfer
     , memoryInfo   = exampleMemoryInfo
+    , forceUpdate  = True
     }
 
 type alias MemoryInfo =
@@ -96,13 +98,17 @@ type CommonAction = SetLog (List String)
 update : CommonAction -> CommonState -> CommonState
 update action s =
     case action of
-        (SetLog l)          -> {s | log <- l}
-        (AppendToLog str)   -> {s | log <- str::s.log}
-        (SetConnected c)    -> {s | connected <- c}
+        SetLog l            -> {s | log <- l}
+        AppendToLog str     -> {s | log <- str::s.log}
+        SetConnected c      -> {s | connected <- c}
         SetTransferInfo i   -> {s | transferInfo <- i}
         StartImportMedia id -> {s | transferInfo <- ImportRequested id}
         SetMemoryInfo i     -> {s | memoryInfo <- i}
-        GetState            -> s
+        -- GetState just twiddles the forceUpdate bit to make the state seem
+        -- changed. This is so we can dropRepeats on the state signal but force
+        -- an update through if we need to (like when the GUI is closed and
+        -- then re-opened).
+        GetState            -> {s | forceUpdate <- not s.forceUpdate}
         CommonNoOp          -> s
 
 apply : List CommonAction -> CommonState -> CommonState

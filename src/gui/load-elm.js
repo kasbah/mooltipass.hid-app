@@ -16,8 +16,14 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 });
 
 //get the current state
+var getStateMessage = {};
+for (var prop in emptyFromGuiMessage) {
+    if (prop != "getState")
+        getStateMessage[prop] = emptyFromGuiMessage[prop];
+}
+getStateMessage["getState"] = [];
 chrome.runtime.sendMessage({
-    toBackground:emptyFromGuiMessage
+    toBackground:getStateMessage
 });
 
 gui.ports.toBackground.subscribe(function(message) {

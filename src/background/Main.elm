@@ -23,7 +23,7 @@ import ChromeBgMessage (..)
 port fromGUI : Signal FromGuiMessage
 
 port toGUI : Signal ToGuiMessage
-port toGUI = map (ToGuiMessage.encode << .common) state
+port toGUI = map (ToGuiMessage.encode << .common) (dropRepeats state)
 
 port fromDevice : Signal FromDeviceMessage
 
