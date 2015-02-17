@@ -8,20 +8,20 @@ import String
 
 {-| The background state excluding gui components -}
 type alias CommonState =
-    { connected    : ConnectState
-    , log          : List String
-    , importInfo : ImportInfo
-    , memoryInfo   : MemoryInfo
-    , forceUpdate  : Bool
+    { connected   : ConnectState
+    , log         : List String
+    , importInfo  : ImportInfo
+    , memoryInfo  : MemoryInfo
+    , forceUpdate : Bool
     }
 
 default : CommonState
 default =
-    { connected    = NotConnected
-    , log          = []
-    , importInfo = NoImport
-    , memoryInfo   = exampleMemoryInfo
-    , forceUpdate  = True
+    { connected   = NotConnected
+    , log         = []
+    , importInfo  = NoImport
+    , memoryInfo  = exampleMemoryInfo
+    , forceUpdate = True
     }
 
 type alias Favorite = Maybe (String, String)
@@ -107,13 +107,13 @@ update action s =
         SetLog l            -> {s | log <- l}
         AppendToLog str     -> {s | log <- str::s.log}
         SetConnected c      -> {s | connected <- c}
-        SetImportInfo i   -> {s | importInfo <- i}
+        SetImportInfo i     -> {s | importInfo <- i}
         StartImportMedia id -> {s | importInfo <- ImportRequested id}
         SetMemoryInfo i     -> {s | memoryInfo <- i}
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force
-        -- an update through if we need to (like when the GUI is closed and
-        -- then re-opened).
+        -- an update through if we need to (like when the GUI is newly opened
+        -- and definetely needs the state)
         GetState            -> {s | forceUpdate <- not s.forceUpdate}
         CommonNoOp          -> s
 

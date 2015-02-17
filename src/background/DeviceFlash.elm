@@ -100,7 +100,6 @@ toFavs ffs firstParent =
                 p.firstChild
     in map (\f -> parent f `andThen` child f) ffs
 
-
 fromFavs : List Favorite -> ParentNode -> List SendPacket
 fromFavs fs firstParent =
     let parent fav =
