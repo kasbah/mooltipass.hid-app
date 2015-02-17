@@ -38,22 +38,27 @@ content : (Int, Int) -> MemoryInfo -> Element
 content (w,h) info =
     let saveButton = button (send commonActions CommonNoOp) "save"
         cancelButton = button (send commonActions CommonNoOp) "cancel"
-    in container w h midTop <| flow down
-        [ favorites w info
-        , spacer 1 heights.manageSpacer
-        , credentials
-            ( w
-            , h - (heightOf (favorites w info))
-                - heights.manageSpacer
-                - (heights.button + 4)
-                - heights.manageSpacer)
-            info
-        , spacer 1 heights.manageSpacer
-        , container w (heights.button + 4) middle
-            <| flow right [cancelButton, spacer 16 1, saveButton]
-        ]
+        showMem infodata = container w h midTop <| flow down
+            [ favorites w infodata
+            , spacer 1 heights.manageSpacer
+            , credentials
+                ( w
+                , h - (heightOf (favorites w infodata))
+                    - heights.manageSpacer
+                    - (heights.button + 4)
+                    - heights.manageSpacer)
+                infodata
+            , spacer 1 heights.manageSpacer
+            , container w (heights.button + 4) middle
+                <| flow right [cancelButton, spacer 16 1, saveButton]
+            ]
+    in case info of
+        NoMemoryInfo       -> leftAligned <| whiteText "no info"
+        MemoryData d       -> showMem d
+        MemManageRequested -> asText "accept mem-manage mode"
 
-favorites : Int -> MemoryInfo -> Element
+
+favorites : Int -> MemoryInfoData -> Element
 favorites w info =
     let style =
             Html.Attributes.style
@@ -63,7 +68,9 @@ favorites w info =
                 ]
         favorites' = Html.div [style]
                     (intersperse (Html.fromElement (spacer 1 5))
-                        (map (favorite (w - 48)) (map2 (,) [1..15] (stripNothing info.favorites)))
+                        (map
+                            (favorite (w - 48))
+                            (map2 (,) [1..15] (stripNothing info.favorites)))
                     )
                 |> Html.toElement (w - 32) ch
         ch = heights.manageLogin * 5 + (5*6)
@@ -129,7 +136,7 @@ favorite w (n,maybeF) =
        [Html.Attributes.style [("position", "relative")]]
        [Html.fromElement elem]
 
-credentials : (Int, Int) -> MemoryInfo -> Element
+credentials : (Int, Int) -> MemoryInfoData -> Element
 credentials (w,h) i =
     let ht = heights.manageTitle
         titleBg = collage w ht

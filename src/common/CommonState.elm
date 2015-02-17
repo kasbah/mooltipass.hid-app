@@ -20,7 +20,7 @@ default =
     { connected   = NotConnected
     , log         = []
     , importInfo  = NoImport
-    , memoryInfo  = exampleMemoryInfo
+    , memoryInfo  = NoMemoryInfo
     , forceUpdate = True
     }
 
@@ -30,17 +30,18 @@ emptyFavorites = [Nothing,Nothing,Nothing,Nothing,Nothing
                  ,Nothing,Nothing,Nothing,Nothing,Nothing
                  ,Nothing,Nothing,Nothing,Nothing,Nothing]
 
-type alias MemoryInfo =
+type MemoryInfo =
+      MemoryData MemoryInfoData
+    | MemManageRequested
+    | NoMemoryInfo
+
+type alias MemoryInfoData =
     { credentials : List (String, List String)
     , favorites   : List Favorite
     }
 
-emptyMemoryInfo =
-    { credentials = []
-    , favorites   = emptyFavorites
-    }
-
 exampleMemoryInfo =
+    MemoryData
     { credentials = [ ("github.com", ["kasbah", "monostable"])
                     , ("oshpark.com",["kaspar.emanuel@gmail.com"])
                     , ("amazon.com" ,["kaspar.bumke+nu-server@gmail.com"])
@@ -98,6 +99,7 @@ type CommonAction = SetLog (List String)
                   | SetImportInfo ImportInfo
                   | StartImportMedia FileId
                   | SetMemoryInfo MemoryInfo
+                  | StartMemManage
                   | CommonNoOp
 
 {-| Transform the state to a new state according to an action -}
@@ -110,6 +112,7 @@ update action s =
         SetImportInfo i     -> {s | importInfo <- i}
         StartImportMedia id -> {s | importInfo <- ImportRequested id}
         SetMemoryInfo i     -> {s | memoryInfo <- i}
+        StartMemManage      -> {s | memoryInfo <- MemManageRequested}
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force
         -- an update through if we need to (like when the GUI is newly opened

@@ -19,12 +19,12 @@ type ImportRequest =
 
 {-| The entire GUI state -}
 type alias GuiState =
-    { activeTab   : Tab
-    , iconClicked : Int
-    , devEnabled  : Bool
-    , importMedia : ImportRequest
-    , unsavedMemInfo : Maybe MemoryInfo
-    , common      : CommonState
+    { activeTab      : Tab
+    , iconClicked    : Int
+    , devEnabled     : Bool
+    , importMedia    : ImportRequest
+    , unsavedMemInfo : MemoryInfo
+    , common         : CommonState
     }
 
 {-| All actions that can be performed to change GUI state directly -}
@@ -41,12 +41,12 @@ type Action = ChangeTab Tab
 {-| The initial state -}
 default : GuiState
 default =
-    { activeTab   = Log
-    , iconClicked = 0
-    , devEnabled  = False
-    , importMedia = NotRequested
-    , unsavedMemInfo = Nothing
-    , common      = Common.default
+    { activeTab      = Log
+    , iconClicked    = 0
+    , devEnabled     = False
+    , importMedia    = NotRequested
+    , unsavedMemInfo = NoMemoryInfo
+    , common         = Common.default
     }
 
 {-| The non-visible tabs according to the 'CommonState.ConnectState' -}
@@ -80,17 +80,25 @@ update action s =
                              else s
             _ -> {s | importMedia <- r}
         AddFav f        ->
-            {s | unsavedMemInfo <- Maybe.map (addToFavs f) s.unsavedMemInfo}
+            case s.unsavedMemInfo of
+                MemoryData d -> {s | unsavedMemInfo <- addToFavs f d}
+                _ -> appendToLog "Error: trying to add favorite without having memory data" s
         RemoveFav f   ->
-            {s | unsavedMemInfo <- Maybe.map (removeFromFavs f) s.unsavedMemInfo}
+            case s.unsavedMemInfo of
+                MemoryData d -> {s | unsavedMemInfo <- removeFromFavs f d}
+                _ -> appendToLog "Error: trying to remove favorite without having memory data" s
         MoveFavUp f   ->
-            {s | unsavedMemInfo <- Maybe.map (moveFavUp f) s.unsavedMemInfo}
+            case s.unsavedMemInfo of
+                MemoryData d -> {s | unsavedMemInfo <- moveFavUp f d}
+                _ -> appendToLog "Error: trying to move favorite without having memory data" s
         MoveFavDown f   ->
-            {s | unsavedMemInfo <- Maybe.map (moveFavDown f) s.unsavedMemInfo}
+            case s.unsavedMemInfo of
+                MemoryData d -> {s | unsavedMemInfo <- moveFavDown f d}
+                _ -> appendToLog "Error: trying to move favorite without having memory data" s
         -- An action on the common state can have an affect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
         -- connected state for instance.
-        (CommonAction a) -> case a of
+        CommonAction a -> case a of
                             (SetConnected c) ->
                                 { s | activeTab <-
                                         if s.activeTab `member` (disabledTabs c)
@@ -98,32 +106,45 @@ update action s =
                                     , common <- updateCommon a
                                 }
                             (SetMemoryInfo i) ->
-                                if s.unsavedMemInfo == Nothing
-                                   || i /= s.common.memoryInfo
-                                then {s | unsavedMemInfo <- Just i
-                                        , common <- updateCommon a
-                                     }
-                                else s
+                                case i of
+                                    (MemoryData d) -> case s.common.memoryInfo of
+                                        (MemoryData cd) ->
+                                            if d /= cd
+                                            then {s | unsavedMemInfo <- i
+                                                    , common <- updateCommon a
+                                                 }
+                                            else s
+                                        _ -> {s | unsavedMemInfo <- i
+                                                , common <- updateCommon a
+                                             }
+                                    _ -> {s | unsavedMemInfo <- i
+                                            , common <- updateCommon a
+                                         }
                             _ -> {s | common <- updateCommon a}
         NoOp -> s
 
-removeFromFavs : (String, String) -> MemoryInfo -> MemoryInfo
+removeFromFavs : (String, String) -> MemoryInfoData -> MemoryInfo
 removeFromFavs f info =
+    MemoryData
     {info | favorites <-
         map (\x -> if x == (Just f) then Nothing else x) info.favorites
     }
 
-addToFavs : (String, String) -> MemoryInfo -> MemoryInfo
-addToFavs f info = {info | favorites <- replaceFirst Nothing (Just f) info.favorites}
+addToFavs : (String, String) -> MemoryInfoData -> MemoryInfo
+addToFavs f info =
+    MemoryData
+    {info | favorites <- replaceFirst Nothing (Just f) info.favorites}
 
-moveFavUp : (String, String) -> MemoryInfo -> MemoryInfo
+moveFavUp : (String, String) -> MemoryInfoData -> MemoryInfo
 moveFavUp f info =
+    MemoryData
     {info | favorites <-
         reverse <| foldl (switchFav f) [] info.favorites
     }
 
-moveFavDown : (String, String) -> MemoryInfo -> MemoryInfo
+moveFavDown : (String, String) -> MemoryInfoData -> MemoryInfo
 moveFavDown f info =
+    MemoryData
     {info | favorites <-
         foldr (switchFav f) [] info.favorites
     }
@@ -135,3 +156,6 @@ switchFav f x zs = if | zs == []   -> [x]
 {-| Apply 'update' to a list of actions -}
 apply : List Action -> GuiState -> GuiState
 apply actions state = foldr update state actions
+
+appendToLog' str = CommonAction (AppendToLog str)
+appendToLog str state = update (appendToLog' str) state
