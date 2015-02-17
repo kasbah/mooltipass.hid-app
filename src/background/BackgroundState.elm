@@ -8,6 +8,7 @@ import List (..)
 import CommonState as Common
 import CommonState (..)
 import DevicePacket (..)
+import DeviceFlash (..)
 import Byte (..)
 
 type alias BackgroundState = { deviceConnected  : Bool
@@ -17,6 +18,7 @@ type alias BackgroundState = { deviceConnected  : Bool
                              , extAwaitingPing  : Bool
                              , extRequest       : ExtensionRequest
                              , mediaImport      : MediaImport
+                             , memoryManage     : MemoryManageState
                              , common           : CommonState
                              }
 
@@ -28,15 +30,21 @@ default = { deviceConnected  = False
           , extAwaitingPing  = False
           , extRequest       = NoRequest
           , mediaImport      = NoMediaImport
+          , memoryManage     = NotManaging
           , common           = Common.default
           }
 
-mediaImportActive : BackgroundState -> Bool
-mediaImportActive s = case s.mediaImport of
-    NoMediaImport             -> False
-    MediaImportError _        -> False
-    MediaImportSuccess        -> False
-    _                         -> True
+type MemoryManageState =
+      NotManaging
+    | MemManageRequested
+    | MemManageWaiting
+    | MemRead
+    | MemReadWaiting
+    | MemReadSuccess  (ParentNode, List Favorite)
+    | MemWrite        (List SendPacket)
+    | MemWriteWaiting (List SendPacket)
+    | MemWriteSuccess
+    | MemManageError  String
 
 type MediaImport =
       NoMediaImport
@@ -47,6 +55,13 @@ type MediaImport =
     | MediaImportWaiting      (List SendPacket)
     | MediaImportError        String
     | MediaImportSuccess
+
+mediaImportActive : BackgroundState -> Bool
+mediaImportActive s = case s.mediaImport of
+    NoMediaImport             -> False
+    MediaImportError _        -> False
+    MediaImportSuccess        -> False
+    _                         -> True
 
 type ExtensionRequest =
       ExtWantsCredentials     { context : ByteString }
