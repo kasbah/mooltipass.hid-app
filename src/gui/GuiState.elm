@@ -62,15 +62,29 @@ disabledTabs s =
 update : Action -> GuiState -> GuiState
 update action s =
     let updateCommon a = Common.update a s.common
+        errorTryingTo str =
+            appendToLog
+                ("Error: trying to " ++ str ++ " favorite without having memory data")
+                s
     in case action of
-        (ChangeTab t) -> {s | activeTab <- t}
+        (ChangeTab t) -> if t == Manage && s.unsavedMemInfo == NoMemoryInfo
+                         then update
+                                (CommonAction StartMemManage)
+                                {s | activeTab <- Manage}
+                         else {s | activeTab <- t}
         -- clicking the icon 7 times toggles developer tab visibility
         ClickIcon     -> if s.iconClicked >= 6
                          then { s | iconClicked <- 0
                                   , devEnabled  <- not s.devEnabled
                                   , activeTab   <-
-                                     if | s.activeTab == Developer && s.devEnabled -> Log
-                                        | not s.devEnabled && not (Developer `member` disabledTabs s.common.connected) -> Developer
+                                     if | s.activeTab == Developer
+                                            && s.devEnabled
+                                                    -> Log
+                                        | not s.devEnabled
+                                            && not (Developer
+                                                `member`
+                                                    disabledTabs s.common.connected)
+                                                    -> Developer
                                         | otherwise -> s.activeTab
                               }
                          else {s | iconClicked <- s.iconClicked + 1}
@@ -82,30 +96,30 @@ update action s =
         AddFav f        ->
             case s.unsavedMemInfo of
                 MemoryData d -> {s | unsavedMemInfo <- addToFavs f d}
-                _ -> appendToLog "Error: trying to add favorite without having memory data" s
+                _ -> errorTryingTo "add"
         RemoveFav f   ->
             case s.unsavedMemInfo of
                 MemoryData d -> {s | unsavedMemInfo <- removeFromFavs f d}
-                _ -> appendToLog "Error: trying to remove favorite without having memory data" s
+                _ -> errorTryingTo "remove"
         MoveFavUp f   ->
             case s.unsavedMemInfo of
                 MemoryData d -> {s | unsavedMemInfo <- moveFavUp f d}
-                _ -> appendToLog "Error: trying to move favorite without having memory data" s
+                _ -> errorTryingTo "move"
         MoveFavDown f   ->
             case s.unsavedMemInfo of
                 MemoryData d -> {s | unsavedMemInfo <- moveFavDown f d}
-                _ -> appendToLog "Error: trying to move favorite without having memory data" s
+                _ -> errorTryingTo "move"
         -- An action on the common state can have an affect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
         -- connected state for instance.
         CommonAction a -> case a of
-                            (SetConnected c) ->
+                            SetConnected c ->
                                 { s | activeTab <-
                                         if s.activeTab `member` (disabledTabs c)
                                         then Log else s.activeTab
                                     , common <- updateCommon a
                                 }
-                            (SetMemoryInfo i) ->
+                            SetMemoryInfo i ->
                                 case i of
                                     (MemoryData d) -> case s.common.memoryInfo of
                                         (MemoryData cd) ->
@@ -120,6 +134,10 @@ update action s =
                                     _ -> {s | unsavedMemInfo <- i
                                             , common <- updateCommon a
                                          }
+                            StartMemManage ->
+                                {s | unsavedMemInfo <- MemManageRequested
+                                   , common <- updateCommon a
+                                }
                             _ -> {s | common <- updateCommon a}
         NoOp -> s
 

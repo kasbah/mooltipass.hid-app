@@ -52,10 +52,22 @@ content (w,h) info =
             , container w (heights.button + 4) middle
                 <| flow right [cancelButton, spacer 16 1, saveButton]
             ]
+        reEnterButton = button (send commonActions StartMemManage) "re-enter"
+        noInfoText = leftAligned <| whiteText "manage mode exited"
     in case info of
-        NoMemoryInfo       -> leftAligned <| whiteText "no info"
+        NoMemoryInfo       ->
+            flow down [ noInfoText
+                      , spacer 1 16
+                      , container
+                            (widthOf noInfoText)
+                            (heights.button + 4)
+                            middle
+                            reEnterButton
+                      ]
         MemoryData d       -> showMem d
-        MemManageRequested -> asText "accept mem-manage mode"
+        MemManageRequested ->
+            leftAligned
+                <| whiteText "please accept memory management mode on the device"
 
 
 favorites : Int -> MemoryInfoData -> Element
