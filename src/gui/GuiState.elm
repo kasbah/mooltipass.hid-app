@@ -49,8 +49,8 @@ default =
     , common         = Common.default
     }
 
-{-| The non-visible tabs according to the 'CommonState.ConnectState' -}
-disabledTabs : Common.ConnectState -> List Tab
+{-| The non-visible tabs according to the 'CommonState.DeviceStatus' -}
+disabledTabs : Common.DeviceStatus -> List Tab
 disabledTabs s =
     case s of
         Common.Connected    -> []
@@ -111,7 +111,7 @@ update action s =
                 _ -> errorTryingTo "move"
         -- An action on the common state can have an affect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
-        -- connected state for instance.
+        -- device state for instance.
         CommonAction a -> case a of
                             SetConnected c ->
                                 { s | activeTab <-

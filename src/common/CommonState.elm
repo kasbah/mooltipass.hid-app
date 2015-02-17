@@ -8,7 +8,7 @@ import String
 
 {-| The background state excluding gui components -}
 type alias CommonState =
-    { connected   : ConnectState
+    { connected   : DeviceStatus
     , log         : List String
     , importInfo  : ImportInfo
     , memoryInfo  : MemoryInfo
@@ -68,7 +68,7 @@ exampleMemoryInfo =
                     ]
     }
 
-type ConnectState = NotConnected | Connected | NoCard | NoPin
+type DeviceStatus = NotConnected | Connected | NoCard | NoPin
 
 type ImportInfo =
       ImportRequested FileId
@@ -84,7 +84,7 @@ fileName id = case String.split ":" id of
     [_,name] -> name
     _ -> ""
 
-connectToLog : ConnectState -> String
+connectToLog : DeviceStatus -> String
 connectToLog c = case c of
     NotConnected -> "device disconnected"
     Connected    -> "device status: unlocked"
@@ -93,7 +93,7 @@ connectToLog c = case c of
 
 {-| All actions that can be performed to change state -}
 type CommonAction = SetLog (List String)
-                  | SetConnected ConnectState
+                  | SetConnected DeviceStatus
                   | AppendToLog String
                   | GetState
                   | SetImportInfo ImportInfo

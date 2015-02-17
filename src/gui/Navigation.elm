@@ -24,7 +24,7 @@ navigation (w,h) state =
 
 {-| An icon that indictes the connection status and can be clicked 7 times to
     enable developer mode. -}
-statusIcon : ConnectState -> Element
+statusIcon : DeviceStatus -> Element
 statusIcon c =
     let aspect          = 1.3285316308250572
         width           = round (toFloat heights.icon * aspect)
