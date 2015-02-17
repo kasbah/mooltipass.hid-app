@@ -14,121 +14,121 @@ import Bitwise (and)
 import Byte (..)
 
 {-| The type of packets we send from the app to the device -}
-type AppPacket =
-     AppDebug              ByteString
-   | AppPing
-   | AppGetVersion
-   | AppSetContext         ByteString
-   | AppGetLogin
-   | AppGetPassword
-   | AppSetLogin           ByteString
-   | AppSetPassword        ByteString
-   | AppCheckPassword
-   | AppAddContext         ByteString
-   | AppExportFlashStart
-   | AppExportFlash
-   | AppExportFlashEnd
-   | AppImportFlashStart   FlashSpace
-   | AppImportFlash        ByteArray
-   | AppImportFlashEnd
-   | AppExportEepromStart
-   | AppExportEeprom
-   | AppExportEepromEnd
-   | AppImportEepromStart
-   | AppImportEeprom       ByteString
-   | AppImportEepromEnd
-   | AppGetRandomNumber
-   | AppMemoryManageModeStart
-   | AppMemoryManageModeEnd
-   | AppImportMediaStart
-   | AppImportMedia        ByteArray
-   | AppImportMediaEnd
-   | AppReadFlashNode      FlashAddress
-   | AppWriteFlashNode     FlashAddress Byte ByteString
-   | AppSetFavorite        (Byte,(FlashAddress,FlashAddress))
-   | AppSetStartingParent  FlashAddress
+type SendPacket =
+     SendDebug              ByteString
+   | SendPing
+   | SendGetVersion
+   | SendSetContext         ByteString
+   | SendGetLogin
+   | SendGetPassword
+   | SendSetLogin           ByteString
+   | SendSetPassword        ByteString
+   | SendCheckPassword
+   | SendAddContext         ByteString
+   | SendExportFlashStart
+   | SendExportFlash
+   | SendExportFlashEnd
+   | SendImportFlashStart   FlashSpace
+   | SendImportFlash        ByteArray
+   | SendImportFlashEnd
+   | SendExportEepromStart
+   | SendExportEeprom
+   | SendExportEepromEnd
+   | SendImportEepromStart
+   | SendImportEeprom       ByteString
+   | SendImportEepromEnd
+   | SendGetRandomNumber
+   | SendMemoryManageModeStart
+   | SendMemoryManageModeEnd
+   | SendImportMediaStart
+   | SendImportMedia        ByteArray
+   | SendImportMediaEnd
+   | SendReadFlashNode      FlashAddress
+   | SendWriteFlashNode     FlashAddress Byte ByteString
+   | SendSetFavorite        (Byte,(FlashAddress,FlashAddress))
+   | SendSetStartingParent  FlashAddress
    -- CPZ = code protected zone
    -- CTR = counter value for Eeprom
-   | AppSetCtrValue        (Byte, Byte, Byte)
-   | AppAddCpzCtr          CpzCtrLutEntry
-   | AppGetCpzCtrValues
-   | AppSetParameter       Parameter Byte
-   | AppGetParameter       Parameter
-   | AppGetFavorite        Byte
-   | AppResetCard          (Byte, Byte)
-   | AppGetCardLogin
-   | AppGetCardPassword
-   | AppSetCardLogin       ByteString
-   | AppSetCardPassword    ByteString
-   | AppGetFreeSlotAddress
-   | AppGetStartingParent
-   | AppGetCtrValue
-   | AppAddNewCard
-   | AppGetStatus
+   | SendSetCtrValue        (Byte, Byte, Byte)
+   | SendAddCpzCtr          CpzCtrLutEntry
+   | SendGetCpzCtrValues
+   | SendSetParameter       Parameter Byte
+   | SendGetParameter       Parameter
+   | SendGetFavorite        Byte
+   | SendResetCard          (Byte, Byte)
+   | SendGetCardLogin
+   | SendGetCardPassword
+   | SendSetCardLogin       ByteString
+   | SendSetCardPassword    ByteString
+   | SendGetFreeSlotAddress
+   | SendGetStartingParent
+   | SendGetCtrValue
+   | SendAddNewCard
+   | SendGetStatus
 -- disabled developer types:
-    --AppEraseEeprom      -> 0x40
-    --AppEraseFlash       -> 0x41
-    --AppEraseSmc         -> 0x42
-    --AppDrawBitmap       -> 0x43
-    --AppSetFont          -> 0x44
-    --AppSetBootloaderPwd -> 0x47
-    --AppJumpToBootloader -> 0x48
-    --AppCloneSmartcard   -> 0x49
-    --AppStackFree        -> 0x4A
-    --AppUsbKeyboardPress -> 0x69
+    --SendEraseEeprom      -> 0x40
+    --SendEraseFlash       -> 0x41
+    --SendEraseSmc         -> 0x42
+    --SendDrawBitmap       -> 0x43
+    --SendSetFont          -> 0x44
+    --SendSetBootloaderPwd -> 0x47
+    --SendJumpToBootloader -> 0x48
+    --SendCloneSmartcard   -> 0x49
+    --SendStackFree        -> 0x4A
+    --SendUsbKeyboardPress -> 0x69
 
 
 {-| The type of packets we receive from the device -}
-type DevicePacket =
-      DeviceDebug             ByteString
-    | DevicePing              ByteString
-    | DeviceGetVersion        MpVersion
-    | DeviceSetContext        SetContextReturn
-    | DeviceGetLogin          (Maybe ByteString)
-    | DeviceGetPassword       (Maybe ByteString)
-    | DeviceSetLogin          ReturnCode
-    | DeviceSetPassword       ReturnCode
-    | DeviceCheckPassword     CheckPasswordReturn
-    | DeviceAddContext        ReturnCode
-    | DeviceExportFlashStart  ReturnCode
-    | DeviceExportFlash       ByteString
-    | DeviceExportFlashEnd
-    | DeviceImportFlashStart  ReturnCode
-    | DeviceImportFlash       ReturnCode
-    | DeviceImportFlashEnd    ReturnCode
-    | DeviceExportEepromStart ReturnCode
-    | DeviceExportEeprom      ByteString
-    | DeviceExportEepromEnd
-    | DeviceImportEepromStart ReturnCode
-    | DeviceImportEeprom      ReturnCode
-    | DeviceImportEepromEnd   ReturnCode
-    | DeviceGetRandomNumber   ByteString
-    | DeviceManageModeStart   ReturnCode
-    | DeviceManageModeEnd     ReturnCode
-    | DeviceImportMediaStart  ReturnCode
-    | DeviceImportMediaEnd    ReturnCode
-    | DeviceImportMedia       ReturnCode
-    | DeviceReadFlashNode     ByteString
-    | DeviceWriteFlashNode    ReturnCode
-    | DeviceSetFavorite       ReturnCode
-    | DeviceSetStartingParent ReturnCode
-    | DeviceSetCtrValue       ReturnCode
-    | DeviceAddCpzCtr         ReturnCode
-    | DeviceGetCpzCtrValues   (Maybe ByteString)
-    | DeviceCpzCtrPacketExport CpzCtrLutEntry
-    | DeviceSetParameter      ReturnCode
-    | DeviceGetParameter      (Maybe ByteString)
-    | DeviceGetFavorite       (Maybe ByteString)
-    | DeviceResetCard         ReturnCode
-    | DeviceGetCardLogin      (Maybe ByteString)
-    | DeviceGetCardPassword   (Maybe ByteString)
-    | DeviceSetCardLogin      ReturnCode
-    | DeviceSetCardPassword   ReturnCode
-    | DeviceGetFreeSlotAddr   (Maybe ByteString)
-    | DeviceGetStartingParent (Maybe ByteString)
-    | DeviceGetCtrValue       (Maybe ByteString)
-    | DeviceAddNewCard        ReturnCode
-    | DeviceGetStatus         Status
+type ReceivedPacket =
+      ReceivedDebug             ByteString
+    | ReceivedPing              ByteString
+    | ReceivedGetVersion        MpVersion
+    | ReceivedSetContext        SetContextReturn
+    | ReceivedGetLogin          (Maybe ByteString)
+    | ReceivedGetPassword       (Maybe ByteString)
+    | ReceivedSetLogin          ReturnCode
+    | ReceivedSetPassword       ReturnCode
+    | ReceivedCheckPassword     CheckPasswordReturn
+    | ReceivedAddContext        ReturnCode
+    | ReceivedExportFlashStart  ReturnCode
+    | ReceivedExportFlash       ByteString
+    | ReceivedExportFlashEnd
+    | ReceivedImportFlashStart  ReturnCode
+    | ReceivedImportFlash       ReturnCode
+    | ReceivedImportFlashEnd    ReturnCode
+    | ReceivedExportEepromStart ReturnCode
+    | ReceivedExportEeprom      ByteString
+    | ReceivedExportEepromEnd
+    | ReceivedImportEepromStart ReturnCode
+    | ReceivedImportEeprom      ReturnCode
+    | ReceivedImportEepromEnd   ReturnCode
+    | ReceivedGetRandomNumber   ByteString
+    | ReceivedManageModeStart   ReturnCode
+    | ReceivedManageModeEnd     ReturnCode
+    | ReceivedImportMediaStart  ReturnCode
+    | ReceivedImportMediaEnd    ReturnCode
+    | ReceivedImportMedia       ReturnCode
+    | ReceivedReadFlashNode     ByteString
+    | ReceivedWriteFlashNode    ReturnCode
+    | ReceivedSetFavorite       ReturnCode
+    | ReceivedSetStartingParent ReturnCode
+    | ReceivedSetCtrValue       ReturnCode
+    | ReceivedAddCpzCtr         ReturnCode
+    | ReceivedGetCpzCtrValues   (Maybe ByteString)
+    | ReceivedCpzCtrPacketExport CpzCtrLutEntry
+    | ReceivedSetParameter      ReturnCode
+    | ReceivedGetParameter      (Maybe ByteString)
+    | ReceivedGetFavorite       (Maybe ByteString)
+    | ReceivedResetCard         ReturnCode
+    | ReceivedGetCardLogin      (Maybe ByteString)
+    | ReceivedGetCardPassword   (Maybe ByteString)
+    | ReceivedSetCardLogin      ReturnCode
+    | ReceivedSetCardPassword   ReturnCode
+    | ReceivedGetFreeSlotAddr   (Maybe ByteString)
+    | ReceivedGetStartingParent (Maybe ByteString)
+    | ReceivedGetCtrValue       (Maybe ByteString)
+    | ReceivedAddNewCard        ReturnCode
+    | ReceivedGetStatus         Status
 
 {-| Carries firmware version and flash memory size -}
 type alias MpVersion = { flashMemSize : Byte
@@ -140,13 +140,13 @@ type alias CpzCtrLutEntry = { cpz : ByteString
                             , ctrNonce : ByteString
                             }
 
-{-| Return for 'DeviceCheckPassword' -}
+{-| Return for 'ReceivedCheckPassword' -}
 type CheckPasswordReturn = Incorrect | Correct | RequestBlocked
 
-{-| Return for 'DeviceSetContext' -}
+{-| Return for 'ReceivedSetContext' -}
 type SetContextReturn = UnknownContext | ContextSet | NoCardForContext
 
-{-| Return for 'DeviceGetStatus' -}
+{-| Return for 'ReceivedGetStatus' -}
 type Status = NeedCard | Locked | LockScreen | Unlocked
 
 {-| This is (LSB, MSB) -}
@@ -171,7 +171,7 @@ type FlashSpace = FlashUserSpace | FlashGraphicsSpace
 
 {-| Convert a packet generated in our application to a list of Ints to send out
     a port for chrome.hid.send -}
-toInts : AppPacket -> List Int
+toInts : SendPacket -> List Int
 toInts msg =
     -- the packet format is [payload-size, message-type, payload ... ]
     let byteString msgType s = String.length s::msgType::stringToInts s
@@ -191,65 +191,65 @@ toInts msg =
             TouchProxOs        -> 0x07
             OfflineMode        -> 0x08
     in case msg of
-        AppDebug       s  -> byteString 0x01 s
-        AppPing           -> zeroSize 0x02
-        AppGetVersion     -> zeroSize 0x03
-        AppSetContext  s  -> byteStringNull 0x04 s
-        AppGetLogin       -> zeroSize 0x05
-        AppGetPassword    -> zeroSize 0x06
-        AppSetLogin    s  -> byteStringNull 0x07 s
-        AppSetPassword s  -> byteStringNull 0x08 s
-        AppCheckPassword  -> zeroSize 0x09
-        AppAddContext  s  -> byteStringNull 0x0A s
-        AppExportFlash    -> zeroSize 0x30
-        AppExportFlashEnd -> zeroSize 0x31
-        AppImportFlashStart space -> [ 1
+        SendDebug       s  -> byteString 0x01 s
+        SendPing           -> zeroSize 0x02
+        SendGetVersion     -> zeroSize 0x03
+        SendSetContext  s  -> byteStringNull 0x04 s
+        SendGetLogin       -> zeroSize 0x05
+        SendGetPassword    -> zeroSize 0x06
+        SendSetLogin    s  -> byteStringNull 0x07 s
+        SendSetPassword s  -> byteStringNull 0x08 s
+        SendCheckPassword  -> zeroSize 0x09
+        SendAddContext  s  -> byteStringNull 0x0A s
+        SendExportFlash    -> zeroSize 0x30
+        SendExportFlashEnd -> zeroSize 0x31
+        SendImportFlashStart space -> [ 1
                                      , 0x32
                                      , case space of
                                          FlashUserSpace     -> 0x00
                                          FlashGraphicsSpace -> 0x01
                                      ]
-        AppImportFlash  s        -> byteArray 0x33 s
-        AppImportFlashEnd        -> zeroSize 0x34
-        AppExportEeprom          -> zeroSize 0x35
-        AppExportEepromEnd       -> zeroSize 0x36
-        AppImportEepromStart     -> zeroSize 0x37
-        AppImportEeprom s        -> byteString 0x38 s
-        AppImportEepromEnd       -> zeroSize 0x39
-        AppExportFlashStart      -> zeroSize 0x45
-        AppExportEepromStart     -> zeroSize 0x46
-        AppGetRandomNumber       -> zeroSize 0x4B
-        AppMemoryManageModeStart -> zeroSize 0x50
-        AppMemoryManageModeEnd   -> zeroSize 0x51
-        AppImportMediaStart      -> zeroSize 0x52
-        AppImportMedia  a        -> byteArray 0x53 a
-        AppImportMediaEnd        -> zeroSize 0x54
-        AppReadFlashNode (a1,a2) -> [2, 0x55, a1, a2]
-        AppWriteFlashNode (a1,a2) n s       ->
+        SendImportFlash  s        -> byteArray 0x33 s
+        SendImportFlashEnd        -> zeroSize 0x34
+        SendExportEeprom          -> zeroSize 0x35
+        SendExportEepromEnd       -> zeroSize 0x36
+        SendImportEepromStart     -> zeroSize 0x37
+        SendImportEeprom s        -> byteString 0x38 s
+        SendImportEepromEnd       -> zeroSize 0x39
+        SendExportFlashStart      -> zeroSize 0x45
+        SendExportEepromStart     -> zeroSize 0x46
+        SendGetRandomNumber       -> zeroSize 0x4B
+        SendMemoryManageModeStart -> zeroSize 0x50
+        SendMemoryManageModeEnd   -> zeroSize 0x51
+        SendImportMediaStart      -> zeroSize 0x52
+        SendImportMedia  a        -> byteArray 0x53 a
+        SendImportMediaEnd        -> zeroSize 0x54
+        SendReadFlashNode (a1,a2) -> [2, 0x55, a1, a2]
+        SendWriteFlashNode (a1,a2) n s       ->
             (String.length s + 3)::0x56::a1::a2::n::stringToInts s
-        AppSetFavorite (id,((p1,p2),(c1,c2))) ->
+        SendSetFavorite (id,((p1,p2),(c1,c2))) ->
             [5, 0x57, id, p1, p2, c1, c2]
-        AppSetStartingParent (a1,a2)    -> [2, 0x58, a1, a2]
-        AppSetCtrValue (ctr1,ctr2,ctr3) -> [3, 0x59, ctr1, ctr2, ctr3]
-        AppAddCpzCtr c -> 24::0x5A::stringToInts c.cpz ++ stringToInts c.ctrNonce
-        AppGetCpzCtrValues    -> zeroSize 0x5B
-        AppSetParameter p b   -> [2, 0x5D, param p, b]
-        AppGetParameter p     -> [1, 0x5E, param p]
-        AppGetFavorite  b     -> [1, 0x5F, b]
-        AppResetCard (b1,b2)  -> [2, 0x60, b1, b2]
-        AppGetCardLogin       -> zeroSize 0x61
-        AppGetCardPassword    -> zeroSize 0x62
-        AppSetCardLogin s     -> byteStringNull 0x63 s
-        AppSetCardPassword s  -> byteStringNull 0x64 s
-        AppGetFreeSlotAddress -> zeroSize 0x65
-        AppGetStartingParent  -> zeroSize 0x66
-        AppGetCtrValue        -> zeroSize 0x67
-        AppAddNewCard         -> zeroSize 0x68
-        AppGetStatus          -> zeroSize 0x70
+        SendSetStartingParent (a1,a2)    -> [2, 0x58, a1, a2]
+        SendSetCtrValue (ctr1,ctr2,ctr3) -> [3, 0x59, ctr1, ctr2, ctr3]
+        SendAddCpzCtr c -> 24::0x5A::stringToInts c.cpz ++ stringToInts c.ctrNonce
+        SendGetCpzCtrValues    -> zeroSize 0x5B
+        SendSetParameter p b   -> [2, 0x5D, param p, b]
+        SendGetParameter p     -> [1, 0x5E, param p]
+        SendGetFavorite  b     -> [1, 0x5F, b]
+        SendResetCard (b1,b2)  -> [2, 0x60, b1, b2]
+        SendGetCardLogin       -> zeroSize 0x61
+        SendGetCardPassword    -> zeroSize 0x62
+        SendSetCardLogin s     -> byteStringNull 0x63 s
+        SendSetCardPassword s  -> byteStringNull 0x64 s
+        SendGetFreeSlotAddress -> zeroSize 0x65
+        SendGetStartingParent  -> zeroSize 0x66
+        SendGetCtrValue        -> zeroSize 0x67
+        SendAddNewCard         -> zeroSize 0x68
+        SendGetStatus          -> zeroSize 0x70
 
 {-| Convert a list of ints received through a port from chrome.hid.receive into
     a packet we can interpret -}
-fromInts : List Int -> Result Error DevicePacket
+fromInts : List Int -> Result Error ReceivedPacket
 fromInts (size::messageType::payload) =
     let doneOrNotDone constructor name =
             if size /= 1
@@ -276,9 +276,9 @@ fromInts (size::messageType::payload) =
         if size > List.length payload
         then Err "Invalid size"
         else case messageType of
-            0x01 -> Result.map DeviceDebug (toByteString size payload)
+            0x01 -> Result.map ReceivedDebug (toByteString size payload)
             0x02 -> if size == 4
-                    then Result.map DevicePing (toByteString 4 payload)
+                    then Result.map ReceivedPing (toByteString 4 payload)
                     else Err "Invalid data size for 'ping request'"
             0x03 -> let flashSize =
                             Result.map (\b -> {flashMemSize = b})
@@ -287,86 +287,86 @@ fromInts (size::messageType::payload) =
                             Result.map (\s -> {mpv | version = s})
                             -- (size - 3) because of null-termination
                                 <| toByteString (size - 3) (List.tail payload)
-                    in Result.map DeviceGetVersion (flashSize `andThen` mpVersion)
+                    in Result.map ReceivedGetVersion (flashSize `andThen` mpVersion)
             0x04 -> if size /= 1
                     then Err "Invalid data size for 'set context'"
                     else case List.head payload of
-                        0x00 -> Ok <| DeviceSetContext UnknownContext
-                        0x01 -> Ok <| DeviceSetContext ContextSet
-                        0x03 -> Ok <| DeviceSetContext NoCardForContext
+                        0x00 -> Ok <| ReceivedSetContext UnknownContext
+                        0x01 -> Ok <| ReceivedSetContext ContextSet
+                        0x03 -> Ok <| ReceivedSetContext NoCardForContext
                         _    -> Err "Invalid data for 'set context'"
-            0x05 -> maybeByteStringNull DeviceGetLogin    "get login"
-            0x06 -> maybeByteStringNull DeviceGetPassword "get password"
-            0x07 -> doneOrNotDone DeviceSetLogin      "set login"
-            0x08 -> doneOrNotDone DeviceSetPassword   "set password"
+            0x05 -> maybeByteStringNull ReceivedGetLogin    "get login"
+            0x06 -> maybeByteStringNull ReceivedGetPassword "get password"
+            0x07 -> doneOrNotDone ReceivedSetLogin      "set login"
+            0x08 -> doneOrNotDone ReceivedSetPassword   "set password"
             0x09 -> if size /= 1
                     then Err "Invalid data size for 'check password'"
                     else case List.head payload of
-                        0x00 -> Ok <| DeviceCheckPassword Incorrect
-                        0x01 -> Ok <| DeviceCheckPassword Correct
-                        0x02 -> Ok <| DeviceCheckPassword RequestBlocked
+                        0x00 -> Ok <| ReceivedCheckPassword Incorrect
+                        0x01 -> Ok <| ReceivedCheckPassword Correct
+                        0x02 -> Ok <| ReceivedCheckPassword RequestBlocked
                         _    -> Err "Invalid data for 'check password'"
-            0x0A -> doneOrNotDone DeviceAddContext "add context"
-            0x30 -> Result.map DeviceExportFlash (toByteString size payload)
-            0x31 -> Ok DeviceExportFlashEnd
-            0x32 -> doneOrNotDone DeviceImportFlashStart "import flash start"
-            0x33 -> doneOrNotDone DeviceImportFlash      "import flash"
-            0x34 -> doneOrNotDone DeviceImportFlashEnd   "import flash end"
-            0x35 -> Result.map DeviceExportEeprom (toByteString size payload)
-            0x36 -> Ok DeviceExportEepromEnd
-            0x37 -> doneOrNotDone DeviceImportEepromStart "import eeprom start"
-            0x38 -> doneOrNotDone DeviceImportEeprom      "import eeprom"
-            0x39 -> doneOrNotDone DeviceImportEepromEnd   "import eeprom end"
-            0x40 -> Err "Got DeviceEraseEeprom"
-            0x41 -> Err "Got DeviceEraseFlash"
-            0x42 -> Err "Got DeviceEraseSmc"
-            0x43 -> Err "Got DeviceDrawBitmap"
-            0x44 -> Err "Got DeviceSetFont"
-            0x45 -> doneOrNotDone DeviceExportFlashStart  "export flash start"
-            0x46 -> doneOrNotDone DeviceExportEepromStart "export eeprom start"
-            0x47 -> Err "Got DeviceSetBootloaderPwd"
-            0x48 -> Err "Got DeviceJumpToBootloader"
-            0x49 -> Err "Got DeviceCloneSmartcard"
-            0x4A -> Err "Got DeviceStackFree"
-            0x4B -> Result.map DeviceGetRandomNumber (toByteString size payload)
-            0x50 -> doneOrNotDone DeviceManageModeStart  "start memory management mode"
-            0x51 -> doneOrNotDone DeviceManageModeEnd    "end memory management mode"
-            0x52 -> doneOrNotDone DeviceImportMediaStart "media import start"
-            0x53 -> doneOrNotDone DeviceImportMedia      "media import"
-            0x54 -> doneOrNotDone DeviceImportMediaEnd   "media import end"
-            0x55 -> Result.map DeviceReadFlashNode (toByteString size payload)
-            0x56 -> doneOrNotDone DeviceWriteFlashNode    "write node in flash"
-            0x57 -> doneOrNotDone DeviceSetFavorite       "set favorite"
-            0x58 -> doneOrNotDone DeviceSetStartingParent "set starting parent"
-            0x59 -> doneOrNotDone DeviceSetCtrValue       "set CTR value"
-            0x5A -> doneOrNotDone DeviceAddCpzCtr         "set CPZ CTR value"
-            0x5B -> maybeByteString DeviceGetCpzCtrValues "get CPZ CTR value"
+            0x0A -> doneOrNotDone ReceivedAddContext "add context"
+            0x30 -> Result.map ReceivedExportFlash (toByteString size payload)
+            0x31 -> Ok ReceivedExportFlashEnd
+            0x32 -> doneOrNotDone ReceivedImportFlashStart "import flash start"
+            0x33 -> doneOrNotDone ReceivedImportFlash      "import flash"
+            0x34 -> doneOrNotDone ReceivedImportFlashEnd   "import flash end"
+            0x35 -> Result.map ReceivedExportEeprom (toByteString size payload)
+            0x36 -> Ok ReceivedExportEepromEnd
+            0x37 -> doneOrNotDone ReceivedImportEepromStart "import eeprom start"
+            0x38 -> doneOrNotDone ReceivedImportEeprom      "import eeprom"
+            0x39 -> doneOrNotDone ReceivedImportEepromEnd   "import eeprom end"
+            0x40 -> Err "Got ReceivedEraseEeprom"
+            0x41 -> Err "Got ReceivedEraseFlash"
+            0x42 -> Err "Got ReceivedEraseSmc"
+            0x43 -> Err "Got ReceivedDrawBitmap"
+            0x44 -> Err "Got ReceivedSetFont"
+            0x45 -> doneOrNotDone ReceivedExportFlashStart  "export flash start"
+            0x46 -> doneOrNotDone ReceivedExportEepromStart "export eeprom start"
+            0x47 -> Err "Got ReceivedSetBootloaderPwd"
+            0x48 -> Err "Got ReceivedJumpToBootloader"
+            0x49 -> Err "Got ReceivedCloneSmartcard"
+            0x4A -> Err "Got ReceivedStackFree"
+            0x4B -> Result.map ReceivedGetRandomNumber (toByteString size payload)
+            0x50 -> doneOrNotDone ReceivedManageModeStart  "start memory management mode"
+            0x51 -> doneOrNotDone ReceivedManageModeEnd    "end memory management mode"
+            0x52 -> doneOrNotDone ReceivedImportMediaStart "media import start"
+            0x53 -> doneOrNotDone ReceivedImportMedia      "media import"
+            0x54 -> doneOrNotDone ReceivedImportMediaEnd   "media import end"
+            0x55 -> Result.map ReceivedReadFlashNode (toByteString size payload)
+            0x56 -> doneOrNotDone ReceivedWriteFlashNode    "write node in flash"
+            0x57 -> doneOrNotDone ReceivedSetFavorite       "set favorite"
+            0x58 -> doneOrNotDone ReceivedSetStartingParent "set starting parent"
+            0x59 -> doneOrNotDone ReceivedSetCtrValue       "set CTR value"
+            0x5A -> doneOrNotDone ReceivedAddCpzCtr         "set CPZ CTR value"
+            0x5B -> maybeByteString ReceivedGetCpzCtrValues "get CPZ CTR value"
             0x5C -> let cpz  =
                             Result.map (\c -> {cpz = c})
                                 <| toByteString 8 payload
                         ctrNonce d =
                             Result.map (\s -> {d | ctrNonce = s})
                                 <| toByteString 16 (List.drop 8 payload)
-                    in Result.map DeviceCpzCtrPacketExport (cpz `andThen` ctrNonce)
-            0x5D -> doneOrNotDone DeviceSetParameter "set Mooltipass parameter"
-            0x5E -> maybeByteString DeviceGetParameter    "get parameter"
-            0x5F -> maybeByteString DeviceGetFavorite     "get favorite"
-            0x60 -> doneOrNotDone DeviceResetCard         "reset card"
-            0x61 -> maybeByteStringNull DeviceGetCardLogin    "get card login"
-            0x62 -> maybeByteStringNull DeviceGetCardPassword "get card password"
-            0x63 -> doneOrNotDone DeviceSetCardLogin      "set card password"
-            0x64 -> doneOrNotDone DeviceSetCardPassword   "set card password"
-            0x65 -> maybeByteString DeviceGetFreeSlotAddr "get free slot address"
-            0x66 -> maybeByteString DeviceGetStartingParent "get starting parent address"
-            0x67 -> maybeByteString DeviceGetCtrValue       "get CTR value"
-            0x68 -> doneOrNotDone DeviceAddNewCard "add unknown smartcard"
-            0x69 -> Err "Got DeviceUsbKeyboardPress"
+                    in Result.map ReceivedCpzCtrPacketExport (cpz `andThen` ctrNonce)
+            0x5D -> doneOrNotDone ReceivedSetParameter "set Mooltipass parameter"
+            0x5E -> maybeByteString ReceivedGetParameter    "get parameter"
+            0x5F -> maybeByteString ReceivedGetFavorite     "get favorite"
+            0x60 -> doneOrNotDone ReceivedResetCard         "reset card"
+            0x61 -> maybeByteStringNull ReceivedGetCardLogin    "get card login"
+            0x62 -> maybeByteStringNull ReceivedGetCardPassword "get card password"
+            0x63 -> doneOrNotDone ReceivedSetCardLogin      "set card password"
+            0x64 -> doneOrNotDone ReceivedSetCardPassword   "set card password"
+            0x65 -> maybeByteString ReceivedGetFreeSlotAddr "get free slot address"
+            0x66 -> maybeByteString ReceivedGetStartingParent "get starting parent address"
+            0x67 -> maybeByteString ReceivedGetCtrValue       "get CTR value"
+            0x68 -> doneOrNotDone ReceivedAddNewCard "add unknown smartcard"
+            0x69 -> Err "Got ReceivedUsbKeyboardPress"
             0x70 -> if size /= 1
                     then Err "Invalid data size for 'get status'"
                     else case (List.head payload) `and` 0x7 of
-                                0x0 -> Ok <| DeviceGetStatus NeedCard
-                                0x1 -> Ok <| DeviceGetStatus Locked
-                                0x3 -> Ok <| DeviceGetStatus LockScreen
-                                0x5 -> Ok <| DeviceGetStatus Unlocked
+                                0x0 -> Ok <| ReceivedGetStatus NeedCard
+                                0x1 -> Ok <| ReceivedGetStatus Locked
+                                0x3 -> Ok <| ReceivedGetStatus LockScreen
+                                0x5 -> Ok <| ReceivedGetStatus Unlocked
                                 _   -> Err "Invalid status received in 'get status'"
             _    -> Err <| "Got unknown message: " ++ toString messageType

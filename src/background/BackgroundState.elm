@@ -43,10 +43,10 @@ mediaImportActive s =
 type MediaImport =
       NoMediaImport
     | MediaImportRequested    FileId
-    | MediaImportStart        (List AppPacket)
-    | MediaImportStartWaiting (List AppPacket)
-    | MediaImport             (List AppPacket)
-    | MediaImportWaiting      (List AppPacket)
+    | MediaImportStart        (List SendPacket)
+    | MediaImportStartWaiting (List SendPacket)
+    | MediaImport             (List SendPacket)
+    | MediaImportWaiting      (List SendPacket)
     | MediaImportError        String
     | MediaImportSuccess
 
@@ -103,7 +103,7 @@ type BackgroundAction = SetHidConnected     Bool
                       | SetExtAwaitingPing  Bool
                       | SetExtRequest       ExtensionRequest
                       | SetMediaImport      MediaImport
-                      | Receive             DevicePacket
+                      | Receive             ReceivedPacket
                       | CommonAction        CommonAction
                       | NoOp
 
@@ -174,7 +174,7 @@ update action s =
             then setMedia (MediaImportRequested p)
             else s
         CommonAction a -> {s | common <- updateCommon a}
-        Receive (DeviceGetLogin ml) -> case ml of
+        Receive (ReceivedGetLogin ml) -> case ml of
             Just l ->
                 {s | extRequest <- case s.extRequest of
                           ExtWantsCredentials c ->
@@ -182,7 +182,7 @@ update action s =
                           _ -> NoRequest
                 }
             Nothing -> {s | extRequest <- ExtNoCredentials}
-        Receive (DeviceGetPassword mp) -> case mp of
+        Receive (ReceivedGetPassword mp) -> case mp of
             Just p ->
                 {s | extRequest <- case s.extRequest of
                           ExtNeedsPassword c ->
@@ -190,7 +190,7 @@ update action s =
                           _ -> NoRequest
                 }
             Nothing -> {s | extRequest <- ExtNoCredentials}
-        Receive (DeviceSetLogin r) ->
+        Receive (ReceivedSetLogin r) ->
             {s | extRequest <- case s.extRequest of
                      ExtWantsToWrite c ->
                          if r == Done
@@ -198,7 +198,7 @@ update action s =
                          else ExtNotWritten
                      _ -> NoRequest
             }
-        Receive (DeviceSetPassword r) ->
+        Receive (ReceivedSetPassword r) ->
             {s | extRequest <- case s.extRequest of
                      ExtNeedsToWritePassword c ->
                          if r == Done
@@ -206,7 +206,7 @@ update action s =
                          else ExtNotWritten
                      _ -> NoRequest
             }
-        Receive (DeviceSetContext r) ->
+        Receive (ReceivedSetContext r) ->
             case r of
                 ContextSet -> case s.extRequest of
                     ExtWantsCredentials c ->
@@ -232,7 +232,7 @@ update action s =
                     _ -> s
                 NoCardForContext ->
                     update (CommonAction (SetConnected NoCard)) s
-        Receive (DeviceAddContext r) ->
+        Receive (ReceivedAddContext r) ->
             {s | extRequest <- case s.extRequest of
                      ExtNeedsNewContext c ->
                          if r == Done
@@ -240,14 +240,14 @@ update action s =
                          else ExtNotWritten
                      _ -> NoRequest
             }
-        Receive (DeviceGetStatus st) ->
+        Receive (ReceivedGetStatus st) ->
             update (CommonAction (SetConnected (case st of
                        NeedCard   -> NoCard
                        Locked     -> NoPin
                        LockScreen -> NoPin
                        Unlocked   -> Connected
                     ))) s
-        Receive (DeviceGetVersion v) ->
+        Receive (ReceivedGetVersion v) ->
             update
                 (appendToLog
                     ("device is "
@@ -255,21 +255,21 @@ update action s =
                         ++ toString v.flashMemSize
                         ++ "MBit"))
                 {s | deviceVersion <- Just v}
-        Receive (DeviceImportMediaStart r) ->
+        Receive (ReceivedImportMediaStart r) ->
             case s.mediaImport of
                 MediaImportStartWaiting ps ->
                     if r == Done
                     then setMedia (MediaImport ps)
                     else setMedia (MediaImportError "Import start failed")
                 _ -> setMedia (MediaImportError "Received unexpected start import confirmation from device")
-        Receive (DeviceImportMedia r) ->
+        Receive (ReceivedImportMedia r) ->
             case s.mediaImport of
                 MediaImportWaiting (p::ps) ->
                     if r == Done
                     then setMedia (MediaImport ps)
                     else setMedia (MediaImportError "Import write failed")
                 _ -> setMedia (MediaImportError "Received unexpected imported data confirmation from device")
-        Receive (DeviceImportMediaEnd r) ->
+        Receive (ReceivedImportMediaEnd r) ->
             case s.mediaImport of
                 MediaImportWaiting [] ->
                     if r == Done
@@ -285,7 +285,7 @@ update action s =
         NoOp -> s
 
 
-fromPacket :  (Result Error DevicePacket) -> BackgroundAction
+fromPacket :  (Result Error ReceivedPacket) -> BackgroundAction
 fromPacket r = case r of
     Err err -> appendToLog ("HID Error: " ++ err)
     Ok p    -> Receive p

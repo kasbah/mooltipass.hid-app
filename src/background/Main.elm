@@ -35,7 +35,7 @@ port toDevice =
         <| map2
             (\_ s -> if | mediaImportActive s && s.deviceConnected
                             -> emptyToDeviceMessage
-                        | s.deviceConnected   -> sendCommand AppGetStatus
+                        | s.deviceConnected   -> sendCommand SendGetStatus
                         | otherwise           -> emptyToDeviceMessage
             )
             (every second)

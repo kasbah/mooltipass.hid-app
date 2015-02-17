@@ -20,7 +20,7 @@ type alias ToDeviceMessage   = { connect     : Maybe ()
                                , sendCommand : Maybe (List Int)
                                }
 
-sendCommand : AppPacket -> ToDeviceMessage
+sendCommand : SendPacket -> ToDeviceMessage
 sendCommand p = {emptyToDeviceMessage | sendCommand <- Just (toInts p)}
 
 connect : ToDeviceMessage
@@ -49,17 +49,17 @@ encode s =
                 case s.mediaImport of
                     MediaImportStart ps ->
                         sendCommand'
-                            AppImportMediaStart
+                            SendImportMediaStart
                             [SetMediaImport (MediaImportStartWaiting ps)]
                     MediaImport (p::ps) ->
                         sendCommand' p
                             [SetMediaImport (MediaImportWaiting (p::ps))]
                     MediaImport [] ->
                         sendCommand'
-                            AppImportMediaEnd
+                            SendImportMediaEnd
                             [SetMediaImport (MediaImportWaiting [])]
                     _ -> (e, [])
-          | s.deviceVersion == Nothing && s.common.connected == Connected -> sendCommand' AppGetVersion []
+          | s.deviceVersion == Nothing && s.common.connected == Connected -> sendCommand' SendGetVersion []
           | s.extRequest /= NoRequest && s.common.connected == Connected ->
               ({e | sendCommand <-
                     Maybe.map toInts (toPacket s.currentContext s.extRequest)}
@@ -72,27 +72,27 @@ encode s =
               )
           | otherwise -> (e, [])
 
-sendCommand' : AppPacket
+sendCommand' : SendPacket
             -> (List BackgroundAction)
             -> (ToDeviceMessage, List BackgroundAction)
 sendCommand' p a = (sendCommand p, SetWaitingForDevice True::a)
 
-toPacket : String -> ExtensionRequest -> Maybe AppPacket
+toPacket : String -> ExtensionRequest -> Maybe SendPacket
 toPacket cc extRequest =
     case extRequest of
         ExtNeedsNewContext {context, login, password} ->
-            Just (AppAddContext context)
+            Just (SendAddContext context)
         ExtWantsCredentials {context} ->
-            if cc == context then Just AppGetLogin
-            else Just (AppSetContext context)
+            if cc == context then Just SendGetLogin
+            else Just (SendSetContext context)
         ExtNeedsPassword {context, login} ->
-            if cc == context then Just AppGetPassword
-            else Just (AppSetContext context)
+            if cc == context then Just SendGetPassword
+            else Just (SendSetContext context)
         ExtWantsToWrite {context, login, password} ->
-            if cc == context then Just (AppSetLogin login)
-            else Just (AppSetContext context)
+            if cc == context then Just (SendSetLogin login)
+            else Just (SendSetContext context)
         ExtNeedsToWritePassword {context, password} ->
-            if cc == context then Just (AppSetPassword password)
-            else Just (AppSetContext context)
+            if cc == context then Just (SendSetPassword password)
+            else Just (SendSetContext context)
         _ -> Nothing
 

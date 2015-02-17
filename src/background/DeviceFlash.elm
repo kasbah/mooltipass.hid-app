@@ -101,7 +101,7 @@ toFavs ffs firstParent =
     in map (\f -> parent f `andThen` child f) ffs
 
 
-fromFavs : List Favorite -> ParentNode -> List AppPacket
+fromFavs : List Favorite -> ParentNode -> List SendPacket
 fromFavs fs firstParent =
     let parent fav =
             queryParent
@@ -113,7 +113,7 @@ fromFavs fs firstParent =
                 (\c -> c.login == snd (fromJust fav))
                 (\c -> (p.address, c.address))
                 p.firstChild
-    in map AppSetFavorite
+    in map SendSetFavorite
         <| map2 (,) [1..15]
             <| map (Maybe.withDefault (null, null))
                 <| map (\f -> parent f `andThen` child f) fs

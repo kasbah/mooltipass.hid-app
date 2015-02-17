@@ -24,4 +24,4 @@ type alias FromChromeMessage = {readFile : List ByteArray}
 decode : FromChromeMessage -> BackgroundAction
 decode msg = case msg.readFile of
     [] -> SetMediaImport (MediaImportError "empty file")
-    bs -> SetMediaImport (MediaImportStart (List.map AppImportMedia bs))
+    bs -> SetMediaImport (MediaImportStart (List.map SendImportMedia bs))
