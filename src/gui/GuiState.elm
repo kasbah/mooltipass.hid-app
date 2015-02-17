@@ -11,7 +11,7 @@ import Util (..)
 
 type Tab = Log | Settings | Manage | Developer
 
-type TransferRequest =
+type ImportRequest =
       Requested
     | Waiting
     | RequestFile FileId
@@ -22,7 +22,7 @@ type alias GuiState =
     { activeTab   : Tab
     , iconClicked : Int
     , devEnabled  : Bool
-    , importMedia : TransferRequest
+    , importMedia : ImportRequest
     , unsavedMemInfo : Maybe MemoryInfo
     , common      : CommonState
     }
@@ -30,7 +30,7 @@ type alias GuiState =
 {-| All actions that can be performed to change GUI state directly -}
 type Action = ChangeTab Tab
             | ClickIcon
-            | SetImportMedia TransferRequest
+            | SetImportMedia ImportRequest
             | CommonAction CommonAction
             | AddFav (String, String)
             | RemoveFav (String, String)

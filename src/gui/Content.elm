@@ -25,6 +25,6 @@ content (w,h) state =
         withBackground e = layers [background, e]
     in case state.activeTab of
         Log       -> withBackground <| logTab (w, h') state.common.log
-        Developer -> withBackground <| developerTab (w, h') state.common.transferInfo
+        Developer -> withBackground <| developerTab (w, h') state.common.importInfo
         Manage    -> withBackground <| manageTab (w, h') (Maybe.withDefault emptyMemoryInfo state.unsavedMemInfo)
         _         -> empty

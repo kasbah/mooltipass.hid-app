@@ -155,28 +155,28 @@ setMedia imp s =
     let c             = s.common
         s'            = {s | mediaImport <- imp}
         updateInfo' i =
-            {s' | common <- updateCommon (SetTransferInfo i)}
+            {s' | common <- updateCommon (SetImportInfo i)}
         updateCommon a = Common.update a s.common
     in case imp of
-        MediaImportError str    -> updateInfo' (TransferError str)
+        MediaImportError str    -> updateInfo' (ImportError str)
         MediaImportRequested id -> updateInfo' (ImportRequested id)
-        MediaImportStart ps     -> case s.common.transferInfo of
+        MediaImportStart ps     -> case s.common.importInfo of
             ImportRequested id ->
                 updateInfo' (Importing id (length ps) (length ps))
             _ -> updateInfo'
-                (TransferError
+                (ImportError
                     "Internal state error MediaImportStart")
-        MediaImport ps          -> case s.common.transferInfo of
+        MediaImport ps          -> case s.common.importInfo of
             Importing id _ t   ->
                 updateInfo' (Importing id (length ps) t)
             _ -> updateInfo'
-                    (TransferError
+                    (ImportError
                         "Internal state error MediaImport")
-        MediaImportSuccess      -> case s.common.transferInfo of
+        MediaImportSuccess      -> case s.common.importInfo of
             Importing id _ _
                 -> updateInfo' (Imported id)
             _ -> updateInfo'
-                    (TransferError
+                    (ImportError
                         "Internal state error MediaImportSuccess")
         _ -> s'
 

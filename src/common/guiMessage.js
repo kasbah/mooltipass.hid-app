@@ -1,7 +1,7 @@
 var emptyToGuiMessage =
     { setLog:[]
     , setConnected:0
-    , setTransferInfo:[0,"",0,0]
+    , setImportInfo:[0,"",0,0]
     , setMemoryInfo: { favorites: [], credentials: []}
 };
 

@@ -10,7 +10,7 @@ import String
 type alias CommonState =
     { connected    : ConnectState
     , log          : List String
-    , transferInfo : TransferInfo
+    , importInfo : ImportInfo
     , memoryInfo   : MemoryInfo
     , forceUpdate  : Bool
     }
@@ -19,7 +19,7 @@ default : CommonState
 default =
     { connected    = NotConnected
     , log          = []
-    , transferInfo = NoTransfer
+    , importInfo = NoImport
     , memoryInfo   = exampleMemoryInfo
     , forceUpdate  = True
     }
@@ -69,12 +69,12 @@ exampleMemoryInfo =
 
 type ConnectState = NotConnected | Connected | NoCard | NoPin
 
-type TransferInfo =
+type ImportInfo =
       ImportRequested FileId
     | Importing FileId Int Int
     | Imported FileId
-    | TransferError String
-    | NoTransfer
+    | ImportError String
+    | NoImport
 
 type alias FileId = String
 
@@ -95,7 +95,7 @@ type CommonAction = SetLog (List String)
                   | SetConnected ConnectState
                   | AppendToLog String
                   | GetState
-                  | SetTransferInfo TransferInfo
+                  | SetImportInfo ImportInfo
                   | StartImportMedia FileId
                   | SetMemoryInfo MemoryInfo
                   | CommonNoOp
@@ -107,8 +107,8 @@ update action s =
         SetLog l            -> {s | log <- l}
         AppendToLog str     -> {s | log <- str::s.log}
         SetConnected c      -> {s | connected <- c}
-        SetTransferInfo i   -> {s | transferInfo <- i}
-        StartImportMedia id -> {s | transferInfo <- ImportRequested id}
+        SetImportInfo i   -> {s | importInfo <- i}
+        StartImportMedia id -> {s | importInfo <- ImportRequested id}
         SetMemoryInfo i     -> {s | memoryInfo <- i}
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force

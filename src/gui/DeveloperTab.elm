@@ -17,14 +17,14 @@ import Actions (..)
 import CommonState (..)
 import GuiState (..)
 
-developerTab : (Int, Int) -> TransferInfo -> Element
+developerTab : (Int, Int) -> ImportInfo -> Element
 developerTab (w,h) t =
     let screenH = h - 32
         screenW = w - 64
         screen' = container w screenH middle <| screen (screenW, screenH) t
     in container w h middle screen'
 
-screen : (Int, Int) -> TransferInfo -> Element
+screen : (Int, Int) -> ImportInfo -> Element
 screen (w,h) t =
     container w h midTop
         <| flow down
@@ -35,15 +35,15 @@ screen (w,h) t =
                     "import media"
             ]
 
-infoText : TransferInfo -> String
+infoText : ImportInfo -> String
 infoText t = case t of
     ImportRequested id -> "importing " ++ fileName id
     Importing id _ _   -> "importing " ++ fileName id
     Imported id        -> "sucessfully imported " ++ fileName id
-    TransferError str  -> "import error: " ++ str
+    ImportError str  -> "import error: " ++ str
     _                  -> ""
 
-widget : (Int, Int) -> TransferInfo -> Element
+widget : (Int, Int) -> ImportInfo -> Element
 widget (w,h) t =
     let (w',h') = (toFloat w, toFloat h)
         progToWidth x = w' * x
@@ -54,7 +54,7 @@ widget (w,h) t =
             Importing id td ttl ->
                 progressBar' (toFloat (ttl - td)/toFloat ttl) blue
             Imported id        -> progressBar' 1.0 cyan
-            TransferError str  -> progressBar' 1.0 Color.red
+            ImportError str  -> progressBar' 1.0 Color.red
             _                  -> Element.empty
         txt s = container w h middle <| leftAligned (text s)
     in layers [bg, progressBar, txt (infoText t) ]
