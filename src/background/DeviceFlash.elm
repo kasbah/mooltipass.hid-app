@@ -2,6 +2,7 @@ module DeviceFlash where
 
 import List (..)
 import Maybe (andThen, Maybe(..))
+import Maybe
 
 -- local source
 import Byte (..)
@@ -60,6 +61,22 @@ foldParents f z n = case n of
     ParentNode data -> f data (foldParents f z data.nextParent)
     EmptyParentNode -> z
 
+queryParent : (ParentNodeData -> Bool) -> (ParentNodeData -> a)
+           -> ParentNode -> Maybe a
+queryParent fb fp firstParent =
+    foldParents
+        (\p z -> if z == Nothing && fb p then Just (fp p) else z)
+        Nothing
+        firstParent
+
+queryChild : (ChildNodeData -> Bool) -> (ChildNodeData -> a)
+          -> ChildNode -> Maybe a
+queryChild fb fc firstChild =
+    foldChildren
+        (\c z -> if z == Nothing && fb c then Just (fc c) else z)
+        Nothing
+        firstChild
+
 toCreds : ParentNode -> List (String, List String)
 toCreds firstParent =
     let getLogins firstChild =
@@ -71,21 +88,33 @@ toCreds firstParent =
 
 toFavs : List FlashFavorite -> ParentNode -> List Favorite
 toFavs ffs firstParent =
-    case firstParent of
-        (ParentNode firstParentData) ->
-            let parent f =
-                    if f.parentNode == null then Nothing
-                    else foldParents
-                        (\p z -> if p.address == f.parentNode
-                                 then Just p else z)
-                        Nothing
-                        firstParent
-                child p f =
-                    if f.childNode == null then Nothing
-                    else foldChildren
-                        (\c z -> if c.address == f.childNode
-                                 then Just (p.service,c.login) else z)
-                        Nothing
-                        p.firstChild
-            in map (\f -> parent f `andThen` (\p -> child p f)) ffs
-        EmptyParentNode -> emptyFavorites
+    let parent fav =
+            queryParent
+                (\p -> fav.parentNode /= null && p.address == fav.parentNode)
+                identity
+                firstParent
+        child fav p =
+            queryChild
+                (\c -> fav.childNode /= null && c.address == fav.childNode)
+                (\c -> (p.service, c.login))
+                p.firstChild
+    in map (\f -> parent f `andThen` child f) ffs
+
+
+fromFavs : List Favorite -> ParentNode -> List AppPacket
+fromFavs fs firstParent =
+    let parent fav =
+            queryParent
+                (\p -> fav /= Nothing && p.service == fst (fromJust fav))
+                identity
+                firstParent
+        child fav p =
+            queryChild
+                (\c -> c.login == snd (fromJust fav))
+                (\c -> (p.address, c.address))
+                p.firstChild
+    in map AppSetFavorite
+        <| map2 (,) [1..15]
+            <| map (Maybe.withDefault (null, null))
+                <| map (\f -> parent f `andThen` child f) fs
+

@@ -11,7 +11,7 @@ fromJust : Maybe a -> a
 fromJust (Just a) = a
 
 justs : List (Maybe a) -> List a
-justs = filterMap (\x -> x)
+justs = filterMap identity
 
 mapOnce : (a -> Maybe a) -> List a -> List a
 mapOnce f (x::xs) = case f x of

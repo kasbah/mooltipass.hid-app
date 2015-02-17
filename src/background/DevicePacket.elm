@@ -45,7 +45,7 @@ type AppPacket =
    | AppImportMediaEnd
    | AppReadFlashNode      FlashAddress
    | AppWriteFlashNode     FlashAddress Byte ByteString
-   | AppSetFavorite        Byte FlashAddress FlashAddress ByteString
+   | AppSetFavorite        (Byte,(FlashAddress,FlashAddress))
    | AppSetStartingParent  FlashAddress
    -- CPZ = code protected zone
    -- CTR = counter value for Eeprom
@@ -227,8 +227,8 @@ toInts msg =
         AppReadFlashNode (a1,a2) -> [2, 0x55, a1, a2]
         AppWriteFlashNode (a1,a2) n s       ->
             (String.length s + 3)::0x56::a1::a2::n::stringToInts s
-        AppSetFavorite id (p1,p2) (c1,c2) s ->
-            (String.length s + 5)::0x57::id::p1::p2::c1::c2::stringToInts s
+        AppSetFavorite (id,((p1,p2),(c1,c2))) ->
+            [5, 0x57, id, p1, p2, c1, c2]
         AppSetStartingParent (a1,a2)    -> [2, 0x58, a1, a2]
         AppSetCtrValue (ctr1,ctr2,ctr3) -> [3, 0x59, ctr1, ctr2, ctr3]
         AppAddCpzCtr c -> 24::0x5A::stringToInts c.cpz ++ stringToInts c.ctrNonce
