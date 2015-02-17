@@ -19,7 +19,7 @@ navigation (w,h) state =
         [ container (round (toFloat w * 0.85)) heights.nav midLeft
             (flow right [navSpacer 38, tabs state])
         , container (round (toFloat w * 0.15)) heights.nav midRight
-            (flow left [navSpacer 32, statusIcon state.common.connected, navSpacer 9000])
+            (flow left [navSpacer 32, statusIcon state.common.deviceStatus, navSpacer 9000])
         ]
 
 {-| An icon that indictes the connection status and can be clicked 7 times to
@@ -32,10 +32,10 @@ statusIcon c =
                             ("images/status_icon-" ++ color ++ ".svg")
         clickIcon color = clickable (send guiActions ClickIcon) (img color)
         icon            = case c of
-            Connected    -> clickIcon "blue"
+            Unlocked     -> clickIcon "blue"
             NotConnected -> clickIcon "red"
             NoCard       -> clickIcon "orange"
-            NoPin        -> clickIcon "purple"
+            Locked       -> clickIcon "purple"
     in flow down [icon, spacer 1 heights.iconPadding, navLine width]
 
 {-| A spacer that has a grey line at the bottom -}
@@ -49,7 +49,7 @@ navLine w = tiledImage w 1 "images/tab_spacer_pixel.png"
 {-| The tab navigation with an optional developer tab. -}
 tabs : GuiState -> Element
 tabs state =
-    let disabled = disabledTabs state.common.connected
+    let disabled = disabledTabs state.common.deviceStatus
     in flow right <| [ tab Log      state.activeTab disabled
                      -- disabled for alpha release
                      --, navSpacer 5

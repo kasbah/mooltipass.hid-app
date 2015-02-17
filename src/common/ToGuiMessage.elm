@@ -3,20 +3,20 @@ module ToGuiMessage where
 -- local source
 import CommonState (..)
 
-type alias ToGuiMessage = { setLog        : (List String)
-                          , setConnected  : Int
-                          , setImportInfo : (Int,FileId,Int,Int)
-                          , setMemoryInfo : (Int, Maybe MemoryInfoData)
+type alias ToGuiMessage = { setLog          : (List String)
+                          , setDeviceStatus : Int
+                          , setImportInfo   : (Int,FileId,Int,Int)
+                          , setMemoryInfo   : (Int, Maybe MemoryInfoData)
                           }
 
 encode : CommonState -> ToGuiMessage
 encode s =
     { setLog = s.log
-    , setConnected = case s.connected of
+    , setDeviceStatus = case s.deviceStatus of
                     NotConnected -> 0
-                    Connected    -> 1
+                    Unlocked     -> 1
                     NoCard       -> 2
-                    NoPin        -> 3
+                    Locked       -> 3
     , setImportInfo = case s.importInfo of
         NoImport           -> (0,"",0,0)
         ImportRequested id -> (1,id,0,0)
@@ -32,12 +32,12 @@ encode s =
 
 decode : ToGuiMessage -> List CommonAction
 decode msg=
-    let setConnected =
-        case msg.setConnected of
+    let setDeviceStatus =
+        case msg.setDeviceStatus of
             0 -> NotConnected
-            1 -> Connected
+            1 -> Unlocked
             2 -> NoCard
-            3 -> NoPin
+            3 -> Locked
         setImportInfo = case msg.setImportInfo of
            (0,"",0,0)   -> NoImport
            (1,id,0,0)   -> ImportRequested id
@@ -49,7 +49,7 @@ decode msg=
             (1,_) -> MemManageRequested
             (2,Just d) -> MemoryData d
     in  [ SetLog msg.setLog
-        , SetConnected setConnected
+        , SetDeviceStatus setDeviceStatus
         , SetImportInfo setImportInfo
         , SetMemoryInfo setMemoryInfo
         ]

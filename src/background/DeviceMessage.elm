@@ -59,8 +59,8 @@ encode s =
                             SendImportMediaEnd
                             [SetMediaImport (MediaImportWaiting [])]
                     _ -> (e, [])
-          | s.deviceVersion == Nothing && s.common.connected == Connected -> sendCommand' SendGetVersion []
-          | s.extRequest /= NoRequest && s.common.connected == Connected ->
+          | s.deviceVersion == Nothing && s.common.deviceStatus == Unlocked -> sendCommand' SendGetVersion []
+          | s.extRequest /= NoRequest && s.common.deviceStatus == Unlocked ->
               ({e | sendCommand <-
                     Maybe.map toInts (toPacket s.currentContext s.extRequest)}
               , [ Maybe.withDefault NoOp

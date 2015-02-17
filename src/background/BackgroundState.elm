@@ -130,7 +130,7 @@ update action s =
         SetHidConnected b ->
             if not b
             then apply
-               [ CommonAction (SetConnected NotConnected)
+               [ CommonAction (SetDeviceStatus NotConnected)
                , if mediaImportActive s
                  then SetMediaImport (MediaImportError "device disconnected")
                  else NoOp
@@ -141,11 +141,11 @@ update action s =
         SetExtRequest d -> {s | extRequest <- d}
         SetMediaImport t -> setMedia t s
         SetWaitingForDevice b -> {s | waitingForDevice <- b}
-        CommonAction (SetConnected c) ->
-            let s' = {s | common <- updateCommon (SetConnected c)}
-            in if c /= s.common.connected
+        CommonAction (SetDeviceStatus c) ->
+            let s' = {s | common <- updateCommon (SetDeviceStatus c)}
+            in if c /= s.common.deviceStatus
                then update
-                        ( if mediaImportActive s && (c == NoPin || c == NotConnected)
+                        ( if mediaImportActive s && (c == Locked || c == NotConnected)
                           then SetMediaImport (MediaImportError "interrupted by device")
                           else NoOp )
                     {s' | common <-
@@ -227,7 +227,7 @@ interpret packet s =
                         {s | extRequest <- ExtNotWritten}
                     _ -> s
                 NoCardForContext ->
-                    update (CommonAction (SetConnected NoCard)) s
+                    update (CommonAction (SetDeviceStatus NoCard)) s
         ReceivedAddContext r ->
             {s | extRequest <- case s.extRequest of
                      ExtNeedsNewContext c ->
@@ -237,11 +237,11 @@ interpret packet s =
                      _ -> NoRequest
             }
         ReceivedGetStatus st ->
-            update (CommonAction (SetConnected (case st of
-                       NeedCard   -> NoCard
-                       Locked     -> NoPin
-                       LockScreen -> NoPin
-                       Unlocked   -> Connected
+            update (CommonAction (SetDeviceStatus (case st of
+                       PacketNoCard     -> NoCard
+                       PacketLocked     -> Locked
+                       PacketLockScreen -> Locked
+                       PacketUnlocked   -> Unlocked
                     ))) s
         ReceivedGetVersion v ->
                 appendToLog

@@ -1,8 +1,8 @@
 var emptyToGuiMessage =
-    { setLog        : []
-    , setConnected  : 0
-    , setImportInfo : [0,"",0,0]
-    , setMemoryInfo : [0,null]
+    { setLog          : []
+    , setDeviceStatus : 0
+    , setImportInfo   : [0,"",0,0]
+    , setMemoryInfo   : [0,null]
     };
 
 var emptyFromGuiMessage =

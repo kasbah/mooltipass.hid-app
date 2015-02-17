@@ -53,10 +53,10 @@ default =
 disabledTabs : Common.DeviceStatus -> List Tab
 disabledTabs s =
     case s of
-        Common.Connected    -> []
+        Common.Unlocked     -> []
         Common.NotConnected -> [Settings, Manage, Developer]
         Common.NoCard       -> [Settings, Manage]
-        Common.NoPin        -> [Settings, Manage, Developer]
+        Common.Locked       -> [Settings, Manage, Developer]
 
 {-| Transform the state to a new state according to an action -}
 update : Action -> GuiState -> GuiState
@@ -83,7 +83,7 @@ update action s =
                                         | not s.devEnabled
                                             && not (Developer
                                                 `member`
-                                                    disabledTabs s.common.connected)
+                                                    disabledTabs s.common.deviceStatus)
                                                     -> Developer
                                         | otherwise -> s.activeTab
                               }
@@ -113,7 +113,7 @@ update action s =
         -- state as well. The activeTab may become disabled due to setting the
         -- device state for instance.
         CommonAction a -> case a of
-                            SetConnected c ->
+                            SetDeviceStatus c ->
                                 { s | activeTab <-
                                         if s.activeTab `member` (disabledTabs c)
                                         then Log else s.activeTab

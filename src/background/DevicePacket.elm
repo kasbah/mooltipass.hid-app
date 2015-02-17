@@ -147,7 +147,7 @@ type CheckPasswordReturn = Incorrect | Correct | RequestBlocked
 type SetContextReturn = UnknownContext | ContextSet | NoCardForContext
 
 {-| Return for 'ReceivedGetStatus' -}
-type Status = NeedCard | Locked | LockScreen | Unlocked
+type Status = PacketNoCard | PacketLocked | PacketLockScreen | PacketUnlocked
 
 {-| This is (LSB, MSB) -}
 type alias FlashAddress = (Byte, Byte)
@@ -364,9 +364,9 @@ fromInts (size::messageType::payload) =
             0x70 -> if size /= 1
                     then Err "Invalid data size for 'get status'"
                     else case (List.head payload) `and` 0x7 of
-                                0x0 -> Ok <| ReceivedGetStatus NeedCard
-                                0x1 -> Ok <| ReceivedGetStatus Locked
-                                0x3 -> Ok <| ReceivedGetStatus LockScreen
-                                0x5 -> Ok <| ReceivedGetStatus Unlocked
+                                0x0 -> Ok <| ReceivedGetStatus PacketNoCard
+                                0x1 -> Ok <| ReceivedGetStatus PacketLocked
+                                0x3 -> Ok <| ReceivedGetStatus PacketLockScreen
+                                0x5 -> Ok <| ReceivedGetStatus PacketUnlocked
                                 _   -> Err "Invalid status received in 'get status'"
             _    -> Err <| "Got unknown message: " ++ toString messageType

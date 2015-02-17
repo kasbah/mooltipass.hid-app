@@ -8,7 +8,7 @@ import String
 
 {-| The background state excluding gui components -}
 type alias CommonState =
-    { connected   : DeviceStatus
+    { deviceStatus   : DeviceStatus
     , log         : List String
     , importInfo  : ImportInfo
     , memoryInfo  : MemoryInfo
@@ -17,7 +17,7 @@ type alias CommonState =
 
 default : CommonState
 default =
-    { connected   = NotConnected
+    { deviceStatus   = NotConnected
     , log         = []
     , importInfo  = NoImport
     , memoryInfo  = NoMemoryInfo
@@ -68,7 +68,7 @@ exampleMemoryInfo =
                     ]
     }
 
-type DeviceStatus = NotConnected | Connected | NoCard | NoPin
+type DeviceStatus = NotConnected | Unlocked | NoCard | Locked
 
 type ImportInfo =
       ImportRequested FileId
@@ -87,13 +87,13 @@ fileName id = case String.split ":" id of
 connectToLog : DeviceStatus -> String
 connectToLog c = case c of
     NotConnected -> "device disconnected"
-    Connected    -> "device status: unlocked"
+    Unlocked     -> "device status: unlocked"
     NoCard       -> "device status: no card present"
-    NoPin        -> "device status: locked"
+    Locked       -> "device status: locked"
 
 {-| All actions that can be performed to change state -}
 type CommonAction = SetLog (List String)
-                  | SetConnected DeviceStatus
+                  | SetDeviceStatus DeviceStatus
                   | AppendToLog String
                   | GetState
                   | SetImportInfo ImportInfo
@@ -108,7 +108,7 @@ update action s =
     case action of
         SetLog l            -> {s | log <- l}
         AppendToLog str     -> {s | log <- str::s.log}
-        SetConnected c      -> {s | connected <- c}
+        SetDeviceStatus c      -> {s | deviceStatus <- c}
         SetImportInfo i     -> {s | importInfo <- i}
         StartImportMedia id -> {s | importInfo <- ImportRequested id}
         SetMemoryInfo i     -> {s | memoryInfo <- i}
@@ -116,7 +116,7 @@ update action s =
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force
         -- an update through if we need to (like when the GUI is newly opened
-        -- and definetely needs the state)
+        -- and definetely needs the state).
         GetState            -> {s | forceUpdate <- not s.forceUpdate}
         CommonNoOp          -> s
 
