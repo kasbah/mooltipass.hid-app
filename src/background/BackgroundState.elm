@@ -103,40 +103,13 @@ type BackgroundAction = SetHidConnected     Bool
                       | SetExtAwaitingPing  Bool
                       | SetExtRequest       ExtensionRequest
                       | SetMediaImport      MediaImport
-                      | Receive             ReceivedPacket
+                      | Interpret             ReceivedPacket
                       | CommonAction        CommonAction
                       | NoOp
 
 update : BackgroundAction -> BackgroundState -> BackgroundState
 update action s =
     let updateCommon a = Common.update a s.common
-        setMedia imp =
-            let c             = s.common
-                s'            = {s | mediaImport <- imp}
-                updateInfo' i =
-                    {s' | common <- updateCommon (SetTransferInfo i)}
-            in case imp of
-                MediaImportError str    -> updateInfo' (TransferError str)
-                MediaImportRequested id -> updateInfo' (ImportRequested id)
-                MediaImportStart ps     -> case s.common.transferInfo of
-                    ImportRequested id ->
-                        updateInfo' (Importing id (length ps) (length ps))
-                    _ -> updateInfo'
-                        (TransferError
-                            "Internal state error MediaImportStart")
-                MediaImport ps          -> case s.common.transferInfo of
-                    Importing id _ t   ->
-                        updateInfo' (Importing id (length ps) t)
-                    _ -> updateInfo'
-                            (TransferError
-                                "Internal state error MediaImport")
-                MediaImportSuccess      -> case s.common.transferInfo of
-                    Importing id _ _
-                        -> updateInfo' (Imported id)
-                    _ -> updateInfo'
-                            (TransferError
-                                "Internal state error MediaImportSuccess")
-                _ -> s'
     in case action of
         SetHidConnected b ->
             if not b
@@ -150,7 +123,7 @@ update action s =
             else {s | deviceConnected <- True}
         SetExtAwaitingPing b -> {s | extAwaitingPing <- b}
         SetExtRequest d -> {s | extRequest <- d}
-        SetMediaImport t -> setMedia t
+        SetMediaImport t -> setMedia t s
         SetWaitingForDevice b -> {s | waitingForDevice <- b}
         CommonAction (SetConnected c) ->
             let s' = {s | common <- updateCommon (SetConnected c)}
@@ -171,10 +144,46 @@ update action s =
                else s
         CommonAction (StartImportMedia p) ->
             if not (mediaImportActive s)
-            then setMedia (MediaImportRequested p)
+            then setMedia (MediaImportRequested p) s
             else s
         CommonAction a -> {s | common <- updateCommon a}
-        Receive (ReceivedGetLogin ml) -> case ml of
+        Interpret p -> interpret p s
+        NoOp -> s
+
+setMedia : MediaImport -> BackgroundState -> BackgroundState
+setMedia imp s =
+    let c             = s.common
+        s'            = {s | mediaImport <- imp}
+        updateInfo' i =
+            {s' | common <- updateCommon (SetTransferInfo i)}
+        updateCommon a = Common.update a s.common
+    in case imp of
+        MediaImportError str    -> updateInfo' (TransferError str)
+        MediaImportRequested id -> updateInfo' (ImportRequested id)
+        MediaImportStart ps     -> case s.common.transferInfo of
+            ImportRequested id ->
+                updateInfo' (Importing id (length ps) (length ps))
+            _ -> updateInfo'
+                (TransferError
+                    "Internal state error MediaImportStart")
+        MediaImport ps          -> case s.common.transferInfo of
+            Importing id _ t   ->
+                updateInfo' (Importing id (length ps) t)
+            _ -> updateInfo'
+                    (TransferError
+                        "Internal state error MediaImport")
+        MediaImportSuccess      -> case s.common.transferInfo of
+            Importing id _ _
+                -> updateInfo' (Imported id)
+            _ -> updateInfo'
+                    (TransferError
+                        "Internal state error MediaImportSuccess")
+        _ -> s'
+
+interpret : ReceivedPacket -> BackgroundState -> BackgroundState
+interpret packet s =
+    case packet of
+        ReceivedGetLogin ml -> case ml of
             Just l ->
                 {s | extRequest <- case s.extRequest of
                           ExtWantsCredentials c ->
@@ -182,7 +191,7 @@ update action s =
                           _ -> NoRequest
                 }
             Nothing -> {s | extRequest <- ExtNoCredentials}
-        Receive (ReceivedGetPassword mp) -> case mp of
+        ReceivedGetPassword mp -> case mp of
             Just p ->
                 {s | extRequest <- case s.extRequest of
                           ExtNeedsPassword c ->
@@ -190,7 +199,7 @@ update action s =
                           _ -> NoRequest
                 }
             Nothing -> {s | extRequest <- ExtNoCredentials}
-        Receive (ReceivedSetLogin r) ->
+        ReceivedSetLogin r ->
             {s | extRequest <- case s.extRequest of
                      ExtWantsToWrite c ->
                          if r == Done
@@ -198,7 +207,7 @@ update action s =
                          else ExtNotWritten
                      _ -> NoRequest
             }
-        Receive (ReceivedSetPassword r) ->
+        ReceivedSetPassword r ->
             {s | extRequest <- case s.extRequest of
                      ExtNeedsToWritePassword c ->
                          if r == Done
@@ -206,7 +215,7 @@ update action s =
                          else ExtNotWritten
                      _ -> NoRequest
             }
-        Receive (ReceivedSetContext r) ->
+        ReceivedSetContext r ->
             case r of
                 ContextSet -> case s.extRequest of
                     ExtWantsCredentials c ->
@@ -232,7 +241,7 @@ update action s =
                     _ -> s
                 NoCardForContext ->
                     update (CommonAction (SetConnected NoCard)) s
-        Receive (ReceivedAddContext r) ->
+        ReceivedAddContext r ->
             {s | extRequest <- case s.extRequest of
                      ExtNeedsNewContext c ->
                          if r == Done
@@ -240,57 +249,52 @@ update action s =
                          else ExtNotWritten
                      _ -> NoRequest
             }
-        Receive (ReceivedGetStatus st) ->
+        ReceivedGetStatus st ->
             update (CommonAction (SetConnected (case st of
                        NeedCard   -> NoCard
                        Locked     -> NoPin
                        LockScreen -> NoPin
                        Unlocked   -> Connected
                     ))) s
-        Receive (ReceivedGetVersion v) ->
-            update
-                (appendToLog
+        ReceivedGetVersion v ->
+                appendToLog
                     ("device is "
                         ++ v.version ++ " "
                         ++ toString v.flashMemSize
-                        ++ "MBit"))
+                        ++ "MBit")
                 {s | deviceVersion <- Just v}
-        Receive (ReceivedImportMediaStart r) ->
+        ReceivedImportMediaStart r ->
             case s.mediaImport of
                 MediaImportStartWaiting ps ->
                     if r == Done
-                    then setMedia (MediaImport ps)
-                    else setMedia (MediaImportError "Import start failed")
-                _ -> setMedia (MediaImportError "Received unexpected start import confirmation from device")
-        Receive (ReceivedImportMedia r) ->
+                    then setMedia (MediaImport ps) s
+                    else setMedia (MediaImportError "Import start failed") s
+                _ -> setMedia (MediaImportError "Received unexpected start import confirmation from device") s
+        ReceivedImportMedia r ->
             case s.mediaImport of
                 MediaImportWaiting (p::ps) ->
                     if r == Done
-                    then setMedia (MediaImport ps)
-                    else setMedia (MediaImportError "Import write failed")
-                _ -> setMedia (MediaImportError "Received unexpected imported data confirmation from device")
-        Receive (ReceivedImportMediaEnd r) ->
+                    then setMedia (MediaImport ps) s
+                    else setMedia (MediaImportError "Import write failed") s
+                _ -> setMedia (MediaImportError "Received unexpected imported data confirmation from device") s
+        ReceivedImportMediaEnd r ->
             case s.mediaImport of
                 MediaImportWaiting [] ->
                     if r == Done
-                    then setMedia MediaImportSuccess
-                    else setMedia (MediaImportError "Import end-write failed")
-                _ -> setMedia (MediaImportError "Received unexpected end import confirmation from device")
-        Receive x ->
-            update
-                (appendToLog
-                    ("Error: received unhandled packet "
-                        ++ toString x))
+                    then setMedia MediaImportSuccess s
+                    else setMedia (MediaImportError "Import end-write failed") s
+                _ -> setMedia (MediaImportError "Received unexpected end import confirmation from device") s
+        x -> appendToLog
+                ("Error: received unhandled packet " ++ toString x)
                 s
-        NoOp -> s
 
-
-fromPacket :  (Result Error ReceivedPacket) -> BackgroundAction
-fromPacket r = case r of
-    Err err -> appendToLog ("HID Error: " ++ err)
-    Ok p    -> Receive p
+fromResult :  Result Error ReceivedPacket -> BackgroundAction
+fromResult r = case r of
+    Err err -> appendToLog' ("HID Error: " ++ err)
+    Ok p    -> Interpret p
 
 apply : List BackgroundAction -> BackgroundState -> BackgroundState
 apply actions state = List.foldr update state actions
 
-appendToLog s = CommonAction (AppendToLog s)
+appendToLog' str = CommonAction (AppendToLog str)
+appendToLog str state = update (appendToLog' str) state

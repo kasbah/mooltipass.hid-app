@@ -34,7 +34,7 @@ decode message =
         Maybe.oneOf
             [ Maybe.map (CommonAction << Common.AppendToLog) appendToLog
             , Maybe.map SetHidConnected setHidConnected
-            , Maybe.map (fromPacket << fromInts) receiveCommand
+            , Maybe.map (fromResult << fromInts) receiveCommand
             ]
     in case Maybe.withDefault NoOp (decode' message) of
         NoOp -> []
