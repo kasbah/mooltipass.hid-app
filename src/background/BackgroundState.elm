@@ -46,6 +46,20 @@ type MemoryManageState =
     | MemWriteSuccess
     | MemManageError  String
 
+memoryManageBusy : MemoryManageState -> Bool
+memoryManageBusy mms = case mms of
+    NotManaging       -> False
+    MemManageError _  -> False
+    MemWriteSuccess   -> False
+    MemReadSuccess _  -> False
+    _                 -> True
+
+memoryManaging : MemoryManageState -> Bool
+memoryManaging mms = case mms of
+    NotManaging       -> False
+    MemManageError _  -> False
+    _                 -> True
+
 type MediaImport =
       NoMediaImport
     | MediaImportRequested    FileId
@@ -116,7 +130,8 @@ type BackgroundAction = SetHidConnected     Bool
                       | SetExtAwaitingPing  Bool
                       | SetExtRequest       ExtensionRequest
                       | SetMediaImport      MediaImport
-                      | Interpret             ReceivedPacket
+                      | SetMemManage        MemoryManageState
+                      | Interpret           ReceivedPacket
                       | CommonAction        CommonAction
                       | NoOp
 
@@ -141,6 +156,16 @@ update action s =
         SetExtRequest d -> {s | extRequest <- d}
         SetMediaImport t -> setMedia t s
         SetWaitingForDevice b -> {s | waitingForDevice <- b}
+        SetMemManage m -> {s | memoryManage <- m}
+        CommonAction StartMemManage ->
+            if memoryManaging s.memoryManage
+            then
+                update
+                    (appendToLog' "Error: Already in memory-manage mode")
+                    {s | common <- updateCommon (SetMemoryInfo NoMemoryInfo)}
+            else
+                { s | memoryManage <- MemManageRequested
+                    , common <- updateCommon (SetMemoryInfo MemInfoRequested)}
         CommonAction (SetDeviceStatus c) ->
             let s' = {s | common <- updateCommon (SetDeviceStatus c)}
             in if c /= s.common.deviceStatus

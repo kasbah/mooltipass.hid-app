@@ -67,8 +67,8 @@ update action s =
                 ("Error: trying to " ++ str ++ " favorite without having memory data")
                 s
     in case action of
-        (ChangeTab t) -> if t == Manage && s.unsavedMemInfo == NoMemoryInfo
-                         then update
+        ChangeTab t -> if t == Manage && s.unsavedMemInfo == NoMemoryInfo
+                         then update (CommonAction (AppendToLog "hi")) <| update
                                 (CommonAction StartMemManage)
                                 {s | activeTab <- Manage}
                          else {s | activeTab <- t}
@@ -95,19 +95,19 @@ update action s =
             _ -> {s | importMedia <- r}
         AddFav f        ->
             case s.unsavedMemInfo of
-                MemoryData d -> {s | unsavedMemInfo <- addToFavs f d}
+                MemoryInfo d -> {s | unsavedMemInfo <- addToFavs f d}
                 _ -> errorTryingTo "add"
         RemoveFav f   ->
             case s.unsavedMemInfo of
-                MemoryData d -> {s | unsavedMemInfo <- removeFromFavs f d}
+                MemoryInfo d -> {s | unsavedMemInfo <- removeFromFavs f d}
                 _ -> errorTryingTo "remove"
         MoveFavUp f   ->
             case s.unsavedMemInfo of
-                MemoryData d -> {s | unsavedMemInfo <- moveFavUp f d}
+                MemoryInfo d -> {s | unsavedMemInfo <- moveFavUp f d}
                 _ -> errorTryingTo "move"
         MoveFavDown f   ->
             case s.unsavedMemInfo of
-                MemoryData d -> {s | unsavedMemInfo <- moveFavDown f d}
+                MemoryInfo d -> {s | unsavedMemInfo <- moveFavDown f d}
                 _ -> errorTryingTo "move"
         -- An action on the common state can have an affect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
@@ -121,8 +121,8 @@ update action s =
                                 }
                             SetMemoryInfo i ->
                                 case i of
-                                    (MemoryData d) -> case s.common.memoryInfo of
-                                        (MemoryData cd) ->
+                                    (MemoryInfo d) -> case s.common.memoryInfo of
+                                        (MemoryInfo cd) ->
                                             if d /= cd
                                             then {s | unsavedMemInfo <- i
                                                     , common <- updateCommon a
@@ -135,7 +135,7 @@ update action s =
                                             , common <- updateCommon a
                                          }
                             StartMemManage ->
-                                {s | unsavedMemInfo <- MemManageRequested
+                                {s | unsavedMemInfo <- MemInfoRequested
                                    , common <- updateCommon a
                                 }
                             _ -> {s | common <- updateCommon a}
@@ -143,26 +143,26 @@ update action s =
 
 removeFromFavs : (String, String) -> MemoryInfoData -> MemoryInfo
 removeFromFavs f info =
-    MemoryData
+    MemoryInfo
     {info | favorites <-
         map (\x -> if x == (Just f) then Nothing else x) info.favorites
     }
 
 addToFavs : (String, String) -> MemoryInfoData -> MemoryInfo
 addToFavs f info =
-    MemoryData
+    MemoryInfo
     {info | favorites <- replaceFirst Nothing (Just f) info.favorites}
 
 moveFavUp : (String, String) -> MemoryInfoData -> MemoryInfo
 moveFavUp f info =
-    MemoryData
+    MemoryInfo
     {info | favorites <-
         reverse <| foldl (switchFav f) [] info.favorites
     }
 
 moveFavDown : (String, String) -> MemoryInfoData -> MemoryInfo
 moveFavDown f info =
-    MemoryData
+    MemoryInfo
     {info | favorites <-
         foldr (switchFav f) [] info.favorites
     }

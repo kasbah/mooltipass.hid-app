@@ -31,8 +31,8 @@ emptyFavorites = [Nothing,Nothing,Nothing,Nothing,Nothing
                  ,Nothing,Nothing,Nothing,Nothing,Nothing]
 
 type MemoryInfo =
-      MemoryData MemoryInfoData
-    | MemManageRequested
+      MemoryInfo MemoryInfoData
+    | MemInfoRequested
     | NoMemoryInfo
 
 type alias MemoryInfoData =
@@ -41,7 +41,7 @@ type alias MemoryInfoData =
     }
 
 exampleMemoryInfo =
-    MemoryData
+    MemoryInfo
     { credentials = [ ("github.com", ["kasbah", "monostable"])
                     , ("oshpark.com",["kaspar.emanuel@gmail.com"])
                     , ("amazon.com" ,["kaspar.bumke+nu-server@gmail.com"])
@@ -112,7 +112,7 @@ update action s =
         SetImportInfo i     -> {s | importInfo <- i}
         StartImportMedia id -> {s | importInfo <- ImportRequested id}
         SetMemoryInfo i     -> {s | memoryInfo <- i}
-        StartMemManage      -> {s | memoryInfo <- MemManageRequested}
+        StartMemManage      -> {s | memoryInfo <- MemInfoRequested}
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force
         -- an update through if we need to (like when the GUI is newly opened

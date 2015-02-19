@@ -21,9 +21,10 @@ var elm = Elm.worker(
     }
 );
 
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.toBackground !== undefined) {
-        elm.ports.fromGUI.send(request.toBackground);
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    if (message.toBackground !== undefined) {
+        console.log(message);
+        elm.ports.fromGUI.send(message.toBackground);
     }
 });
 

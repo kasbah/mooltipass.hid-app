@@ -25,8 +25,8 @@ encode s =
         ImportError s      -> (4,s ,0,0)
     , setMemoryInfo = case s.memoryInfo of
         NoMemoryInfo       -> (0, Nothing)
-        MemManageRequested -> (1, Nothing)
-        MemoryData d       -> (2, Just d)
+        MemInfoRequested -> (1, Nothing)
+        MemoryInfo d       -> (2, Just d)
 
     }
 
@@ -46,8 +46,8 @@ decode msg=
            (4,s,0,0)    -> ImportError s
         setMemoryInfo = case msg.setMemoryInfo of
             (0,_) -> NoMemoryInfo
-            (1,_) -> MemManageRequested
-            (2,Just d) -> MemoryData d
+            (1,_) -> MemInfoRequested
+            (2,Just d) -> MemoryInfo d
     in  [ SetLog msg.setLog
         , SetDeviceStatus setDeviceStatus
         , SetImportInfo setImportInfo

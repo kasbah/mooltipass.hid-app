@@ -64,8 +64,8 @@ content (w,h) info =
                             middle
                             reEnterButton
                       ]
-        MemoryData d       -> showMem d
-        MemManageRequested ->
+        MemoryInfo d       -> showMem d
+        MemInfoRequested ->
             leftAligned
                 <| whiteText "please accept memory management mode on the device"
 
