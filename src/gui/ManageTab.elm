@@ -36,8 +36,8 @@ manageTab (w,h) i =
 
 content : (Int, Int) -> MemInfo -> Element
 content (w,h) info =
-    let saveButton = button (send commonActions CommonNoOp) "save"
-        cancelButton = button (send commonActions CommonNoOp) "cancel"
+    let saveButton       = button (send commonActions CommonNoOp) "save"
+        cancelButton     = button (send commonActions CommonNoOp) "cancel"
         showMem infodata = container w h midTop <| flow down
             [ favorites w infodata
             , spacer 1 heights.manageSpacer
@@ -53,25 +53,24 @@ content (w,h) info =
                 <| flow right [cancelButton, spacer 16 1, saveButton]
             ]
         reEnterButton = button (send commonActions StartMemManage) "re-enter"
-        noInfoText = leftAligned <| whiteText "manage mode exited"
-    in case info of
-        NoMemInfo      ->
-            flow down [ noInfoText
+        modeExited    = leftAligned <| whiteText "manage mode exited"
+        reEnter       =
+            flow down [ modeExited
                       , spacer 1 16
                       , container
-                            (widthOf noInfoText)
+                            (widthOf modeExited)
                             (heights.button + 4)
                             middle
                             reEnterButton
                       ]
-        MemInfo d      -> showMem d
-        MemInfoRequest ->
-            leftAligned
-                <| whiteText "please accept memory management mode on the device"
-        MemInfoWaitingForUser ->
-            leftAligned
-                <| whiteText "please accept memory management mode on the device"
-        _ -> Element.empty
+        pleaseAccept = leftAligned
+            <| whiteText "please accept memory management mode on the device"
+    in case info of
+        NoMemInfo             -> reEnter
+        MemInfo d             -> showMem d
+        MemInfoRequest        -> pleaseAccept
+        MemInfoWaitingForUser -> pleaseAccept
+        _                     -> Element.empty
 
 favorites : Int -> MemInfoData -> Element
 favorites w info =
