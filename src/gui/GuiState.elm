@@ -81,8 +81,7 @@ update action s =
                                             && s.devEnabled
                                                     -> Log
                                         | not s.devEnabled
-                                            && not (Developer
-                                                `member`
+                                            && not (Developer `member`
                                                     disabledTabs s.common.deviceStatus)
                                                     -> Developer
                                         | otherwise -> s.activeTab
@@ -112,33 +111,27 @@ update action s =
         -- An action on the common state can have an affect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
         -- device state for instance.
-        CommonAction a -> case a of
-                            SetDeviceStatus c ->
-                                { s | activeTab <-
-                                        if s.activeTab `member` (disabledTabs c)
-                                        then Log else s.activeTab
-                                    , common <- updateCommon a
-                                }
-                            SetMemoryInfo i ->
-                                case i of
-                                    (MemoryInfo d) -> case s.common.memoryInfo of
-                                        (MemoryInfo cd) ->
-                                            if d /= cd
-                                            then {s | unsavedMemInfo <- i
-                                                    , common <- updateCommon a
-                                                 }
-                                            else s
-                                        _ -> {s | unsavedMemInfo <- i
-                                                , common <- updateCommon a
-                                             }
-                                    _ -> {s | unsavedMemInfo <- i
-                                            , common <- updateCommon a
-                                         }
-                            StartMemManage ->
-                                {s | unsavedMemInfo <- MemInfoRequested
-                                   , common <- updateCommon a
-                                }
-                            _ -> {s | common <- updateCommon a}
+        CommonAction a ->
+            let s' = {s | common <- updateCommon a}
+            in case a of
+                SetDeviceStatus c ->
+                    { s' | activeTab <-
+                            if s.activeTab `member` (disabledTabs c)
+                            then Log else s.activeTab
+                    }
+                SetMemoryInfo i ->
+                    let updateMemInfo = {s' | unsavedMemInfo <- i}
+                    in case i of
+                        MemoryInfo d -> case s.common.memoryInfo of
+                            MemoryInfo cd ->
+                                if d /= cd
+                                then updateMemInfo
+                                else s
+                            _ -> updateMemInfo
+                        _ -> updateMemInfo
+                StartMemManage ->
+                    {s' | unsavedMemInfo <- MemInfoRequested}
+                _ -> s'
         NoOp -> s
 
 removeFromFavs : (String, String) -> MemoryInfoData -> MemoryInfo
