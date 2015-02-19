@@ -305,7 +305,8 @@ interpret packet s =
                     then setMedia MediaImportSuccess s
                     else setMedia (MediaImportError "Import end-write failed") s
                 _ -> setMedia (MediaImportError (unexpected "ImportMediaEnd")) s
-        ReceivedManageModeStart r -> setMemManage (if r == Done then MemManageRead else MemManageDenied) s
+        ReceivedManageModeStart r ->
+            setMemManage (if r == Done then MemManageRead else MemManageDenied) s
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s
@@ -314,21 +315,21 @@ setMemManage : MemManageState -> BackgroundState -> BackgroundState
 setMemManage m s =
     let s' = setInfo (memManageToInfo m)
         setInfo i = {s | common <- updateCommon (SetMemInfo i )}
+        setManage m' = { s' | memoryManage <- m'}
         updateCommon a = Common.update a s.common
     in case m of
         MemManageRequested ->
-            if memoryManaging s.memoryManage
+            if not (memoryManaging s.memoryManage)
             then
-                update
-                    (appendToLog'
-                        "Error: Mem manage mode request when already in mem manage mode")
-                    {s | common <- updateCommon (SetMemInfo NoMemInfo)}
+                setManage MemManageRequested
             else
-                { s' | memoryManage <- MemManageRequested}
+                setManage
+                    (MemManageError
+                        "manage mode requested while aready in manage mode")
         MemManageDenied ->
             if s.memoryManage == MemManageWaiting
-            then { s' | memoryManage <- MemManageDenied }
-            else { s' | memoryManage <- MemManageError (unexpected "memory manage denied")}
+            then setManage MemManageDenied
+            else setManage <| MemManageError (unexpected "memory manage denied")
         _ -> s
 
 setMedia : MediaImport -> BackgroundState -> BackgroundState
@@ -369,4 +370,3 @@ appendToLog' str = CommonAction (AppendToLog str)
 appendToLog str state = update (appendToLog' str) state
 
 unexpected str = "Received unexpected " ++ str ++  " from device"
-
