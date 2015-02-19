@@ -18,7 +18,7 @@ type alias BackgroundState = { deviceConnected  : Bool
                              , extAwaitingPing  : Bool
                              , extRequest       : ExtensionRequest
                              , mediaImport      : MediaImport
-                             , memoryManage     : MemoryManageState
+                             , memoryManage     : MemManageState
                              , common           : CommonState
                              }
 
@@ -34,27 +34,27 @@ default = { deviceConnected  = False
           , common           = Common.default
           }
 
-type MemoryManageState =
+type MemManageState =
       NotManaging
     | MemManageRequested
     | MemManageWaiting
-    | MemRead
-    | MemReadWaiting
-    | MemReadSuccess  (ParentNode, List Favorite)
-    | MemWrite        (List SendPacket)
-    | MemWriteWaiting (List SendPacket)
-    | MemWriteSuccess
+    | MemManageRead
+    | MemManageReadWaiting
+    | MemManageReadSuccess  (ParentNode, List Favorite)
+    | MemManageWrite        (List SendPacket)
+    | MemManageWriteWaiting (List SendPacket)
+    | MemManageWriteSuccess
     | MemManageError  String
 
-memoryManageBusy : MemoryManageState -> Bool
+memoryManageBusy : MemManageState -> Bool
 memoryManageBusy mms = case mms of
     NotManaging       -> False
     MemManageError _  -> False
-    MemWriteSuccess   -> False
-    MemReadSuccess _  -> False
+    MemManageWriteSuccess   -> False
+    MemManageReadSuccess _  -> False
     _                 -> True
 
-memoryManaging : MemoryManageState -> Bool
+memoryManaging : MemManageState -> Bool
 memoryManaging mms = case mms of
     NotManaging       -> False
     MemManageError _  -> False
@@ -130,7 +130,7 @@ type BackgroundAction = SetHidConnected     Bool
                       | SetExtAwaitingPing  Bool
                       | SetExtRequest       ExtensionRequest
                       | SetMediaImport      MediaImport
-                      | SetMemManage        MemoryManageState
+                      | SetMemManage        MemManageState
                       | Interpret           ReceivedPacket
                       | CommonAction        CommonAction
                       | NoOp
@@ -163,10 +163,10 @@ update action s =
                 update
                     (appendToLog'
                         "Error: Mem manage mode request when already in mem manage mode")
-                    {s | common <- updateCommon (SetMemoryInfo NoMemoryInfo)}
+                    {s | common <- updateCommon (SetMemInfo NoMemInfo)}
             else
                 { s | memoryManage <- MemManageRequested
-                    , common <- updateCommon (SetMemoryInfo MemInfoWaiting)}
+                    , common <- updateCommon (SetMemInfo MemInfoWaitingForUser)}
         CommonAction (SetDeviceStatus c) ->
             let s' = {s | common <- updateCommon (SetDeviceStatus c)}
             in if c /= s.common.deviceStatus
@@ -191,6 +191,21 @@ update action s =
         CommonAction a -> {s | common <- updateCommon a}
         Interpret p -> interpret p s
         NoOp -> s
+
+
+memManageToInfo : MemManageState -> MemInfo
+memManageToInfo mm = case mm of
+    NotManaging             -> NoMemInfo
+    MemManageRequested      -> MemInfoWaitingForUser
+    MemManageWaiting        -> MemInfoWaitingForUser
+    MemManageRead           -> MemInfoWaitingForDevice
+    MemManageReadWaiting    -> MemInfoWaitingForDevice
+    --MemManageReadSuccess (pnode, favs)  -> MemInfo
+    MemManageWrite        _ -> MemInfoWaitingForDevice
+    MemManageWriteWaiting _ -> MemInfoWaitingForDevice
+    MemManageWriteSuccess   -> MemInfoWaitingForDevice
+    MemManageError  _       -> NoMemInfo
+
 
 
 interpret : ReceivedPacket -> BackgroundState -> BackgroundState
@@ -297,6 +312,9 @@ interpret packet s =
                     then setMedia MediaImportSuccess s
                     else setMedia (MediaImportError "Import end-write failed") s
                 _ -> setMedia (MediaImportError (unexpected "ImportMediaEnd")) s
+        ReceivedManageModeStart r ->
+            case s.memoryManage of
+                MemManageWaiting -> {s | memoryManage <- MemManageRead}
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s

@@ -38,8 +38,8 @@ type SendPacket =
    | SendImportEeprom       ByteString
    | SendImportEepromEnd
    | SendGetRandomNumber
-   | SendMemoryManageModeStart
-   | SendMemoryManageModeEnd
+   | SendMemManageModeStart
+   | SendMemManageModeEnd
    | SendImportMediaStart
    | SendImportMedia        ByteArray
    | SendImportMediaEnd
@@ -219,8 +219,8 @@ toInts msg =
         SendExportFlashStart      -> zeroSize 0x45
         SendExportEepromStart     -> zeroSize 0x46
         SendGetRandomNumber       -> zeroSize 0x4B
-        SendMemoryManageModeStart -> zeroSize 0x50
-        SendMemoryManageModeEnd   -> zeroSize 0x51
+        SendMemManageModeStart -> zeroSize 0x50
+        SendMemManageModeEnd   -> zeroSize 0x51
         SendImportMediaStart      -> zeroSize 0x52
         SendImportMedia  a        -> byteArray 0x53 a
         SendImportMediaEnd        -> zeroSize 0x54

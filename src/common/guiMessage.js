@@ -2,7 +2,7 @@ var emptyToGuiMessage =
     { setLog          : []
     , setDeviceStatus : 0
     , setImportInfo   : [0,"",0,0]
-    , setMemoryInfo   : [0,null]
+    , setMemInfo   : [0,null]
     };
 
 var emptyFromGuiMessage =

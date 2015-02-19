@@ -39,8 +39,8 @@ port fromChrome : Signal FromChromeMessage
 state : Signal GuiState
 state = map (\(_,_,s) -> s) output
 
-forbg : GuiState -> (FromGuiMessage, Action)
-forbg s =
+forBg : GuiState -> (FromGuiMessage, Action)
+forBg s =
     let e = emptyFromGuiMessage
         mImportRequested = case s.importMedia of
             RequestFile _ -> True
@@ -52,7 +52,7 @@ forbg s =
                 , SetImportMedia NotRequested)
             _             -> (e, NoOp)
         | s.unsavedMemInfo == Common.MemInfoRequest ->
-            (FromGuiMessage.encode Common.StartMemManage, SetUnsavedMem Common.MemInfoWaiting)
+            (FromGuiMessage.encode Common.StartMemManage, SetUnsavedMem Common.MemInfoWaitingForUser)
         | otherwise -> (e, NoOp)
 
 output : Signal (ToChromeMessage, FromGuiMessage, GuiState)
@@ -61,7 +61,7 @@ output =
         let s'        = apply ias s
             (tcm, a1) = ChromeMessage.encode s'
             s''       = update a1 s'
-            (fgm, a2) = forbg s''
+            (fgm, a2) = forBg s''
         in (tcm, fgm, update a2 s'')
     in foldp go
         (emptyToChromeMessage, emptyFromGuiMessage, default)

@@ -23,7 +23,7 @@ type alias GuiState =
     , iconClicked    : Int
     , devEnabled     : Bool
     , importMedia    : ImportRequest
-    , unsavedMemInfo : MemoryInfo
+    , unsavedMemInfo : MemInfo
     , common         : CommonState
     }
 
@@ -31,7 +31,7 @@ type alias GuiState =
 type Action = ChangeTab Tab
             | ClickIcon
             | SetImportMedia ImportRequest
-            | SetUnsavedMem MemoryInfo
+            | SetUnsavedMem MemInfo
             | CommonAction CommonAction
             | AddFav (String, String)
             | RemoveFav (String, String)
@@ -46,7 +46,7 @@ default =
     , iconClicked    = 0
     , devEnabled     = False
     , importMedia    = NotRequested
-    , unsavedMemInfo = NoMemoryInfo
+    , unsavedMemInfo = NoMemInfo
     , common         = Common.default
     }
 
@@ -68,7 +68,7 @@ update action s =
                 ("Error: trying to " ++ str ++ " favorite without having memory data")
                 s
     in case action of
-        ChangeTab t -> if t == Manage && s.unsavedMemInfo == NoMemoryInfo
+        ChangeTab t -> if t == Manage && s.unsavedMemInfo == NoMemInfo
                          then {s | activeTab <- Manage
                                  , unsavedMemInfo <- MemInfoRequest
                               }
@@ -95,19 +95,19 @@ update action s =
             _ -> {s | importMedia <- r}
         AddFav f        ->
             case s.unsavedMemInfo of
-                MemoryInfo d -> {s | unsavedMemInfo <- addToFavs f d}
+                MemInfo d -> {s | unsavedMemInfo <- addToFavs f d}
                 _ -> errorTryingTo "add"
         RemoveFav f   ->
             case s.unsavedMemInfo of
-                MemoryInfo d -> {s | unsavedMemInfo <- removeFromFavs f d}
+                MemInfo d -> {s | unsavedMemInfo <- removeFromFavs f d}
                 _ -> errorTryingTo "remove"
         MoveFavUp f   ->
             case s.unsavedMemInfo of
-                MemoryInfo d -> {s | unsavedMemInfo <- moveFavUp f d}
+                MemInfo d -> {s | unsavedMemInfo <- moveFavUp f d}
                 _ -> errorTryingTo "move"
         MoveFavDown f   ->
             case s.unsavedMemInfo of
-                MemoryInfo d -> {s | unsavedMemInfo <- moveFavDown f d}
+                MemInfo d -> {s | unsavedMemInfo <- moveFavDown f d}
                 _ -> errorTryingTo "move"
         SetUnsavedMem i -> {s | unsavedMemInfo <- i}
         -- An action on the common state can have an affect on the gui-only
@@ -121,11 +121,11 @@ update action s =
                             if s.activeTab `member` (disabledTabs c)
                             then Log else s.activeTab
                     }
-                SetMemoryInfo i ->
+                SetMemInfo i ->
                     let updateMemInfo = {s' | unsavedMemInfo <- i}
                     in case i of
-                        MemoryInfo d -> case s.common.memoryInfo of
-                            MemoryInfo cd ->
+                        MemInfo d -> case s.common.memoryInfo of
+                            MemInfo cd ->
                                 if d /= cd
                                 then updateMemInfo
                                 else s
@@ -134,28 +134,28 @@ update action s =
                 _ -> s'
         NoOp -> s
 
-removeFromFavs : (String, String) -> MemoryInfoData -> MemoryInfo
+removeFromFavs : (String, String) -> MemInfoData -> MemInfo
 removeFromFavs f info =
-    MemoryInfo
+    MemInfo
     {info | favorites <-
         map (\x -> if x == (Just f) then Nothing else x) info.favorites
     }
 
-addToFavs : (String, String) -> MemoryInfoData -> MemoryInfo
+addToFavs : (String, String) -> MemInfoData -> MemInfo
 addToFavs f info =
-    MemoryInfo
+    MemInfo
     {info | favorites <- replaceFirst Nothing (Just f) info.favorites}
 
-moveFavUp : (String, String) -> MemoryInfoData -> MemoryInfo
+moveFavUp : (String, String) -> MemInfoData -> MemInfo
 moveFavUp f info =
-    MemoryInfo
+    MemInfo
     {info | favorites <-
         reverse <| foldl (switchFav f) [] info.favorites
     }
 
-moveFavDown : (String, String) -> MemoryInfoData -> MemoryInfo
+moveFavDown : (String, String) -> MemInfoData -> MemInfo
 moveFavDown f info =
-    MemoryInfo
+    MemInfo
     {info | favorites <-
         foldr (switchFav f) [] info.favorites
     }

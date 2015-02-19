@@ -11,7 +11,7 @@ type alias CommonState =
     { deviceStatus   : DeviceStatus
     , log         : List String
     , importInfo  : ImportInfo
-    , memoryInfo  : MemoryInfo
+    , memoryInfo  : MemInfo
     , forceUpdate : Bool
     }
 
@@ -20,7 +20,7 @@ default =
     { deviceStatus   = NotConnected
     , log         = []
     , importInfo  = NoImport
-    , memoryInfo  = NoMemoryInfo
+    , memoryInfo  = NoMemInfo
     , forceUpdate = True
     }
 
@@ -30,19 +30,20 @@ emptyFavorites = [Nothing,Nothing,Nothing,Nothing,Nothing
                  ,Nothing,Nothing,Nothing,Nothing,Nothing
                  ,Nothing,Nothing,Nothing,Nothing,Nothing]
 
-type MemoryInfo =
-      MemoryInfo MemoryInfoData
+type MemInfo =
+      MemInfo MemInfoData
     | MemInfoRequest
-    | MemInfoWaiting
-    | NoMemoryInfo
+    | MemInfoWaitingForUser
+    | MemInfoWaitingForDevice
+    | NoMemInfo
 
-type alias MemoryInfoData =
+type alias MemInfoData =
     { credentials : List (String, List String)
     , favorites   : List Favorite
     }
 
-exampleMemoryInfo =
-    MemoryInfo
+exampleMemInfo =
+    MemInfo
     { credentials = [ ("github.com", ["kasbah", "monostable"])
                     , ("oshpark.com",["kaspar.emanuel@gmail.com"])
                     , ("amazon.com" ,["kaspar.bumke+nu-server@gmail.com"])
@@ -99,7 +100,7 @@ type CommonAction = SetLog (List String)
                   | GetState
                   | SetImportInfo ImportInfo
                   | StartImportMedia FileId
-                  | SetMemoryInfo MemoryInfo
+                  | SetMemInfo MemInfo
                   | StartMemManage
                   | CommonNoOp
 
@@ -112,7 +113,7 @@ update action s =
         SetDeviceStatus c      -> {s | deviceStatus <- c}
         SetImportInfo i     -> {s | importInfo <- i}
         StartImportMedia id -> {s | importInfo <- ImportRequested id}
-        SetMemoryInfo i     -> {s | memoryInfo <- i}
+        SetMemInfo i     -> {s | memoryInfo <- i}
         StartMemManage      -> {s | memoryInfo <- MemInfoRequest}
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force

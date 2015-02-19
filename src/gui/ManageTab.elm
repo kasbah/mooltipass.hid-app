@@ -26,7 +26,7 @@ import Actions (..)
 import Util (..)
 
 
-manageTab : (Int, Int) -> MemoryInfo -> Element
+manageTab : (Int, Int) -> MemInfo -> Element
 manageTab (w,h) i =
     let contentH = h - 32
         contentW = w - 64
@@ -34,7 +34,7 @@ manageTab (w,h) i =
             <| content (contentW, contentH) i
     in container w h middle content'
 
-content : (Int, Int) -> MemoryInfo -> Element
+content : (Int, Int) -> MemInfo -> Element
 content (w,h) info =
     let saveButton = button (send commonActions CommonNoOp) "save"
         cancelButton = button (send commonActions CommonNoOp) "cancel"
@@ -55,7 +55,7 @@ content (w,h) info =
         reEnterButton = button (send commonActions StartMemManage) "re-enter"
         noInfoText = leftAligned <| whiteText "manage mode exited"
     in case info of
-        NoMemoryInfo       ->
+        NoMemInfo      ->
             flow down [ noInfoText
                       , spacer 1 16
                       , container
@@ -64,16 +64,16 @@ content (w,h) info =
                             middle
                             reEnterButton
                       ]
-        MemoryInfo d       -> showMem d
+        MemInfo d      -> showMem d
         MemInfoRequest ->
             leftAligned
                 <| whiteText "please accept memory management mode on the device"
-        MemInfoWaiting ->
+        MemInfoWaitingForUser ->
             leftAligned
                 <| whiteText "please accept memory management mode on the device"
         _ -> Element.empty
 
-favorites : Int -> MemoryInfoData -> Element
+favorites : Int -> MemInfoData -> Element
 favorites w info =
     let style =
             Html.Attributes.style
@@ -151,7 +151,7 @@ favorite w (n,maybeF) =
        [Html.Attributes.style [("position", "relative")]]
        [Html.fromElement elem]
 
-credentials : (Int, Int) -> MemoryInfoData -> Element
+credentials : (Int, Int) -> MemInfoData -> Element
 credentials (w,h) i =
     let ht = heights.manageTitle
         titleBg = collage w ht

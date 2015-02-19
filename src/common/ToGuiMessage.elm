@@ -6,7 +6,7 @@ import CommonState (..)
 type alias ToGuiMessage = { setLog          : (List String)
                           , setDeviceStatus : Int
                           , setImportInfo   : (Int,FileId,Int,Int)
-                          , setMemoryInfo   : (Int, Maybe MemoryInfoData)
+                          , setMemInfo   : (Int, Maybe MemInfoData)
                           }
 
 encode : CommonState -> ToGuiMessage
@@ -23,11 +23,11 @@ encode s =
         Importing id i1 i2 -> (2,id,i1,i2)
         Imported id        -> (3,id,0,0)
         ImportError s      -> (4,s ,0,0)
-    , setMemoryInfo = case s.memoryInfo of
-        NoMemoryInfo       -> (0, Nothing)
+    , setMemInfo = case s.memoryInfo of
+        NoMemInfo       -> (0, Nothing)
         MemInfoRequest     -> (1, Nothing)
-        MemInfoWaiting     -> (2, Nothing)
-        MemoryInfo d       -> (3, Just d)
+        MemInfoWaitingForUser     -> (2, Nothing)
+        MemInfo d       -> (3, Just d)
 
     }
 
@@ -45,13 +45,13 @@ decode msg=
            (2,id,i1,i2) -> Importing id i1 i2
            (3,id,0,0)   -> Imported id
            (4,s,0,0)    -> ImportError s
-        setMemoryInfo = case msg.setMemoryInfo of
-            (0,_)      -> NoMemoryInfo
+        setMemInfo = case msg.setMemInfo of
+            (0,_)      -> NoMemInfo
             (1,_)      -> MemInfoRequest
-            (2,_)      -> MemInfoWaiting
-            (3,Just d) -> MemoryInfo d
+            (2,_)      -> MemInfoWaitingForUser
+            (3,Just d) -> MemInfo d
     in  [ SetLog msg.setLog
         , SetDeviceStatus setDeviceStatus
         , SetImportInfo setImportInfo
-        , SetMemoryInfo setMemoryInfo
+        , SetMemInfo setMemInfo
         ]

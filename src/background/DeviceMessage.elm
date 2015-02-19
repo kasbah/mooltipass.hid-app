@@ -64,7 +64,7 @@ encode s =
                 -> sendCommand' SendGetVersion []
           | s.memoryManage == MemManageRequested ->
               sendCommand'
-                 SendMemoryManageModeStart
+                 SendMemManageModeStart
                  [SetMemManage MemManageWaiting]
           | s.extRequest /= NoRequest && s.common.deviceStatus == Unlocked ->
               ({e | sendCommand <-
