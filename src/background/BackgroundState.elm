@@ -39,8 +39,8 @@ type MemManageState =
     | MemManageRequested
     | MemManageWaiting
     | MemManageDenied
-    | MemManageRead
-    | MemManageReadWaiting
+    | MemManageRead         (List ReceivedPacket)
+    | MemManageReadWaiting  (List ReceivedPacket)
     | MemManageReadSuccess  (ParentNode, List Favorite)
     | MemManageWrite        (List OutgoingPacket)
     | MemManageWriteWaiting (List OutgoingPacket)
@@ -69,8 +69,8 @@ memManageToInfo mm = case mm of
     MemManageRequested      -> MemInfoWaitingForUser
     MemManageWaiting        -> MemInfoWaitingForUser
     MemManageDenied         -> NoMemInfo
-    MemManageRead           -> MemInfoWaitingForDevice
-    MemManageReadWaiting    -> MemInfoWaitingForDevice
+    MemManageRead _         -> MemInfoWaitingForDevice
+    MemManageReadWaiting _  -> MemInfoWaitingForDevice
     --MemManageReadSuccess (pnode, favs)  -> MemInfo
     MemManageWrite        _ -> MemInfoWaitingForDevice
     MemManageWriteWaiting _ -> MemInfoWaitingForDevice
@@ -306,7 +306,7 @@ interpret packet s =
                     else setMedia (MediaImportError "Import end-write failed") s
                 _ -> setMedia (MediaImportError (unexpected "ImportMediaEnd")) s
         ReceivedManageModeStart r ->
-            setMemManage (if r == Done then MemManageRead else MemManageDenied) s
+            setMemManage (if r == Done then MemManageRead [] else MemManageDenied) s
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s
