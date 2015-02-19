@@ -65,10 +65,13 @@ content (w,h) info =
                             reEnterButton
                       ]
         MemoryInfo d       -> showMem d
-        MemInfoRequested ->
+        MemInfoRequest ->
             leftAligned
                 <| whiteText "please accept memory management mode on the device"
-
+        MemInfoWaiting ->
+            leftAligned
+                <| whiteText "please accept memory management mode on the device"
+        _ -> Element.empty
 
 favorites : Int -> MemoryInfoData -> Element
 favorites w info =

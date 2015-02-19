@@ -31,6 +31,7 @@ type alias GuiState =
 type Action = ChangeTab Tab
             | ClickIcon
             | SetImportMedia ImportRequest
+            | SetUnsavedMem MemoryInfo
             | CommonAction CommonAction
             | AddFav (String, String)
             | RemoveFav (String, String)
@@ -68,9 +69,9 @@ update action s =
                 s
     in case action of
         ChangeTab t -> if t == Manage && s.unsavedMemInfo == NoMemoryInfo
-                         then update (CommonAction (AppendToLog "hi")) <| update
-                                (CommonAction StartMemManage)
-                                {s | activeTab <- Manage}
+                         then {s | activeTab <- Manage
+                                 , unsavedMemInfo <- MemInfoRequest
+                              }
                          else {s | activeTab <- t}
         -- clicking the icon 7 times toggles developer tab visibility
         ClickIcon     -> if s.iconClicked >= 6
@@ -108,6 +109,7 @@ update action s =
             case s.unsavedMemInfo of
                 MemoryInfo d -> {s | unsavedMemInfo <- moveFavDown f d}
                 _ -> errorTryingTo "move"
+        SetUnsavedMem i -> {s | unsavedMemInfo <- i}
         -- An action on the common state can have an affect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
         -- device state for instance.
@@ -129,8 +131,6 @@ update action s =
                                 else s
                             _ -> updateMemInfo
                         _ -> updateMemInfo
-                StartMemManage ->
-                    {s' | unsavedMemInfo <- MemInfoRequested}
                 _ -> s'
         NoOp -> s
 

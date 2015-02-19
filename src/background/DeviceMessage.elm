@@ -65,7 +65,7 @@ encode s =
           | s.memoryManage == MemManageRequested ->
               sendCommand'
                  SendMemoryManageModeStart
-                 [SetMemManage MemManageWaiting, (CommonAction (AppendToLog "yo"))]
+                 [SetMemManage MemManageWaiting]
           | s.extRequest /= NoRequest && s.common.deviceStatus == Unlocked ->
               ({e | sendCommand <-
                     Maybe.map toInts (toPacket s.currentContext s.extRequest)}

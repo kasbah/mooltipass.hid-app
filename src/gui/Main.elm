@@ -42,11 +42,18 @@ state = map (\(_,_,s) -> s) output
 forbg : GuiState -> (FromGuiMessage, Action)
 forbg s =
     let e = emptyFromGuiMessage
-    in case s.importMedia of
-        RequestFile p ->
-            ( FromGuiMessage.encode (Common.StartImportMedia p)
-            , SetImportMedia NotRequested)
-        _             -> (e, NoOp)
+        mImportRequested = case s.importMedia of
+            RequestFile _ -> True
+            _ -> False
+    in if
+        | mImportRequested -> case s.importMedia of
+            RequestFile p ->
+                ( FromGuiMessage.encode (Common.StartImportMedia p)
+                , SetImportMedia NotRequested)
+            _             -> (e, NoOp)
+        | s.unsavedMemInfo == Common.MemInfoRequest ->
+            (FromGuiMessage.encode Common.StartMemManage, SetUnsavedMem Common.MemInfoWaiting)
+        | otherwise -> (e, NoOp)
 
 output : Signal (ToChromeMessage, FromGuiMessage, GuiState)
 output =

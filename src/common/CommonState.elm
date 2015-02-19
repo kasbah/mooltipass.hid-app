@@ -32,7 +32,8 @@ emptyFavorites = [Nothing,Nothing,Nothing,Nothing,Nothing
 
 type MemoryInfo =
       MemoryInfo MemoryInfoData
-    | MemInfoRequested
+    | MemInfoRequest
+    | MemInfoWaiting
     | NoMemoryInfo
 
 type alias MemoryInfoData =
@@ -112,7 +113,7 @@ update action s =
         SetImportInfo i     -> {s | importInfo <- i}
         StartImportMedia id -> {s | importInfo <- ImportRequested id}
         SetMemoryInfo i     -> {s | memoryInfo <- i}
-        StartMemManage      -> {s | memoryInfo <- MemInfoRequested}
+        StartMemManage      -> {s | memoryInfo <- MemInfoRequest}
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force
         -- an update through if we need to (like when the GUI is newly opened

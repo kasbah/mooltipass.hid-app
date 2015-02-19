@@ -161,11 +161,12 @@ update action s =
             if memoryManaging s.memoryManage
             then
                 update
-                    (appendToLog' "Error: Already in memory-manage mode")
+                    (appendToLog'
+                        "Error: Mem manage mode request when already in mem manage mode")
                     {s | common <- updateCommon (SetMemoryInfo NoMemoryInfo)}
             else
                 { s | memoryManage <- MemManageRequested
-                    , common <- updateCommon (SetMemoryInfo MemInfoRequested)}
+                    , common <- updateCommon (SetMemoryInfo MemInfoWaiting)}
         CommonAction (SetDeviceStatus c) ->
             let s' = {s | common <- updateCommon (SetDeviceStatus c)}
             in if c /= s.common.deviceStatus
