@@ -20,7 +20,7 @@ type alias ToDeviceMessage   = { connect     : Maybe ()
                                , sendCommand : Maybe (List Int)
                                }
 
-sendCommand : SendPacket -> ToDeviceMessage
+sendCommand : OutgoingPacket -> ToDeviceMessage
 sendCommand p = {emptyToDeviceMessage | sendCommand <- Just (toInts p)}
 
 connect : ToDeviceMessage
@@ -49,22 +49,22 @@ encode s =
                 case s.mediaImport of
                     MediaImportStart ps ->
                         sendCommand'
-                            SendImportMediaStart
+                            OutgoingImportMediaStart
                             [SetMediaImport (MediaImportStartWaiting ps)]
                     MediaImport (p::ps) ->
                         sendCommand' p
                             [SetMediaImport (MediaImportWaiting (p::ps))]
                     MediaImport [] ->
                         sendCommand'
-                            SendImportMediaEnd
+                            OutgoingImportMediaEnd
                             [SetMediaImport (MediaImportWaiting [])]
                     _ -> (e, [])
           | s.deviceVersion == Nothing
             && s.common.deviceStatus == Unlocked
-                -> sendCommand' SendGetVersion []
+                -> sendCommand' OutgoingGetVersion []
           | s.memoryManage == MemManageRequested ->
               sendCommand'
-                 SendMemManageModeStart
+                 OutgoingMemManageModeStart
                  [SetMemManage MemManageWaiting]
           | s.extRequest /= NoRequest && s.common.deviceStatus == Unlocked ->
               ({e | sendCommand <-
@@ -78,27 +78,27 @@ encode s =
               )
           | otherwise -> (e, [])
 
-sendCommand' : SendPacket
+sendCommand' : OutgoingPacket
             -> (List BackgroundAction)
             -> (ToDeviceMessage, List BackgroundAction)
 sendCommand' p a = (sendCommand p, SetWaitingForDevice True::a)
 
-toPacket : String -> ExtensionRequest -> Maybe SendPacket
+toPacket : String -> ExtensionRequest -> Maybe OutgoingPacket
 toPacket cc extRequest =
     case extRequest of
         ExtNeedsNewContext {context, login, password} ->
-            Just (SendAddContext context)
+            Just (OutgoingAddContext context)
         ExtWantsCredentials {context} ->
-            if cc == context then Just SendGetLogin
-            else Just (SendSetContext context)
+            if cc == context then Just OutgoingGetLogin
+            else Just (OutgoingSetContext context)
         ExtNeedsPassword {context, login} ->
-            if cc == context then Just SendGetPassword
-            else Just (SendSetContext context)
+            if cc == context then Just OutgoingGetPassword
+            else Just (OutgoingSetContext context)
         ExtWantsToWrite {context, login, password} ->
-            if cc == context then Just (SendSetLogin login)
-            else Just (SendSetContext context)
+            if cc == context then Just (OutgoingSetLogin login)
+            else Just (OutgoingSetContext context)
         ExtNeedsToWritePassword {context, password} ->
-            if cc == context then Just (SendSetPassword password)
-            else Just (SendSetContext context)
+            if cc == context then Just (OutgoingSetPassword password)
+            else Just (OutgoingSetContext context)
         _ -> Nothing
 

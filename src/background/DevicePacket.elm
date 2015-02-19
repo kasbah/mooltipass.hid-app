@@ -14,68 +14,68 @@ import Bitwise (and)
 import Byte (..)
 
 {-| The type of packets we send from the app to the device -}
-type SendPacket =
-     SendDebug              ByteString
-   | SendPing
-   | SendGetVersion
-   | SendSetContext         ByteString
-   | SendGetLogin
-   | SendGetPassword
-   | SendSetLogin           ByteString
-   | SendSetPassword        ByteString
-   | SendCheckPassword
-   | SendAddContext         ByteString
-   | SendExportFlashStart
-   | SendExportFlash
-   | SendExportFlashEnd
-   | SendImportFlashStart   FlashSpace
-   | SendImportFlash        ByteArray
-   | SendImportFlashEnd
-   | SendExportEepromStart
-   | SendExportEeprom
-   | SendExportEepromEnd
-   | SendImportEepromStart
-   | SendImportEeprom       ByteString
-   | SendImportEepromEnd
-   | SendGetRandomNumber
-   | SendMemManageModeStart
-   | SendMemManageModeEnd
-   | SendImportMediaStart
-   | SendImportMedia        ByteArray
-   | SendImportMediaEnd
-   | SendReadFlashNode      FlashAddress
-   | SendWriteFlashNode     FlashAddress Byte ByteString
-   | SendSetFavorite        (Byte,(FlashAddress,FlashAddress))
-   | SendSetStartingParent  FlashAddress
+type OutgoingPacket =
+     OutgoingDebug              ByteString
+   | OutgoingPing
+   | OutgoingGetVersion
+   | OutgoingSetContext         ByteString
+   | OutgoingGetLogin
+   | OutgoingGetPassword
+   | OutgoingSetLogin           ByteString
+   | OutgoingSetPassword        ByteString
+   | OutgoingCheckPassword
+   | OutgoingAddContext         ByteString
+   | OutgoingExportFlashStart
+   | OutgoingExportFlash
+   | OutgoingExportFlashEnd
+   | OutgoingImportFlashStart   FlashSpace
+   | OutgoingImportFlash        ByteArray
+   | OutgoingImportFlashEnd
+   | OutgoingExportEepromStart
+   | OutgoingExportEeprom
+   | OutgoingExportEepromEnd
+   | OutgoingImportEepromStart
+   | OutgoingImportEeprom       ByteString
+   | OutgoingImportEepromEnd
+   | OutgoingGetRandomNumber
+   | OutgoingMemManageModeStart
+   | OutgoingMemManageModeEnd
+   | OutgoingImportMediaStart
+   | OutgoingImportMedia        ByteArray
+   | OutgoingImportMediaEnd
+   | OutgoingReadFlashNode      FlashAddress
+   | OutgoingWriteFlashNode     FlashAddress Byte ByteString
+   | OutgoingSetFavorite        (Byte,(FlashAddress,FlashAddress))
+   | OutgoingSetStartingParent  FlashAddress
    -- CPZ = code protected zone
    -- CTR = counter value for Eeprom
-   | SendSetCtrValue        (Byte, Byte, Byte)
-   | SendAddCpzCtr          CpzCtrLutEntry
-   | SendGetCpzCtrValues
-   | SendSetParameter       Parameter Byte
-   | SendGetParameter       Parameter
-   | SendGetFavorite        Byte
-   | SendResetCard          (Byte, Byte)
-   | SendGetCardLogin
-   | SendGetCardPassword
-   | SendSetCardLogin       ByteString
-   | SendSetCardPassword    ByteString
-   | SendGetFreeSlotAddress
-   | SendGetStartingParent
-   | SendGetCtrValue
-   | SendAddNewCard
-   | SendGetStatus
+   | OutgoingSetCtrValue        (Byte, Byte, Byte)
+   | OutgoingAddCpzCtr          CpzCtrLutEntry
+   | OutgoingGetCpzCtrValues
+   | OutgoingSetParameter       Parameter Byte
+   | OutgoingGetParameter       Parameter
+   | OutgoingGetFavorite        Byte
+   | OutgoingResetCard          (Byte, Byte)
+   | OutgoingGetCardLogin
+   | OutgoingGetCardPassword
+   | OutgoingSetCardLogin       ByteString
+   | OutgoingSetCardPassword    ByteString
+   | OutgoingGetFreeSlotAddress
+   | OutgoingGetStartingParent
+   | OutgoingGetCtrValue
+   | OutgoingAddNewCard
+   | OutgoingGetStatus
 -- disabled developer types:
-    --SendEraseEeprom      -> 0x40
-    --SendEraseFlash       -> 0x41
-    --SendEraseSmc         -> 0x42
-    --SendDrawBitmap       -> 0x43
-    --SendSetFont          -> 0x44
-    --SendSetBootloaderPwd -> 0x47
-    --SendJumpToBootloader -> 0x48
-    --SendCloneSmartcard   -> 0x49
-    --SendStackFree        -> 0x4A
-    --SendUsbKeyboardPress -> 0x69
+    --OutgoingEraseEeprom      -> 0x40
+    --OutgoingEraseFlash       -> 0x41
+    --OutgoingEraseSmc         -> 0x42
+    --OutgoingDrawBitmap       -> 0x43
+    --OutgoingSetFont          -> 0x44
+    --OutgoingSetBootloaderPwd -> 0x47
+    --OutgoingJumpToBootloader -> 0x48
+    --OutgoingCloneSmartcard   -> 0x49
+    --OutgoingStackFree        -> 0x4A
+    --OutgoingUsbKeyboardPress -> 0x69
 
 
 {-| The type of packets we receive from the device -}
@@ -171,7 +171,7 @@ type FlashSpace = FlashUserSpace | FlashGraphicsSpace
 
 {-| Convert a packet generated in our application to a list of Ints to send out
     a port for chrome.hid.send -}
-toInts : SendPacket -> List Int
+toInts : OutgoingPacket -> List Int
 toInts msg =
     -- the packet format is [payload-size, message-type, payload ... ]
     let byteString msgType s = String.length s::msgType::stringToInts s
@@ -191,61 +191,61 @@ toInts msg =
             TouchProxOs        -> 0x07
             OfflineMode        -> 0x08
     in case msg of
-        SendDebug       s  -> byteString 0x01 s
-        SendPing           -> zeroSize 0x02
-        SendGetVersion     -> zeroSize 0x03
-        SendSetContext  s  -> byteStringNull 0x04 s
-        SendGetLogin       -> zeroSize 0x05
-        SendGetPassword    -> zeroSize 0x06
-        SendSetLogin    s  -> byteStringNull 0x07 s
-        SendSetPassword s  -> byteStringNull 0x08 s
-        SendCheckPassword  -> zeroSize 0x09
-        SendAddContext  s  -> byteStringNull 0x0A s
-        SendExportFlash    -> zeroSize 0x30
-        SendExportFlashEnd -> zeroSize 0x31
-        SendImportFlashStart space -> [ 1
+        OutgoingDebug       s  -> byteString 0x01 s
+        OutgoingPing           -> zeroSize 0x02
+        OutgoingGetVersion     -> zeroSize 0x03
+        OutgoingSetContext  s  -> byteStringNull 0x04 s
+        OutgoingGetLogin       -> zeroSize 0x05
+        OutgoingGetPassword    -> zeroSize 0x06
+        OutgoingSetLogin    s  -> byteStringNull 0x07 s
+        OutgoingSetPassword s  -> byteStringNull 0x08 s
+        OutgoingCheckPassword  -> zeroSize 0x09
+        OutgoingAddContext  s  -> byteStringNull 0x0A s
+        OutgoingExportFlash    -> zeroSize 0x30
+        OutgoingExportFlashEnd -> zeroSize 0x31
+        OutgoingImportFlashStart space -> [ 1
                                      , 0x32
                                      , case space of
                                          FlashUserSpace     -> 0x00
                                          FlashGraphicsSpace -> 0x01
                                      ]
-        SendImportFlash  s        -> byteArray 0x33 s
-        SendImportFlashEnd        -> zeroSize 0x34
-        SendExportEeprom          -> zeroSize 0x35
-        SendExportEepromEnd       -> zeroSize 0x36
-        SendImportEepromStart     -> zeroSize 0x37
-        SendImportEeprom s        -> byteString 0x38 s
-        SendImportEepromEnd       -> zeroSize 0x39
-        SendExportFlashStart      -> zeroSize 0x45
-        SendExportEepromStart     -> zeroSize 0x46
-        SendGetRandomNumber       -> zeroSize 0x4B
-        SendMemManageModeStart -> zeroSize 0x50
-        SendMemManageModeEnd   -> zeroSize 0x51
-        SendImportMediaStart      -> zeroSize 0x52
-        SendImportMedia  a        -> byteArray 0x53 a
-        SendImportMediaEnd        -> zeroSize 0x54
-        SendReadFlashNode (a1,a2) -> [2, 0x55, a1, a2]
-        SendWriteFlashNode (a1,a2) n s       ->
+        OutgoingImportFlash  s        -> byteArray 0x33 s
+        OutgoingImportFlashEnd        -> zeroSize 0x34
+        OutgoingExportEeprom          -> zeroSize 0x35
+        OutgoingExportEepromEnd       -> zeroSize 0x36
+        OutgoingImportEepromStart     -> zeroSize 0x37
+        OutgoingImportEeprom s        -> byteString 0x38 s
+        OutgoingImportEepromEnd       -> zeroSize 0x39
+        OutgoingExportFlashStart      -> zeroSize 0x45
+        OutgoingExportEepromStart     -> zeroSize 0x46
+        OutgoingGetRandomNumber       -> zeroSize 0x4B
+        OutgoingMemManageModeStart -> zeroSize 0x50
+        OutgoingMemManageModeEnd   -> zeroSize 0x51
+        OutgoingImportMediaStart      -> zeroSize 0x52
+        OutgoingImportMedia  a        -> byteArray 0x53 a
+        OutgoingImportMediaEnd        -> zeroSize 0x54
+        OutgoingReadFlashNode (a1,a2) -> [2, 0x55, a1, a2]
+        OutgoingWriteFlashNode (a1,a2) n s       ->
             (String.length s + 3)::0x56::a1::a2::n::stringToInts s
-        SendSetFavorite (id,((p1,p2),(c1,c2))) ->
+        OutgoingSetFavorite (id,((p1,p2),(c1,c2))) ->
             [5, 0x57, id, p1, p2, c1, c2]
-        SendSetStartingParent (a1,a2)    -> [2, 0x58, a1, a2]
-        SendSetCtrValue (ctr1,ctr2,ctr3) -> [3, 0x59, ctr1, ctr2, ctr3]
-        SendAddCpzCtr c -> 24::0x5A::stringToInts c.cpz ++ stringToInts c.ctrNonce
-        SendGetCpzCtrValues    -> zeroSize 0x5B
-        SendSetParameter p b   -> [2, 0x5D, param p, b]
-        SendGetParameter p     -> [1, 0x5E, param p]
-        SendGetFavorite  b     -> [1, 0x5F, b]
-        SendResetCard (b1,b2)  -> [2, 0x60, b1, b2]
-        SendGetCardLogin       -> zeroSize 0x61
-        SendGetCardPassword    -> zeroSize 0x62
-        SendSetCardLogin s     -> byteStringNull 0x63 s
-        SendSetCardPassword s  -> byteStringNull 0x64 s
-        SendGetFreeSlotAddress -> zeroSize 0x65
-        SendGetStartingParent  -> zeroSize 0x66
-        SendGetCtrValue        -> zeroSize 0x67
-        SendAddNewCard         -> zeroSize 0x68
-        SendGetStatus          -> zeroSize 0x70
+        OutgoingSetStartingParent (a1,a2)    -> [2, 0x58, a1, a2]
+        OutgoingSetCtrValue (ctr1,ctr2,ctr3) -> [3, 0x59, ctr1, ctr2, ctr3]
+        OutgoingAddCpzCtr c -> 24::0x5A::stringToInts c.cpz ++ stringToInts c.ctrNonce
+        OutgoingGetCpzCtrValues    -> zeroSize 0x5B
+        OutgoingSetParameter p b   -> [2, 0x5D, param p, b]
+        OutgoingGetParameter p     -> [1, 0x5E, param p]
+        OutgoingGetFavorite  b     -> [1, 0x5F, b]
+        OutgoingResetCard (b1,b2)  -> [2, 0x60, b1, b2]
+        OutgoingGetCardLogin       -> zeroSize 0x61
+        OutgoingGetCardPassword    -> zeroSize 0x62
+        OutgoingSetCardLogin s     -> byteStringNull 0x63 s
+        OutgoingSetCardPassword s  -> byteStringNull 0x64 s
+        OutgoingGetFreeSlotAddress -> zeroSize 0x65
+        OutgoingGetStartingParent  -> zeroSize 0x66
+        OutgoingGetCtrValue        -> zeroSize 0x67
+        OutgoingAddNewCard         -> zeroSize 0x68
+        OutgoingGetStatus          -> zeroSize 0x70
 
 {-| Convert a list of ints received through a port from chrome.hid.receive into
     a packet we can interpret -}

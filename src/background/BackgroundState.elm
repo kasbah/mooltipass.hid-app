@@ -42,8 +42,8 @@ type MemManageState =
     | MemManageRead
     | MemManageReadWaiting
     | MemManageReadSuccess  (ParentNode, List Favorite)
-    | MemManageWrite        (List SendPacket)
-    | MemManageWriteWaiting (List SendPacket)
+    | MemManageWrite        (List OutgoingPacket)
+    | MemManageWriteWaiting (List OutgoingPacket)
     | MemManageWriteSuccess
     | MemManageError  String
 
@@ -80,10 +80,10 @@ memManageToInfo mm = case mm of
 type MediaImport =
       NoMediaImport
     | MediaImportRequested    FileId
-    | MediaImportStart        (List SendPacket)
-    | MediaImportStartWaiting (List SendPacket)
-    | MediaImport             (List SendPacket)
-    | MediaImportWaiting      (List SendPacket)
+    | MediaImportStart        (List OutgoingPacket)
+    | MediaImportStartWaiting (List OutgoingPacket)
+    | MediaImport             (List OutgoingPacket)
+    | MediaImportWaiting      (List OutgoingPacket)
     | MediaImportError        String
     | MediaImportSuccess
 
