@@ -14,13 +14,11 @@ type ParentNode = ParentNode ParentNodeData | EmptyParentNode
 
 type alias ParentNodeData =
     { address    : FlashAddress
-    , prevParent : ParentNode
     , nextParent : ParentNode
-    , firstChild  : ChildNode
+    , prevParent : ParentNode
+    , firstChild : ChildNode
     , service    : ByteString
     }
-
-pData (ParentNode data) = data
 
 type ChildNode = ChildNode ChildNodeData | EmptyChildNode
 
@@ -48,51 +46,82 @@ emptyFlashFavorites = [emptyFav,emptyFav,emptyFav,emptyFav,emptyFav
                       ,emptyFav,emptyFav,emptyFav,emptyFav,emptyFav
                       ,emptyFav,emptyFav,emptyFav,emptyFav,emptyFav]
 
+
+foldrParents : (ParentNodeData -> a -> a) -> a -> ParentNode -> a
+foldrParents f z n = case n of
+    ParentNode data -> f data (foldrParents f z data.prevParent)
+    EmptyParentNode -> z
+
+foldrChildren : (ChildNodeData -> a -> a) -> a -> ChildNode -> a
+foldrChildren f z n = case n of
+    ChildNode data -> f data (foldrChildren f z data.prevChild)
+    EmptyChildNode -> z
+
+firstParent : ParentNode -> ParentNode
+firstParent parent = foldrParents (\d _ -> ParentNode d) parent parent
+
+firstChild : ChildNode -> ChildNode
+firstChild child = foldrChildren (\d _ -> ChildNode d) child child
+
+lastChild : ParentNodeData -> ChildNode
+lastChild pdata = foldlChildren (\d _ -> ChildNode d) pdata.firstChild pdata.firstChild
+
+parentAddress : ParentNode -> FlashAddress
+parentAddress p = case p of
+    (ParentNode data) -> data.address
+    _                 -> null
+
+parentAddress' : ChildNode -> ParentNode -> Maybe FlashAddress
+parentAddress' c p = queryParent
+    (\d -> d.firstChild == (firstChild c))
+    .address
+    (firstParent p)
+
 null : FlashAddress
 null = (0,0)
 
-foldChildren : (ChildNodeData -> a -> a) -> a -> ChildNode -> a
-foldChildren f z n = case n of
-    ChildNode data -> f data (foldChildren f z data.nextChild)
+foldlChildren : (ChildNodeData -> a -> a) -> a -> ChildNode -> a
+foldlChildren f z n = case n of
+    ChildNode data -> f data (foldlChildren f z data.nextChild)
     EmptyChildNode -> z
 
-foldParents : (ParentNodeData -> a -> a) -> a -> ParentNode -> a
-foldParents f z n = case n of
-    ParentNode data -> f data (foldParents f z data.nextParent)
+foldlParents : (ParentNodeData -> a -> a) -> a -> ParentNode -> a
+foldlParents f z n = case n of
+    ParentNode data -> f data (foldlParents f z data.nextParent)
     EmptyParentNode -> z
 
 queryParent : (ParentNodeData -> Bool) -> (ParentNodeData -> a)
            -> ParentNode -> Maybe a
-queryParent fb fp firstParent =
-    foldParents
+queryParent fb fp firstP =
+    foldlParents
         (\p z -> if z == Nothing && fb p then Just (fp p) else z)
         Nothing
-        firstParent
+        firstP
 
 queryChild : (ChildNodeData -> Bool) -> (ChildNodeData -> a)
           -> ChildNode -> Maybe a
-queryChild fb fc firstChild =
-    foldChildren
+queryChild fb fc firstC =
+    foldlChildren
         (\c z -> if z == Nothing && fb c then Just (fc c) else z)
         Nothing
-        firstChild
+        firstC
 
 toCreds : ParentNode -> List (String, List String)
-toCreds firstParent =
-    let getLogins firstChild =
-            foldChildren (\c z -> c.login::z) [] firstChild
-    in foldParents
+toCreds firstP =
+    let getLogins firstC =
+            foldlChildren (\c z -> c.login::z) [] firstC
+    in foldlParents
             (\p z -> (p.service, getLogins p.firstChild)::z)
             []
-            firstParent
+            firstP
 
 toFavs : List FlashFavorite -> ParentNode -> List Favorite
-toFavs ffs firstParent =
+toFavs ffs firstP =
     let parent fav =
             queryParent
                 (\p -> fav.parentNode /= null && p.address == fav.parentNode)
                 identity
-                firstParent
+                firstP
         child fav p =
             queryChild
                 (\c -> fav.childNode /= null && c.address == fav.childNode)
@@ -101,12 +130,12 @@ toFavs ffs firstParent =
     in map (\f -> parent f `andThen` child f) ffs
 
 fromFavs : List Favorite -> ParentNode -> List OutgoingPacket
-fromFavs fs firstParent =
+fromFavs fs firstP =
     let parent fav =
             queryParent
                 (\p -> fav /= Nothing && p.service == fst (fromJust fav))
                 identity
-                firstParent
+                firstP
         child fav p =
             queryChild
                 (\c -> c.login == snd (fromJust fav))

@@ -2,14 +2,15 @@ module DeviceMessage where
 
 -- Elm standard library
 import Maybe
+import List (..)
 
 -- local source
 import CommonState (..)
 import CommonState as Common
 import BackgroundState (..)
 import DevicePacket (..)
+import DeviceFlash (..)
 import Util (..)
-import List ((::))
 
 type alias FromDeviceMessage = { setHidConnected : Maybe Bool
                                , receiveCommand  : Maybe (List Int)
@@ -43,32 +44,56 @@ decode message =
 encode : BackgroundState -> (ToDeviceMessage, List BackgroundAction)
 encode s =
     let e = emptyToDeviceMessage
+        memManageNeedsToSend = case s.memoryManage of
+            MemManageRead    _     -> True
+            MemManageReadFav _     -> True
+            MemManageWrite   _     -> True
+            MemManageRequested     -> True
+            _ -> False
+
     in if | not s.deviceConnected -> (connect, [])
           | s.waitingForDevice -> (e, [])
-          | mediaImportActive s ->
-                case s.mediaImport of
-                    MediaImportStart ps ->
-                        sendCommand'
-                            OutgoingImportMediaStart
-                            [SetMediaImport (MediaImportStartWaiting ps)]
-                    MediaImport (p::ps) ->
-                        sendCommand' p
-                            [SetMediaImport (MediaImportWaiting (p::ps))]
-                    MediaImport [] ->
-                        sendCommand'
-                            OutgoingImportMediaEnd
-                            [SetMediaImport (MediaImportWaiting [])]
-                    _ -> (e, [])
+          | mediaImportActive s -> case s.mediaImport of
+                MediaImportStart ps ->
+                    sendCommand'
+                        OutgoingImportMediaStart
+                        [SetMediaImport (MediaImportStartWaiting ps)]
+                MediaImport (p::ps) ->
+                    sendCommand' p
+                        [SetMediaImport (MediaImportWaiting (p::ps))]
+                MediaImport [] ->
+                    sendCommand'
+                        OutgoingImportMediaEnd
+                        [SetMediaImport (MediaImportWaiting [])]
+                _ -> (e, [])
           | s.deviceVersion == Nothing
             && s.common.deviceStatus == Unlocked
                 -> sendCommand' OutgoingGetVersion []
-          | s.memoryManage == MemManageRequested ->
-              sendCommand'
-                 OutgoingMemManageModeStart
-                 [SetMemManage MemManageWaiting]
+          | memManageNeedsToSend -> case s.memoryManage of
+              MemManageRequested -> sendCommand'
+                                        OutgoingMemManageModeStart
+                                        [SetMemManage MemManageWaiting]
+              MemManageRead (p,addr) -> case p of
+                  EmptyParentNode ->
+                      sendCommand'
+                        OutgoingGetStartingParent
+                        [SetMemManage (MemManageReadWaiting (p,addr))]
+                  ParentNode d ->
+                        if  | addr /= null ->
+                                sendCommand'
+                                    (OutgoingReadFlashNode addr)
+                                    [SetMemManage (MemManageReadWaiting (p,addr))]
+                            | otherwise ->
+                                sendCommand'
+                                    (OutgoingGetFavorite 1)
+                                    [SetMemManage (MemManageReadFavWaiting (p,[]))]
+              MemManageReadFav (p,favs) ->
+                        sendCommand'
+                            (OutgoingGetFavorite ((length favs) + 1))
+                            [SetMemManage (MemManageReadFavWaiting (p,favs))]
           | s.extRequest /= NoRequest && s.common.deviceStatus == Unlocked ->
               ({e | sendCommand <-
-                    Maybe.map toInts (toPacket s.currentContext s.extRequest)}
+                    Maybe.map toInts (extRequestToPacket s.currentContext s.extRequest)}
               , [ Maybe.withDefault NoOp
                     (Maybe.map
                         (CommonAction << AppendToLog)
@@ -82,9 +107,8 @@ sendCommand' : OutgoingPacket
             -> (List BackgroundAction)
             -> (ToDeviceMessage, List BackgroundAction)
 sendCommand' p a = (sendCommand p, SetWaitingForDevice True::a)
-
-toPacket : String -> ExtensionRequest -> Maybe OutgoingPacket
-toPacket cc extRequest =
+extRequestToPacket : String -> ExtensionRequest -> Maybe OutgoingPacket
+extRequestToPacket cc extRequest =
     case extRequest of
         ExtNeedsNewContext {context, login, password} ->
             Just (OutgoingAddContext context)
