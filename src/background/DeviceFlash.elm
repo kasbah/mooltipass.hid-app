@@ -3,6 +3,7 @@ module DeviceFlash where
 import List (..)
 import Maybe (andThen, Maybe(..))
 import Maybe
+import Bitwise (..)
 
 -- local source
 import Byte (..)
@@ -146,3 +147,29 @@ fromFavs fs firstP =
             <| map (Maybe.withDefault (null, null))
                 <| map (\f -> parent f `andThen` child f) fs
 
+
+addParentNode : ParentNode -> FlashAddress -> ByteArray
+              -> Maybe (ParentNode, FlashAddress)
+addParentNode p addr bs = case bs of
+    (flags1::flags2::prevP1::prevP2::nextP1::nextP2::firstC1::firstC2::service) ->
+        Just (pNode addr (intsToString service) p, (firstC1,firstC2))
+    _ -> Nothing
+
+pNode : FlashAddress -> String -> ParentNode -> ParentNode
+pNode addr str p = ParentNode
+                { address    = addr
+                , nextParent = EmptyParentNode
+                , prevParent = p
+                , firstChild = EmptyChildNode
+                , service    = str
+                }
+
+parse : FlashAddress -> ByteArray -> Maybe (ParentNode, FlashAddress)
+parse addr bs =
+    let parentOrChild = case bs of
+            (_::flags2::_) -> (flags2 `and` 0xC000) `shiftRight` 12
+            _ -> (-1)
+    in case parentOrChild of
+        --0 -> addParentNode addr bs
+        --1 -> Maybe.map addChildNode addr bs
+        _ -> Nothing

@@ -22,7 +22,10 @@ type alias ByteString = String
     when we convert Ints to a bytestring. -}
 toByteString : Int -> List Int -> Result Error ByteString
 toByteString size ints =
-    Result.map (String.fromList << (List.map Char.fromCode)) (toByteArray size ints)
+    Result.map intsToString (toByteArray size ints)
+
+intsToString : List Int -> String
+intsToString = String.fromList << (List.map Char.fromCode)
 
 {-| We make sure values are between 0 and 255 when we convert a String to a
     bytestring. -}
