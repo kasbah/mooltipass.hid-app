@@ -108,7 +108,7 @@ type ReceivedPacket =
     | ReceivedImportMediaStart  ReturnCode
     | ReceivedImportMediaEnd    ReturnCode
     | ReceivedImportMedia       ReturnCode
-    | ReceivedReadFlashNode     ByteString
+    | ReceivedReadFlashNode     ByteArray
     | ReceivedWriteFlashNode    ReturnCode
     | ReceivedSetFavorite       ReturnCode
     | ReceivedSetStartingParent ReturnCode
@@ -334,7 +334,7 @@ fromInts (size::messageType::payload) =
             0x52 -> doneOrNotDone ReceivedImportMediaStart "media import start"
             0x53 -> doneOrNotDone ReceivedImportMedia      "media import"
             0x54 -> doneOrNotDone ReceivedImportMediaEnd   "media import end"
-            0x55 -> Result.map ReceivedReadFlashNode (toByteString size payload)
+            0x55 -> Result.map ReceivedReadFlashNode (toByteArray size payload)
             0x56 -> doneOrNotDone ReceivedWriteFlashNode    "write node in flash"
             0x57 -> doneOrNotDone ReceivedSetFavorite       "set favorite"
             0x58 -> doneOrNotDone ReceivedSetStartingParent "set starting parent"

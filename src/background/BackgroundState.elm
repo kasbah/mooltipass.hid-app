@@ -308,7 +308,11 @@ interpret packet s =
                     else setMedia (MediaImportError "Import end-write failed") s
                 _ -> setMedia (MediaImportError (unexpected "ImportMediaEnd")) s
         ReceivedManageModeStart r ->
-            setMemManage (if r == Done then MemManageRead (EmptyParentNode, null)  else MemManageDenied) s
+            setMemManage
+                (if r == Done
+                 then MemManageRead (EmptyParentNode, null)
+                 else MemManageDenied)
+                 s
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s
