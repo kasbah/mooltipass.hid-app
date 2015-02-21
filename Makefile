@@ -5,6 +5,7 @@ PACKAGE_NAME = mooltipass.hid-app.$(VERSION)
 
 GUI_ELM_FILES    = $(wildcard src/gui/*.elm)
 BG_ELM_FILES     = $(wildcard src/background/*.elm)
+TEST_ELM_FILES   = $(wildcard src/test/*.elm)
 COMMON_ELM_FILES = $(wildcard src/common/*.elm)
 JS_FILES         = $(call wildc_recursive, src/, *.js)
 HTML_FILES       = $(call wildc_recursive, src/, *.html)
@@ -12,7 +13,7 @@ IMAGE_FILES      = $(wildcard src/gui/images/*)
 DIRS             = $(sort $(dir $(call wildc_recursive, src/, *)))
 PACKAGE_STAMPS   = $(patsubst src%, $(PACKAGE_NAME)%.dirstamp, $(DIRS))
 
-all: images elm js manifest html
+all: images elm js manifest html test
 
 dirs     : elm-stuff/.core-linked $(patsubst src%, build%/.dirstamp, $(DIRS))
 elm      : dirs build/background/elm-background.js build/gui/elm-gui.js
@@ -43,8 +44,13 @@ build/gui/elm-gui.js: $(GUI_ELM_FILES) $(COMMON_ELM_FILES)
 build/background/elm-background.js: $(BG_ELM_FILES) $(COMMON_ELM_FILES)
 	elm-make $(COMMON_ELM_FILES) $(BG_ELM_FILES) --output $@
 
+build/test/elm-test.js: $(BG_ELM_FILES) $(COMMON_ELM_FILES) $(TEST_ELM_FILES)
+	elm-make $(COMMON_ELM_FILES) $(BG_ELM_FILES) $(TEST_ELM_FILES) --output $@
+
 build/%: src/%
 	cp $< $@
+
+test: build/test/elm-test.js
 
 clean:
 	rm -rf build
@@ -53,10 +59,11 @@ clean:
 package: all
 	cp -r build $(PACKAGE_NAME)
 	rm -f $(PACKAGE_STAMPS)
+	rm -rf $(PACKAGE_NAME)/test
 	zip -r $(PACKAGE_NAME).zip $(PACKAGE_NAME)/
 	rm -rf $(PACKAGE_NAME)/
 
 watch:
 	@while true; do make | grep -v "^make\[1\]:"; sleep 1; done
 
-.PHONY: all images dirs js manifest elm clean package watch
+.PHONY: all images dirs js manifest elm clean package watch test
