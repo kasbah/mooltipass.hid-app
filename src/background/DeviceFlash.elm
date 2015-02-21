@@ -15,6 +15,7 @@ type ParentNode = ParentNode ParentNodeData | EmptyParentNode
 
 type alias ParentNodeData =
     { address    : FlashAddress
+    , flags      : (Byte,Byte)
     , nextParent : ParentNode
     , prevParent : ParentNode
     , firstChild : ChildNode
@@ -25,6 +26,7 @@ type ChildNode = ChildNode ChildNodeData | EmptyChildNode
 
 type alias ChildNodeData =
     { address      : FlashAddress
+    , flags        : (Byte,Byte)
     , nextChild    : ChildNode
     , prevChild    : ChildNode
     , ctr          : (Byte, Byte, Byte)
@@ -46,7 +48,6 @@ emptyFav = {parentNode = null, childNode = null}
 emptyFlashFavorites = [emptyFav,emptyFav,emptyFav,emptyFav,emptyFav
                       ,emptyFav,emptyFav,emptyFav,emptyFav,emptyFav
                       ,emptyFav,emptyFav,emptyFav,emptyFav,emptyFav]
-
 
 foldrParents : (ParentNodeData -> a -> a) -> a -> ParentNode -> a
 foldrParents f z n = case n of
@@ -73,14 +74,19 @@ linkChildrenReturnFirst child =
     foldrChildren (\d z -> ChildNode {d | nextChild <- z}) EmptyChildNode child
 
 lastChild : ParentNodeData -> ChildNode
-lastChild pdata = foldlChildren (\d _ -> ChildNode d) pdata.firstChild pdata.firstChild
+lastChild pdata = foldlChildren (\d _ -> ChildNode d) EmptyChildNode pdata.firstChild
 
 lastParent : ParentNode -> ParentNode
-lastParent parent = foldlParents (\d _ -> ParentNode d) parent parent
+lastParent parent = foldlParents (\d _ -> ParentNode d) EmptyParentNode parent
 
-parentAddress : ParentNode -> FlashAddress
-parentAddress p = case p of
+pAddress : ParentNode -> FlashAddress
+pAddress p = case p of
     (ParentNode data) -> data.address
+    _                 -> null
+
+cAddress : ChildNode -> FlashAddress
+cAddress p = case p of
+    (ChildNode data) -> data.address
     _                 -> null
 
 parentAddress' : ChildNode -> ParentNode -> Maybe FlashAddress
@@ -167,6 +173,7 @@ addParentNode p addr bs =
             let newP =
                     (ParentNode
                         { address    = addr
+                        , flags      = (flags1,flags2)
                         , nextParent = EmptyParentNode
                         , prevParent = p
                         , firstChild = EmptyChildNode
@@ -191,6 +198,7 @@ addChildNode p addr bs = case p of
                                         Just
                                             (ChildNode
                                                 { address      = addr
+                                                , flags        = (flags1,flags2)
                                                 , nextChild    = EmptyChildNode
                                                 , prevChild    = c
                                                 , ctr          = (ctr1,ctr2,ctr3)
@@ -211,7 +219,6 @@ addChildNode p addr bs = case p of
         in Maybe.map pNodeAndNextAddr cNodeAndNextAddr
     EmptyParentNode -> Nothing
 
-
 parse : ParentNodeData -> FlashAddress -> ByteArray -> Maybe (ParentNode, FlashAddress)
 parse d addr bs =
     let parentOrChild = case bs of
@@ -221,3 +228,26 @@ parse d addr bs =
         0 -> addParentNode (ParentNode d) addr bs
         1 -> addChildNode (ParentNode d) addr bs
         _ -> Nothing
+
+pairToList : (a,a) -> List a
+pairToList (x,y) = [x,y]
+
+parentToArray : ParentNodeData -> ByteArray
+parentToArray d =
+    pairToList d.flags
+    ++ pairToList (pAddress d.prevParent)
+    ++ pairToList (pAddress d.nextParent)
+    ++ pairToList (cAddress d.firstChild)
+    ++ stringToInts d.service
+
+childToArray : ChildNodeData -> ByteArray
+childToArray d =
+    pairToList d.flags
+    ++ pairToList (cAddress d.prevChild)
+    ++ pairToList (cAddress d.nextChild)
+    ++ (\(x,y,z) -> [x,y,z]) d.ctr
+    ++ stringToInts d.description
+    ++ stringToInts d.login
+    ++ d.password
+    ++ pairToList d.dateCreated
+    ++ pairToList d.dateLastUsed

@@ -48,5 +48,14 @@ toByteArray size ints =
          then Ok <| List.take size ints
          else Err "Invalid char given to byte conversion (unicode?)"
 
+stringToInts : String -> List Int
+stringToInts s  = List.map Char.toCode (String.toList s)
+
+--stringToByteArray :: String -> Maybe ByteArray
+--stringToByteArray s  = List.map Char.toCode (String.toList s)
+
+{-| This is (LSB, MSB) -}
+type alias FlashAddress = (Byte, Byte)
+
 {-| Our error type is just a string that explains the error. -}
 type alias Error = String

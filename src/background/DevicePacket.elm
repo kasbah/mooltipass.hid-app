@@ -149,9 +149,6 @@ type SetContextReturn = UnknownContext | ContextSet | NoCardForContext
 {-| Return for 'ReceivedGetStatus' -}
 type Status = PacketNoCard | PacketLocked | PacketLockScreen | PacketUnlocked
 
-{-| This is (LSB, MSB) -}
-type alias FlashAddress = (Byte, Byte)
-
 {-| You dun it? -}
 type ReturnCode = Done | NotDone
 
@@ -179,7 +176,6 @@ toInts msg =
         byteStringNull msgType s =
             (String.length s + 1)::msgType::stringToInts s ++ [0]
         zeroSize msgType     = [0, msgType]
-        stringToInts s       = List.map Char.toCode (String.toList s)
         param p              = case p of
             UserInitKey        -> 0x00
             KeyboardLayout     -> 0x01
