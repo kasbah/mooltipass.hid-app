@@ -2,6 +2,7 @@ import Check (..)
 import Random (..)
 import DeviceFlash (..)
 import Byte (..)
+import Util (..)
 
 import Text (..)
 import Bitwise (..)
@@ -93,8 +94,8 @@ linkedChildren maxDepth =
         (firstChild << linkPrevChildrenReturnLast)
         (partiallyLinkedChildren maxDepth)
 
-partiallyLinkedParents : Int -> Int -> Generator ParentNode
-partiallyLinkedParents maxChildren maxParents =
+partiallyLinkedParents : Int -> Int -> Int -> Generator ParentNode
+partiallyLinkedParents maxChildren minParents maxParents =
     let parent : Int -> Generator ParentNode
         parent depth =
           if depth <= 0 then always EmptyParentNode
@@ -106,19 +107,29 @@ partiallyLinkedParents maxChildren maxParents =
               `andMap` always EmptyParentNode
               `andMap` linkedChildren maxChildren
               `andMap` byteString 32
-    in (int 0 maxParents) `andThen` parent
+    in (int minParents maxParents) `andThen` parent
+
+
+testa = int 1 0
 
 firstParentOfLinkedList : Int -> Int -> Generator ParentNode
 firstParentOfLinkedList maxChildren maxParents =
     map
         (firstParent << linkPrevParentsReturnLast)
-        <| partiallyLinkedParents maxChildren maxParents
+        <| partiallyLinkedParents maxChildren 1 maxParents
 
 ints : Generator (List Byte)
 ints = list 132 byte
 
 tests =
-  simpleCheck
+    let writeThenParseSucceeds ((ParentNode d),addr) =
+            parse EmptyParentNode addr (parentToArray d) /= Nothing
+        dataFromParse (Just ((ParentNode d), addr)) = d
+        writeThenParseRetains ((ParentNode d),addr) =
+            parentToArray (dataFromParse (parse EmptyParentNode addr (parentToArray d))) == parentToArray d
+        writeThenParseRetains2 ((ParentNode d),addr) =
+            dataFromParse (parse EmptyParentNode addr (parentToArray d)) == {d | address <- addr}
+    in simpleCheck
     [ property
         "- 'Going to lastParent and then to firstParent is the same as staying on firstParent'"
         (\p -> firstParent (lastParent p) == p)
@@ -149,9 +160,15 @@ tests =
     , property "- 'lastChild of last child is last child'"
         (\c -> lastChild c == lastChild (lastChild c))
         (linkedChildren 10)
-    --, property "- 'write then parse of single parent retains'"
-    --    (\p -> parse
-    --    (firstParentOfLinkedList 0 10)
+    , property "- 'Write then parse succeeds'"
+        writeThenParseSucceeds
+        (map2 (,) (firstParentOfLinkedList 0 1) flashAddress)
+    , property "- 'Write then parse retains'"
+        writeThenParseRetains
+        (map2 (,) (firstParentOfLinkedList 0 1) flashAddress)
+    , property "- 'Write then parse retains 2'"
+        writeThenParseRetains2
+        (map2 (,) (firstParentOfLinkedList 0 1) flashAddress)
     ]
 
 main = display tests
