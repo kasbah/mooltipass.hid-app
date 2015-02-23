@@ -109,19 +109,35 @@ firstParent parent = foldrParents (\d _ -> ParentNode d) EmptyParentNode parent
 firstChild : ChildNode -> ChildNode
 firstChild child = foldrChildren (\d _ -> ChildNode d) EmptyChildNode child
 
-linkParentsReturnFirst : ParentNode -> ParentNode
-linkParentsReturnFirst parent =
+linkNextParentsReturnFirst : ParentNode -> ParentNode
+linkNextParentsReturnFirst parent =
     foldrParents (\d z -> ParentNode {d | nextParent <- z}) EmptyParentNode parent
 
-linkChildrenReturnFirst : ChildNode -> ChildNode
-linkChildrenReturnFirst child =
+linkPrevParentsReturnLast : ParentNode -> ParentNode
+linkPrevParentsReturnLast parent =
+    foldlParents (\d z -> ParentNode {d | prevParent <- z}) EmptyParentNode parent
+
+linkNextChildrenReturnFirst : ChildNode -> ChildNode
+linkNextChildrenReturnFirst child =
     foldrChildren (\d z -> ChildNode {d | nextChild <- z}) EmptyChildNode child
+
+linkPrevChildrenReturnLast : ChildNode -> ChildNode
+linkPrevChildrenReturnLast child =
+    foldlChildren (\d z -> ChildNode {d | prevChild <- z}) EmptyChildNode child
 
 lastChild : ParentNodeData -> ChildNode
 lastChild pdata = foldlChildren (\d _ -> ChildNode d) EmptyChildNode pdata.firstChild
 
 lastParent : ParentNode -> ParentNode
 lastParent parent = foldlParents (\d _ -> ParentNode d) EmptyParentNode parent
+
+mapParents : (ParentNode -> ParentNode) -> ParentNode -> ParentNode
+mapParents fn p =
+    linkNextParentsReturnFirst
+        <| foldlParents
+            (\d z -> ParentNode {d | prevParent <- fn z})
+            EmptyParentNode
+            p
 
 pAddress : ParentNode -> FlashAddress
 pAddress p = case p of
@@ -137,7 +153,7 @@ parentAddress' : ChildNode -> ParentNode -> Maybe FlashAddress
 parentAddress' c p = queryParent
     (\d -> d.firstChild == (firstChild c))
     .address
-    (firstParent p)
+    p
 
 null : FlashAddress
 null = (0,0)
@@ -154,19 +170,19 @@ foldlParents f z n = case n of
 
 queryParent : (ParentNodeData -> Bool) -> (ParentNodeData -> a)
            -> ParentNode -> Maybe a
-queryParent fb fp firstP =
+queryParent fb fp p =
     foldlParents
         (\p z -> if z == Nothing && fb p then Just (fp p) else z)
         Nothing
-        firstP
+        (firstParent p)
 
 queryChild : (ChildNodeData -> Bool) -> (ChildNodeData -> a)
           -> ChildNode -> Maybe a
-queryChild fb fc firstC =
+queryChild fb fc c =
     foldlChildren
         (\c z -> if z == Nothing && fb c then Just (fc c) else z)
         Nothing
-        firstC
+        (firstChild c)
 
 toCreds : ParentNode -> List (String, List String)
 toCreds firstP =
@@ -259,7 +275,7 @@ addChildNode p addr bs = case p of
                         Err _ -> Nothing
                 _ -> Nothing
             c = lastChild d
-            pNodeAndNextAddr (cN, nAddr) = (ParentNode {d | firstChild <- linkChildrenReturnFirst cN}, nAddr)
+            pNodeAndNextAddr (cN, nAddr) = (ParentNode {d | firstChild <- linkNextChildrenReturnFirst cN}, nAddr)
         in Maybe.map pNodeAndNextAddr cNodeAndNextAddr
     EmptyParentNode -> Nothing
 

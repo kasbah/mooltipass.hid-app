@@ -61,15 +61,15 @@ always x = customGenerator <| \seed -> (x,seed)
 andMap : Generator (a -> b) -> Generator a -> Generator b
 andMap = map2 (<|)
 
-genChildNode : Int -> Generator ChildNode
-genChildNode depth =
+partiallyLinkedChildNode : Int -> Generator ChildNode
+partiallyLinkedChildNode depth =
     if depth <= 0 then always EmptyChildNode
     else
         childNode
         `map` flashAddress
         `andMap` pairOf byte
-        `andMap` genChildNode (depth - 1)
-        `andMap` always EmptyChildNode
+        `andMap` partiallyLinkedChildNode (depth - 1) -- next child
+        `andMap` always EmptyChildNode -- prev child
         `andMap` tripleOf byte
         `andMap` byteString 32
         `andMap` byteString 32
@@ -77,27 +77,35 @@ genChildNode depth =
         `andMap` pairOf byte
         `andMap` pairOf byte
 
-genChildNodeMaxDepth : Int -> Generator ChildNode
-genChildNodeMaxDepth maxDepth =
-    (int 0 maxDepth) `andThen` genChildNode
+partiallyLinkedChildNodeMaxDepth : Int -> Generator ChildNode
+partiallyLinkedChildNodeMaxDepth maxDepth =
+    (int 0 maxDepth) `andThen` partiallyLinkedChildNode
 
-
-genParentNode : Int -> Int -> Generator ParentNode
-genParentNode maxChildren depth =
+partiallyLinkedParentNode : Int -> Int -> Generator ParentNode
+partiallyLinkedParentNode maxChildren depth =
     if depth <= 0 then always EmptyParentNode
     else
         parentNode
         `map` flashAddress
         `andMap` pairOf byte
-        `andMap` genParentNode maxChildren (depth - 1)
+        `andMap` partiallyLinkedParentNode maxChildren (depth - 1)
         `andMap` always EmptyParentNode
-        `andMap` genChildNodeMaxDepth maxChildren
+        `andMap` partiallyLinkedChildNodeMaxDepth maxChildren
         `andMap` byteString 32
 
-genParentNodeMaxDepth : Int -> Int -> Generator ParentNode
-genParentNodeMaxDepth maxChildren maxDepth =
-    (int 0 maxDepth) `andThen` genParentNode maxChildren
+partiallyLinkedParentNodeMaxDepth : Int -> Int -> Generator ParentNode
+partiallyLinkedParentNodeMaxDepth maxChildren maxDepth =
+    (int 0 maxDepth) `andThen` partiallyLinkedParentNode maxChildren
 
+doublyLinkedList : Generator ParentNode
+doublyLinkedList =
+    let linkChildren p = case p of
+        EmptyParentNode -> EmptyParentNode
+        ParentNode d    ->
+            ParentNode {d | firstChild <- firstChild (linkPrevChildrenReturnLast d.firstChild)}
+    in map (mapParents linkChildren)
+        <| map (firstParent << linkPrevParentsReturnLast)
+        <| partiallyLinkedParentNodeMaxDepth 50 50
 
 ints : Generator (List Byte)
 ints = list 132 byte
