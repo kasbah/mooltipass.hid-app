@@ -111,22 +111,22 @@ firstChild child = foldrChildren (\d _ -> ChildNode d) EmptyChildNode child
 
 linkNextParentsReturnFirst : ParentNode -> ParentNode
 linkNextParentsReturnFirst parent =
-    foldrParents (\d z -> ParentNode {d | nextParent <- z}) EmptyParentNode parent
+    foldrParents (\d z -> ParentNode {d | nextParent <- z}) EmptyParentNode (lastParent parent)
 
 linkPrevParentsReturnLast : ParentNode -> ParentNode
 linkPrevParentsReturnLast parent =
-    foldlParents (\d z -> ParentNode {d | prevParent <- z}) EmptyParentNode parent
+    foldlParents (\d z -> ParentNode {d | prevParent <- z}) EmptyParentNode (firstParent parent)
 
 linkNextChildrenReturnFirst : ChildNode -> ChildNode
 linkNextChildrenReturnFirst child =
-    foldrChildren (\d z -> ChildNode {d | nextChild <- z}) EmptyChildNode child
+    foldrChildren (\d z -> ChildNode {d | nextChild <- z}) EmptyChildNode (lastChild child)
 
 linkPrevChildrenReturnLast : ChildNode -> ChildNode
 linkPrevChildrenReturnLast child =
-    foldlChildren (\d z -> ChildNode {d | prevChild <- z}) EmptyChildNode child
+    foldlChildren (\d z -> ChildNode {d | prevChild <- z}) EmptyChildNode (firstChild child)
 
-lastChild : ParentNodeData -> ChildNode
-lastChild pdata = foldlChildren (\d _ -> ChildNode d) EmptyChildNode pdata.firstChild
+lastChild : ChildNode -> ChildNode
+lastChild child = foldlChildren (\d _ -> ChildNode d) EmptyChildNode child
 
 lastParent : ParentNode -> ParentNode
 lastParent parent = foldlParents (\d _ -> ParentNode d) EmptyParentNode parent
@@ -150,7 +150,7 @@ cAddress p = case p of
     _                 -> null
 
 parentAddress' : ChildNode -> ParentNode -> Maybe FlashAddress
-parentAddress' c p = queryParent
+parentAddress' c p = queryParents
     (\d -> d.firstChild == (firstChild c))
     .address
     p
@@ -168,17 +168,17 @@ foldlParents f z n = case n of
     ParentNode data -> f data (foldlParents f z data.nextParent)
     EmptyParentNode -> z
 
-queryParent : (ParentNodeData -> Bool) -> (ParentNodeData -> a)
+queryParents : (ParentNodeData -> Bool) -> (ParentNodeData -> a)
            -> ParentNode -> Maybe a
-queryParent fb fp p =
+queryParents fb fp p =
     foldlParents
         (\p z -> if z == Nothing && fb p then Just (fp p) else z)
         Nothing
         (firstParent p)
 
-queryChild : (ChildNodeData -> Bool) -> (ChildNodeData -> a)
+queryChildren : (ChildNodeData -> Bool) -> (ChildNodeData -> a)
           -> ChildNode -> Maybe a
-queryChild fb fc c =
+queryChildren fb fc c =
     foldlChildren
         (\c z -> if z == Nothing && fb c then Just (fc c) else z)
         Nothing
@@ -196,12 +196,12 @@ toCreds firstP =
 toFavs : List FlashFavorite -> ParentNode -> List Favorite
 toFavs ffs firstP =
     let parent fav =
-            queryParent
+            queryParents
                 (\p -> fav.parentNode /= null && p.address == fav.parentNode)
                 identity
                 firstP
         child fav p =
-            queryChild
+            queryChildren
                 (\c -> fav.childNode /= null && c.address == fav.childNode)
                 (\c -> (p.service, c.login))
                 p.firstChild
@@ -210,12 +210,12 @@ toFavs ffs firstP =
 fromFavs : List Favorite -> ParentNode -> List OutgoingPacket
 fromFavs fs firstP =
     let parent fav =
-            queryParent
+            queryParents
                 (\p -> fav /= Nothing && p.service == fst (fromJust fav))
                 identity
                 firstP
         child fav p =
-            queryChild
+            queryChildren
                 (\c -> c.login == snd (fromJust fav))
                 (\c -> (p.address, c.address))
                 p.firstChild
@@ -225,9 +225,9 @@ fromFavs fs firstP =
                 <| map (\f -> parent f `andThen` child f) fs
 
 
-addParentNode : ParentNode -> FlashAddress -> ByteArray
+parseParentNode : ParentNode -> FlashAddress -> ByteArray
               -> Maybe (ParentNode, FlashAddress)
-addParentNode p addr bs =
+parseParentNode p addr bs =
     case bs of
         (flags1::flags2::prevP1::prevP2::nextP1::nextP2::firstC1::firstC2::service) ->
             let newP =
@@ -244,9 +244,9 @@ addParentNode p addr bs =
         _ -> Nothing
 
 
-addChildNode : ParentNode -> FlashAddress -> ByteArray
+parseChildNode : ParentNode -> FlashAddress -> ByteArray
             -> Maybe (ParentNode, FlashAddress)
-addChildNode p addr bs = case p of
+parseChildNode p addr bs = case p of
     ParentNode d ->
         let cNodeAndNextAddr = case bs of
                 (flags1::flags2::nextC1::nextC2::ctr1::ctr2::ctr3::data) ->
@@ -260,7 +260,7 @@ addChildNode p addr bs = case p of
                                                 { address      = addr
                                                 , flags        = (flags1,flags2)
                                                 , nextChild    = EmptyChildNode
-                                                , prevChild    = c
+                                                , prevChild    = lastChild d.firstChild
                                                 , ctr          = (ctr1,ctr2,ctr3)
                                                 , description  = descr
                                                 , login        = login
@@ -274,22 +274,19 @@ addChildNode p addr bs = case p of
                             Err _ -> Nothing
                         Err _ -> Nothing
                 _ -> Nothing
-            c = lastChild d
             pNodeAndNextAddr (cN, nAddr) = (ParentNode {d | firstChild <- linkNextChildrenReturnFirst cN}, nAddr)
         in Maybe.map pNodeAndNextAddr cNodeAndNextAddr
     EmptyParentNode -> Nothing
 
-parse : ParentNodeData -> FlashAddress -> ByteArray -> Maybe (ParentNode, FlashAddress)
-parse d addr bs =
+parse : ParentNode -> FlashAddress -> ByteArray -> Maybe (ParentNode, FlashAddress)
+parse p addr bs =
     let parentOrChild = case bs of
-            (_::flags2::_) -> (flags2 `and` 0xC000) `shiftRight` 12
+            (_::flags2::_) -> (flags2 `and` 0xC0) `shiftRight` 6
             _ -> (-1)
     in case parentOrChild of
-        0 -> addParentNode (ParentNode d) addr bs
-        1 -> addChildNode (ParentNode d) addr bs
+        0 -> parseParentNode p addr bs
+        1 -> parseChildNode p addr bs
         _ -> Nothing
-
-
 
 pairToList : (a,a) -> List a
 pairToList (x,y) = [x,y]

@@ -4,6 +4,7 @@ import DeviceFlash (..)
 import Byte (..)
 
 import Text (..)
+import Bitwise (..)
 
 pairOf : Generator a -> Generator (a,a)
 pairOf generator =
@@ -27,13 +28,19 @@ tripleOf' generator =
            ((one,two,three), seed''')
 
 flashAddress : Generator FlashAddress
-flashAddress = pairOf byte
+flashAddress = pairOf (int 1 255) -- (0,0) is null
 
 ctr : Generator (Byte,Byte,Byte)
 ctr = tripleOf byte
 
 byte : Generator Byte
 byte = int 0 255
+
+parentFlags : Generator (Byte, Byte)
+parentFlags = map (\(x,b) -> (x,b `and` 0x3F)) (pairOf byte)
+
+childFlags : Generator (Byte, Byte)
+childFlags = map (\(x,b) -> (x,b `and` 0x3F `or` 0x40)) (pairOf byte)
 
 byteArray : Int -> Generator ByteArray
 byteArray maxLength = list maxLength byte
@@ -69,7 +76,7 @@ partiallyLinkedChildren maxChildren =
             else
                 childNode
                 `map` flashAddress
-                `andMap` pairOf byte
+                `andMap` childFlags
                 `andMap` child (depth - 1) -- next child
                 `andMap` always EmptyChildNode -- prev child
                 `andMap` tripleOf byte
@@ -94,15 +101,15 @@ partiallyLinkedParents maxChildren maxParents =
           else
               parentNode
               `map` flashAddress
-              `andMap` pairOf byte
+              `andMap` parentFlags
               `andMap` parent (depth - 1)
               `andMap` always EmptyParentNode
               `andMap` linkedChildren maxChildren
               `andMap` byteString 32
     in (int 0 maxParents) `andThen` parent
 
-linkedParents : Int -> Int -> Generator ParentNode
-linkedParents maxChildren maxParents =
+firstParentOfLinkedList : Int -> Int -> Generator ParentNode
+firstParentOfLinkedList maxChildren maxParents =
     map
         (firstParent << linkPrevParentsReturnLast)
         <| partiallyLinkedParents maxChildren maxParents
@@ -111,8 +118,40 @@ ints : Generator (List Byte)
 ints = list 132 byte
 
 tests =
-  simpleCheck [
-    property "Square Root Inverse" (\number -> sqrt (number * number) == number) (float 0 100)
-  ]
+  simpleCheck
+    [ property
+        "- 'Going to lastParent and then to firstParent is the same as staying on firstParent'"
+        (\p -> firstParent (lastParent p) == p)
+        (firstParentOfLinkedList 0 10)
+    , property
+        "- 'foldlParents returns first parent'"
+        (\p -> foldlParents (\a _ -> ParentNode a) EmptyParentNode p == p)
+        (firstParentOfLinkedList 0 10)
+    , property
+        "- 'firstParent of first parent is first parent'"
+        (\p -> firstParent p == p)
+        (firstParentOfLinkedList 0 10)
+    , property "- 'lastParent of last parent is last parent'"
+        (\p -> lastParent p == lastParent (lastParent p))
+        (firstParentOfLinkedList 0 10)
+    , property
+        "- 'Going to last child and then to first child is the same as staying on first child'"
+        (\c -> firstChild (lastChild c) == c)
+        (linkedChildren 10)
+    , property
+        "- 'foldlChildren returns first child'"
+        (\c -> foldlChildren (\a _ -> ChildNode a) EmptyChildNode c == c)
+        (linkedChildren 10)
+    , property
+        "- 'firstChild of first child is first child'"
+        (\c -> firstChild c == c)
+        (linkedChildren 10)
+    , property "- 'lastChild of last child is last child'"
+        (\c -> lastChild c == lastChild (lastChild c))
+        (linkedChildren 10)
+    --, property "- 'write then parse of single parent retains'"
+    --    (\p -> parse
+    --    (firstParentOfLinkedList 0 10)
+    ]
 
 main = display tests
