@@ -1,10 +1,11 @@
 module Random
-    ( Generator, Seed
+    ( Generator(..), Seed
     , int, float
     , list, pair
     , minInt, maxInt
     , generate, initialSeed
     , customGenerator
+    , andThen, map
     )
   where
 
@@ -104,7 +105,7 @@ int a b =
         (lo + v % k, { seed | state <- state' })
 
 
-iLogBase : Int -> Int -> Int       
+iLogBase : Int -> Int -> Int
 iLogBase b i =
     if i < b then 1 else 1 + iLogBase b (i // b)
 
@@ -267,7 +268,7 @@ initState s' =
         s1 = s %  (magicNum6-1)
         s2 = q %  (magicNum7-1)
     in
-        State (s1+1) (s2+1)                         
+        State (s1+1) (s2+1)
 
 
 magicNum0 = 40014
@@ -282,16 +283,16 @@ magicNum8 = 2147483562
 
 
 next : State -> (Int, State)
-next (State s1 s2) = 
+next (State s1 s2) =
     -- Div always rounds down and so random numbers are biased
     -- ideally we would use division that rounds towards zero so
     -- that in the negative case it rounds up and in the positive case
     -- it rounds down. Thus half the time it rounds up and half the time it
     -- rounds down
-    let k = s1 // magicNum1 
+    let k = s1 // magicNum1
         s1' = magicNum0 * (s1 - k * magicNum1) - k * magicNum2
-        s1'' = if s1' < 0 then s1' + magicNum6 else s1' 
-        k' = s2 // magicNum3 
+        s1'' = if s1' < 0 then s1' + magicNum6 else s1'
+        k' = s2 // magicNum3
         s2' = magicNum4 * (s2 - k' * magicNum3) - k' * magicNum5
         s2'' = if s2' < 0 then s2' + magicNum7 else s2'
         z = s1'' - s2''
@@ -312,3 +313,13 @@ split (State s1 s2 as std) =
 range : State -> (Int,Int)
 range _ =
     (0, magicNum8)
+
+map : (a -> b) -> Generator a -> Generator b
+map f (Generator g) = Generator <| (\(v,seed) -> (f v, seed)) << g
+
+andThen : Generator a -> (a -> Generator b) -> Generator b
+andThen (Generator g) f = Generator <| \seed ->
+    let (v,seed')     = g seed
+        (Generator h) = f v
+    in h seed'
+

@@ -22,6 +22,24 @@ type alias ParentNodeData =
     , service    : ByteString
     }
 
+parentNode :
+    FlashAddress
+    -> (Byte,Byte)
+    -> ParentNode
+    -> ParentNode
+    -> ChildNode
+    -> ByteString
+    -> ParentNode
+parentNode a f n p fc s =
+    ParentNode
+        { address    = a
+        , flags      = f
+        , nextParent = n
+        , prevParent = p
+        , firstChild = fc
+        , service    = s
+        }
+
 type ChildNode = ChildNode ChildNodeData | EmptyChildNode
 
 type alias ChildNodeData =
@@ -36,6 +54,32 @@ type alias ChildNodeData =
     , dateCreated  : (Byte, Byte)
     , dateLastUsed : (Byte, Byte)
     }
+
+childNode :
+    FlashAddress
+    -> (Byte,Byte)
+    -> ChildNode
+    -> ChildNode
+    -> (Byte, Byte, Byte)
+    -> ByteString
+    -> ByteString
+    -> ByteArray
+    -> (Byte, Byte)
+    -> (Byte, Byte)
+    -> ChildNode
+childNode a f n p c d l pw dC dU =
+    ChildNode
+        { address      = a
+        , flags        = f
+        , nextChild    = n
+        , prevChild    = p
+        , ctr          = c
+        , description  = d
+        , login        = l
+        , password     = pw
+        , dateCreated  = dC
+        , dateLastUsed = dU
+        }
 
 type alias FlashFavorite =
     { parentNode : FlashAddress
@@ -228,6 +272,8 @@ parse d addr bs =
         0 -> addParentNode (ParentNode d) addr bs
         1 -> addChildNode (ParentNode d) addr bs
         _ -> Nothing
+
+
 
 pairToList : (a,a) -> List a
 pairToList (x,y) = [x,y]
