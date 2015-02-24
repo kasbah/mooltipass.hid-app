@@ -12,25 +12,10 @@ import Text (..)
 import Bitwise (..)
 
 pairOf : Generator a -> Generator (a,a)
-pairOf generator =
-        --generator `andThen` (\x -> map (\y -> (x,y)) generator)
-        (,) `map` generator `andMap` generator
-        --generator `andThen` ((,) `map` generator)
+pairOf generator = (,) `map` generator `andMap` generator
 
----tripleOf : Generator a -> Generator (a,a,a)
----tripleOf generator =
----    (\x y z -> (x,y,z)) `map` (generator `andThen` (generator `andThen` generator))
 tripleOf : Generator a -> Generator (a,a,a)
 tripleOf generator = (,,) `map` generator `andMap` generator `andMap` generator
-
-tripleOf' : Generator a -> Generator (a,a,a)
-tripleOf' generator =
-    customGenerator <| \seed ->
-        let (one, seed' )    = generate generator seed
-            (two, seed'')    = generate generator seed'
-            (three, seed''') = generate generator seed''
-        in
-           ((one,two,three), seed''')
 
 flashAddress : Generator FlashAddress
 flashAddress = pairOf notNull
@@ -54,7 +39,8 @@ byteArray : Int -> Generator ByteArray
 byteArray maxLength = list maxLength byte
 
 byteString : Int -> Generator ByteString
-byteString maxLength = int 0 maxLength `andThen` (\n -> map intsToString (list n notNull))
+byteString maxLength =
+    int 0 maxLength `andThen` (\n -> map intsToString (list n notNull))
 
 map : (a -> b) -> Generator a -> Generator b
 map f (Generator g) = Generator <| (\(v,seed) -> (f v, seed)) << g
