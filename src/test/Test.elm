@@ -113,14 +113,14 @@ tests =
             isOk (parse EmptyParentNode addr (parentToArray d))
         dataFromParse (Ok ((ParentNode d), addr)) = d
         writeThenParseParentRetains ((ParentNode d),addr) =
+            dataFromParse
+                (parse EmptyParentNode addr (parentToArray d))
+                    == {d | address <- addr}
+        writeThenParseParentRetains2 ((ParentNode d),addr) =
             parentToArray
                 (dataFromParse
                     (parse EmptyParentNode addr (parentToArray d)))
                         == parentToArray d
-        writeThenParseParentRetains2 ((ParentNode d),addr) =
-            dataFromParse
-                (parse EmptyParentNode addr (parentToArray d))
-                    == {d | address <- addr}
         writeThenParseChildSucceeds (p,(ChildNode cd),addr) =
             isOk (parse p addr (childToArray cd))
         writeThenParseChildRetains ((ParentNode d),(ChildNode cd),addr) =
@@ -128,6 +128,11 @@ tests =
             (dataFromParse
                 (parse (ParentNode d) addr (childToArray cd)))
                     == ChildNode {cd | address <- addr}
+        writeThenParseChildRetains2 ((ParentNode d),(ChildNode cd),addr) =
+            (\(ChildNode d) -> childToArray d)
+            (.firstChild (dataFromParse
+                (parse (ParentNode d) addr (childToArray cd))))
+                    == childToArray cd
     in simpleCheck
     [ property "- 'null term string length remains the same'"
         (\str -> Result.map String.length (nullTermString (String.length str + 3) ((stringToInts str) ++ [0, 0, 0])) == Ok (String.length str))
@@ -190,6 +195,9 @@ tests =
         ((,,) `map` (firstParentOfLinkedList 0 0 1) `andMap` (linkedChildren 1 1) `andMap` flashAddress)
     , property "- 'Write then parse child retains'"
         writeThenParseChildRetains
+        ((,,) `map` (firstParentOfLinkedList 0 0 1) `andMap` (linkedChildren 1 1) `andMap` flashAddress)
+    , property "- 'Write then parse child retains 2'"
+        writeThenParseChildRetains2
         ((,,) `map` (firstParentOfLinkedList 0 0 1) `andMap` (linkedChildren 1 1) `andMap` flashAddress)
     ]
 
