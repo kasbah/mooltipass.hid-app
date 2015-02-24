@@ -1,6 +1,7 @@
 module Util where
 
 import List (..)
+import Debug (log)
 
 isJust : Maybe a -> Bool
 isJust x = case x of
@@ -26,3 +27,14 @@ replaceFirst old new items =
 stripNothing : List (Maybe a) -> List (Maybe a)
 stripNothing =
     foldr (\x z -> if z == [] && x == Nothing then z else x::z) []
+
+truncateNull : List Int -> List Int
+truncateNull = reverse << fst << foldl
+    (\x (z,continue) ->
+        if continue && not (x == 0) then (x::z,True) else (z,False))
+    ([],True)
+
+isOk : Result a b -> Bool
+isOk r = case r of
+    Ok _ -> True
+    _    -> False

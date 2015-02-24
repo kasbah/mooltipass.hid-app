@@ -3,7 +3,11 @@ module DeviceFlash where
 import List (..)
 import Maybe (andThen, Maybe(..))
 import Maybe
+import Result (fromMaybe, Result(..))
+import Result
 import Bitwise (..)
+import Debug(log)
+import String
 
 -- local source
 import Byte (..)
@@ -132,12 +136,12 @@ lastParent : ParentNode -> ParentNode
 lastParent parent = foldlParents (\d _ -> ParentNode d) EmptyParentNode parent
 
 mapParents : (ParentNode -> ParentNode) -> ParentNode -> ParentNode
-mapParents fn p =
+mapParents fn parent =
     linkNextParentsReturnFirst
         <| foldlParents
             (\d z -> ParentNode {d | prevParent <- fn z})
             EmptyParentNode
-            p
+            parent
 
 pAddress : ParentNode -> FlashAddress
 pAddress p = case p of
@@ -230,32 +234,37 @@ parseParentNode : ParentNode -> FlashAddress -> ByteArray
 parseParentNode p addr bs =
     case bs of
         (flags1::flags2::prevP1::prevP2::nextP1::nextP2::firstC1::firstC2::service) ->
-            let newP =
-                    (ParentNode
-                        { address    = addr
-                        , flags      = (flags1,flags2)
-                        , nextParent = EmptyParentNode
-                        , prevParent = p
-                        , firstChild = EmptyChildNode
-                        , service    = intsToString service
-                        }
-                    , (firstC1,firstC2))
-            in Just newP
+            case nullTermString 58 service of
+            Ok str ->
+                let newP =
+                        (ParentNode
+                            { address    = addr
+                            , flags      = (flags1,flags2)
+                            , nextParent = EmptyParentNode
+                            , prevParent = p
+                            , firstChild = EmptyChildNode
+                            , service    = str
+                            }
+                        , (firstC1,firstC2))
+                in Just newP
+            Err _ -> Nothing
         _ -> Nothing
 
 
+--addChild : ParentNode -> ChildNode -> ParentNode
+
 parseChildNode : ParentNode -> FlashAddress -> ByteArray
-            -> Maybe (ParentNode, FlashAddress)
+            -> Result String (ParentNode, FlashAddress)
 parseChildNode p addr bs = case p of
     ParentNode d ->
         let cNodeAndNextAddr = case bs of
-                (flags1::flags2::nextC1::nextC2::ctr1::ctr2::ctr3::data) ->
-                    case toByteString 24 data of
-                        Ok descr -> case toByteString 63 (drop 24 data) of
+                (flags1::flags2::nextC1::nextC2::prevC1::prevC2::ctr1::ctr2::ctr3::data) ->
+                    case nullTermString 24 data of
+                        Ok descr -> case nullTermString 63 (drop 24 data) of
                             Ok login -> case toByteArray 32 (drop 63 (drop 24 data)) of
                                 Ok pw -> case drop 32 (drop 63 (drop 24 data)) of
                                     (dateC1::dateC2::dateU1::[dateU2]) ->
-                                        Just
+                                        Ok
                                             (ChildNode
                                                 { address      = addr
                                                 , flags        = (flags1,flags2)
@@ -269,44 +278,48 @@ parseChildNode p addr bs = case p of
                                                 , dateLastUsed = (dateU1,dateU2)
                                                 }
                                             , (nextC1, nextC2))
-                                    _ -> Nothing
-                                Err _ -> Nothing
-                            Err _ -> Nothing
-                        Err _ -> Nothing
-                _ -> Nothing
+                                    _ -> Err <| "Not enough or too much data: " ++ toString (drop 32 (drop 63 (drop 24 data)))
+                                Err s -> Err <| "converting password, " ++ s ++ toString bs
+                            Err s -> Err <| "Converting login, " ++ s
+                        Err s -> Err <| "Converting description, " ++ s
+                _ -> Err "Not enough data"
             pNodeAndNextAddr (cN, nAddr) = (ParentNode {d | firstChild <- linkNextChildrenReturnFirst cN}, nAddr)
-        in Maybe.map pNodeAndNextAddr cNodeAndNextAddr
-    EmptyParentNode -> Nothing
+        in Result.map pNodeAndNextAddr cNodeAndNextAddr
+    EmptyParentNode -> Err "Empty parent node"
 
-parse : ParentNode -> FlashAddress -> ByteArray -> Maybe (ParentNode, FlashAddress)
+parse : ParentNode -> FlashAddress -> ByteArray -> Result String (ParentNode, FlashAddress)
 parse p addr bs =
     let parentOrChild = case bs of
             (_::flags2::_) -> (flags2 `and` 0xC0) `shiftRight` 6
             _ -> (-1)
     in case parentOrChild of
-        0 -> parseParentNode p addr bs
+        0 -> fromMaybe "parse parent failed" <| parseParentNode p addr bs
         1 -> parseChildNode p addr bs
-        _ -> Nothing
+        _ -> Err <| "Invalid flags: " ++ (toString parentOrChild)
 
 pairToList : (a,a) -> List a
 pairToList (x,y) = [x,y]
 
 parentToArray : ParentNodeData -> ByteArray
 parentToArray d =
-    pairToList d.flags
-    ++ pairToList (pAddress d.prevParent)
-    ++ pairToList (pAddress d.nextParent)
-    ++ pairToList (cAddress d.firstChild)
-    ++ stringToInts d.service
+    let data =
+        pairToList d.flags
+        ++ pairToList (pAddress d.prevParent)
+        ++ pairToList (pAddress d.nextParent)
+        ++ pairToList (cAddress d.firstChild)
+        ++ stringToInts d.service
+    in data ++ repeat (132 - length data) 0
 
 childToArray : ChildNodeData -> ByteArray
 childToArray d =
-    pairToList d.flags
+    let descr = stringToInts d.description
+        login = stringToInts d.login
+    in pairToList d.flags
     ++ pairToList (cAddress d.prevChild)
     ++ pairToList (cAddress d.nextChild)
     ++ (\(x,y,z) -> [x,y,z]) d.ctr
-    ++ stringToInts d.description
-    ++ stringToInts d.login
+    ++ descr ++ (repeat (24 - length descr) 0)
+    ++ login ++ (repeat (63 - length login) 0)
     ++ d.password
     ++ pairToList d.dateCreated
     ++ pairToList d.dateLastUsed
