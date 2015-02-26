@@ -36,8 +36,7 @@ manageTab (w,h) i =
 
 content : (Int, Int) -> MemInfo -> Element
 content (w,h) info =
-    let saveButton       = button (send commonActions CommonNoOp) "save"
-        cancelButton     = button (send commonActions CommonNoOp) "cancel"
+    let cancelButton     = button (send commonActions CommonNoOp) "cancel"
         showMem infodata = container w h midTop <| flow down
             [ favorites w infodata
             , spacer 1 heights.manageSpacer
@@ -50,7 +49,7 @@ content (w,h) info =
                 infodata
             , spacer 1 heights.manageSpacer
             , container w (heights.button + 4) middle
-                <| flow right [cancelButton, spacer 16 1, saveButton]
+                <| flow right [cancelButton, spacer 16 1, saveButton info]
             ]
         reEnterButton = button (send commonActions StartMemManage) "re-enter"
         modeExited    = leftAligned <| whiteText "manage mode exited"
@@ -68,9 +67,17 @@ content (w,h) info =
     in case info of
         NoMemInfo             -> reEnter
         MemInfo d             -> showMem d
+        MemUnsavedInfo d      -> showMem d
         MemInfoRequest        -> pleaseAccept
         MemInfoWaitingForUser -> pleaseAccept
         _                     -> Element.empty
+
+saveButton : MemInfo -> Element
+saveButton info =
+    case info of
+        MemInfo d        -> disabledButton "save"
+        MemUnsavedInfo d -> button (send commonActions CommonNoOp) "save"
+        _                -> Element.empty
 
 favorites : Int -> MemInfoData -> Element
 favorites w info =

@@ -60,17 +60,19 @@ function onDataReceived(reportId, data)
     device.waitingForMessage = false;
 }
 
-function sendMsg(msg)
+function sendMsg(message)
 {
     if (device.waitingForMessage)
         return;
+    if(message[1] !== 112)
+        console.log("app",message);
     device.waitingForMessage = true;
     //Buffer creation is a bit awkward because windows doesn't like us using
     //the Uint8Array.buffer directly (or maybe it's something to do with the
     //ArrayBuffer size argument?). This is what works on all platforms equally.
     var buffer = new ArrayBuffer(PACKET_SIZE);
     var view = new Uint8Array(buffer);
-    view.set(msg,0);
+    view.set(message,0);
     chrome.hid.send(device.connection, 0, buffer, function()
     {
         if (!chrome.runtime.lastError)

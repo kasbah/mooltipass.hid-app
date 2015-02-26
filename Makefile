@@ -30,8 +30,8 @@ build/manifest.json: src/manifest.json
 	@touch $@
 
 elm-stuff/.core-linked: elm-stuff/.dirstamp
-	rm -rf elm-stuff/packages/elm-lang/core/1.1.0
-	ln -s $(PWD)/elm-core $(PWD)/elm-stuff/packages/elm-lang/core/1.1.0
+	rm -rf elm-stuff/packages/elm-lang/core/1.1.1
+	ln -s $(PWD)/elm-core $(PWD)/elm-stuff/packages/elm-lang/core/1.1.1
 	@touch $@
 
 elm-stuff/.dirstamp:

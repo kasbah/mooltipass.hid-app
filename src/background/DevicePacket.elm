@@ -118,7 +118,7 @@ type ReceivedPacket =
     | ReceivedCpzCtrPacketExport CpzCtrLutEntry
     | ReceivedSetParameter      ReturnCode
     | ReceivedGetParameter      (Maybe ByteString)
-    | ReceivedGetFavorite       (Maybe ByteString)
+    | ReceivedGetFavorite       (Maybe (FlashAddress, FlashAddress))
     | ReceivedResetCard         ReturnCode
     | ReceivedGetCardLogin      (Maybe ByteString)
     | ReceivedGetCardPassword   (Maybe ByteString)
@@ -346,7 +346,16 @@ fromInts (size::messageType::payload) =
                     in Result.map ReceivedCpzCtrPacketExport (cpz `andThen` ctrNonce)
             0x5D -> doneOrNotDone ReceivedSetParameter "set Mooltipass parameter"
             0x5E -> maybeByteString ReceivedGetParameter    "get parameter"
-            0x5F -> maybeByteString ReceivedGetFavorite     "get favorite"
+            0x5F -> if size == 4 then case payload of
+                        (addrP1::addrP2::addrC1::addrC2::_) ->
+                            let p = (addrP1,addrP2)
+                                c = (addrC1,addrC2)
+                                null = (0,0)
+                                ok = p /= null && c /= null
+                            in if ok then Ok <| ReceivedGetFavorite (Just (p,c))
+                                     else Err "Received null address from get favorite"
+                        _ -> Err "Invalid data for get favorite"
+                    else Ok <| ReceivedGetFavorite Nothing
             0x60 -> doneOrNotDone ReceivedResetCard         "reset card"
             0x61 -> maybeByteStringNull ReceivedGetCardLogin    "get card login"
             0x62 -> maybeByteStringNull ReceivedGetCardPassword "get card password"

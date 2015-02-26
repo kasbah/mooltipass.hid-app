@@ -88,6 +88,16 @@ button msg str = button' 2.96658357613427 "button" msg str
 bigButton : Signal.Message -> String -> Element
 bigButton msg str = button' 6.018072289156627 "bigButton" msg str
 
+disabledButton str =
+    let h      = heights.button
+        w      = round (toFloat h * aspect)
+        aspect = 2.96658357613427
+        th = 11
+        txt = Element.width w
+            <| centered <| Text.height th <| whiteText str
+        centeredText = container (w - 2) h middle txt
+    in layers [image w h ("images/button-disabled.svg"), centeredText]
+
 button' aspect src msg str =
     let h = heights.button
         w = round (toFloat h * aspect)

@@ -41,8 +41,8 @@ type MemManageState =
     | MemManageDenied
     | MemManageRead           (ParentNode, FlashAddress)
     | MemManageReadWaiting    (ParentNode, FlashAddress)
-    | MemManageReadFav        (ParentNode, List Favorite)
-    | MemManageReadFavWaiting (ParentNode, List Favorite)
+    | MemManageReadFav        (ParentNode, List FlashFavorite)
+    | MemManageReadFavWaiting (ParentNode, List FlashFavorite)
     | MemManageReadSuccess    (ParentNode, List Favorite)
     | MemManageWrite          (List OutgoingPacket)
     | MemManageWriteWaiting   (List OutgoingPacket)
@@ -73,7 +73,10 @@ memManageToInfo mm = case mm of
     MemManageDenied         -> NoMemInfo
     MemManageRead _         -> MemInfoWaitingForDevice
     MemManageReadWaiting _  -> MemInfoWaitingForDevice
-    --MemManageReadSuccess (pnode, favs)  -> MemInfo
+    MemManageReadFav _                 -> MemInfoWaitingForDevice
+    MemManageReadFavWaiting _          -> MemInfoWaitingForDevice
+    MemManageReadSuccess (pnode, favs) -> MemInfo {credentials = toCreds pnode
+                                                  , favorites  = favs}
     MemManageWrite        _ -> MemInfoWaitingForDevice
     MemManageWriteWaiting _ -> MemInfoWaitingForDevice
     MemManageWriteSuccess   -> MemInfoWaitingForDevice
@@ -313,6 +316,23 @@ interpret packet s =
                  then MemManageRead (EmptyParentNode, null)
                  else MemManageDenied)
                  s
+        ReceivedReadFlashNode ba ->
+            case s.memoryManage of
+                MemManageReadWaiting (n,addr) -> case parse n addr ba of
+                    Ok d  -> setMemManage (MemManageRead d) s
+                    Err err -> setMemManage (MemManageError err) s
+                _ -> setMemManage (MemManageError (unexpected "flash node")) s
+        ReceivedGetFavorite ma ->
+            case s.memoryManage of
+                MemManageReadFavWaiting (n,ffavs) -> case ma of
+                    Just (p,c) ->
+                        let ffavs' = ({parentNode = p, childNode = c})::ffavs
+                        in if length ffavs' == 15 then
+                              setMemManage (MemManageReadSuccess (n, toFavs ffavs' n)) s
+                           else
+                              setMemManage (MemManageReadFav (n, ffavs')) s
+                    Nothing -> setMemManage (MemManageError "favorite read denied") s
+                _ -> setMemManage (MemManageError (unexpected "favorite")) s
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s
@@ -336,7 +356,7 @@ setMemManage m s =
             if s.memoryManage == MemManageWaiting
             then setManage MemManageDenied
             else setManage <| MemManageError (unexpected "memory manage denied")
-        _ -> s
+        _ -> setManage m
 
 setMedia : MediaImport -> BackgroundState -> BackgroundState
 setMedia imp s =

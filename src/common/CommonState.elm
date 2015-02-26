@@ -32,6 +32,7 @@ emptyFavorites = [Nothing,Nothing,Nothing,Nothing,Nothing
 
 type MemInfo =
       MemInfo MemInfoData
+    | MemUnsavedInfo MemInfoData
     | MemInfoRequest
     | MemInfoWaitingForUser
     | MemInfoWaitingForDevice
