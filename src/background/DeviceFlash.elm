@@ -115,19 +115,31 @@ firstChild child = foldrChildren (\d _ -> ChildNode d) EmptyChildNode child
 
 linkNextParentsReturnFirst : ParentNode -> ParentNode
 linkNextParentsReturnFirst parent =
-    foldrParents (\d z -> ParentNode {d | nextParent <- z}) EmptyParentNode (lastParent parent)
+    foldrParents
+        (\d z -> ParentNode {d | nextParent <- z})
+        EmptyParentNode
+        (lastParent parent)
 
 linkPrevParentsReturnLast : ParentNode -> ParentNode
 linkPrevParentsReturnLast parent =
-    foldlParents (\d z -> ParentNode {d | prevParent <- z}) EmptyParentNode (firstParent parent)
+    foldlParents
+        (\d z -> ParentNode {d | prevParent <- z})
+        EmptyParentNode
+        (firstParent parent)
 
 linkNextChildrenReturnFirst : ChildNode -> ChildNode
 linkNextChildrenReturnFirst child =
-    foldrChildren (\d z -> ChildNode {d | nextChild <- z}) EmptyChildNode (lastChild child)
+    foldrChildren
+        (\d z -> ChildNode {d | nextChild <- z})
+        EmptyChildNode
+        (lastChild child)
 
 linkPrevChildrenReturnLast : ChildNode -> ChildNode
 linkPrevChildrenReturnLast child =
-    foldlChildren (\d z -> ChildNode {d | prevChild <- z}) EmptyChildNode (firstChild child)
+    foldlChildren
+        (\d z -> ChildNode {d | prevChild <- z})
+        EmptyChildNode
+        (firstChild child)
 
 lastChild : ChildNode -> ChildNode
 lastChild child = foldlChildren (\d _ -> ChildNode d) EmptyChildNode child
@@ -151,7 +163,7 @@ pAddress p = case p of
 cAddress : ChildNode -> FlashAddress
 cAddress p = case p of
     (ChildNode data) -> data.address
-    _                 -> null
+    _                -> null
 
 parentAddress' : ChildNode -> ParentNode -> Maybe FlashAddress
 parentAddress' c p = queryParents
@@ -228,7 +240,6 @@ fromFavs fs firstP =
             <| map (Maybe.withDefault (null, null))
                 <| map (\f -> parent f `andThen` child f) fs
 
-
 parseParentNode : ParentNode -> FlashAddress -> ByteArray
               -> Maybe (ParentNode, FlashAddress)
 parseParentNode p addr bs =
@@ -249,9 +260,6 @@ parseParentNode p addr bs =
                 in Just newP
             Err _ -> Nothing
         _ -> Nothing
-
-
---addChild : ParentNode -> ChildNode -> ParentNode
 
 parseChildNode : ParentNode -> FlashAddress -> ByteArray
             -> Result String (ParentNode, FlashAddress)
@@ -279,7 +287,7 @@ parseChildNode p addr bs = case p of
                                                 }
                                             , (nextC1, nextC2))
                                     _ -> Err <| "Not enough or too much data: " ++ toString (drop 32 (drop 63 (drop 24 data)))
-                                Err s -> Err <| "converting password, " ++ s ++ toString bs
+                                Err s -> Err <| "Converting password, " ++ s ++ toString bs
                             Err s -> Err <| "Converting login, " ++ s
                         Err s -> Err <| "Converting description, " ++ s
                 _ -> Err "Not enough data"
@@ -287,7 +295,8 @@ parseChildNode p addr bs = case p of
         in Result.map pNodeAndNextAddr cNodeAndNextAddr
     EmptyParentNode -> Err "Empty parent node"
 
-parse : ParentNode -> FlashAddress -> ByteArray -> Result String (ParentNode, FlashAddress)
+parse : ParentNode -> FlashAddress -> ByteArray
+      -> Result String (ParentNode, FlashAddress)
 parse p addr bs =
     let parentOrChild = case bs of
             (_::flags2::_) -> (flags2 `and` 0xC0) `shiftRight` 6
