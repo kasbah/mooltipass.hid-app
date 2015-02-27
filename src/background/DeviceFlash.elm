@@ -198,13 +198,13 @@ queryChildren fb fc c =
         (firstChild c)
 
 toCreds : ParentNode -> List (String, List String)
-toCreds parent =
+toCreds firstP =
     let getLogins firstC =
-            foldlChildren (\c z -> c.login::z) [] firstC
+            reverse <| foldlChildren (\c z -> c.login::z) [] firstC
     in reverse <| foldlParents
             (\p z -> log "toCreds" (p.service, getLogins (log "child" p.firstChild))::z)
             []
-            <| linkNextParentsReturnFirst parent
+            firstP
 
 toFavs : List FlashFavorite -> ParentNode -> List Favorite
 toFavs ffs firstP =
@@ -218,7 +218,7 @@ toFavs ffs firstP =
                 (\c -> fav.childNode /= null && c.address == fav.childNode)
                 (\c -> (p.service, c.login))
                 p.firstChild
-    in map (\f -> parent f `andThen` child f) ffs
+    in reverse <| map (\f -> parent f `andThen` child f) ffs
 
 fromFavs : List Favorite -> ParentNode -> List OutgoingPacket
 fromFavs fs firstP =

@@ -96,7 +96,7 @@ encode s =
                             | otherwise ->
                                 sendCommand'
                                     (OutgoingGetFavorite 0)
-                                    [SetMemManage (MemManageReadFavWaiting (p,[]))]
+                                    [SetMemManage (MemManageReadFavWaiting (linkNextParentsReturnFirst p,[]))]
               MemManageReadFav (p,favs) ->
                         sendCommand'
                             (OutgoingGetFavorite ((length favs) + 1))
