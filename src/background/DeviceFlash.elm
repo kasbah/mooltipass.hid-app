@@ -198,13 +198,13 @@ queryChildren fb fc c =
         (firstChild c)
 
 toCreds : ParentNode -> List (String, List String)
-toCreds firstP =
+toCreds parent =
     let getLogins firstC =
             foldlChildren (\c z -> c.login::z) [] firstC
     in foldlParents
-            (\p z -> (p.service, getLogins p.firstChild)::z)
+            (\p z -> log "toCreds" (p.service, getLogins (log "child" p.firstChild))::z)
             []
-            firstP
+            <| linkNextParentsReturnFirst parent
 
 toFavs : List FlashFavorite -> ParentNode -> List Favorite
 toFavs ffs firstP =
