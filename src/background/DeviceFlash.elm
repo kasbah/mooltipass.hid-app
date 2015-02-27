@@ -201,7 +201,7 @@ toCreds : ParentNode -> List (String, List String)
 toCreds parent =
     let getLogins firstC =
             foldlChildren (\c z -> c.login::z) [] firstC
-    in foldlParents
+    in reverse <| foldlParents
             (\p z -> log "toCreds" (p.service, getLogins (log "child" p.firstChild))::z)
             []
             <| linkNextParentsReturnFirst parent
@@ -263,14 +263,14 @@ parseChildNode : ParentNode -> FlashAddress -> FlashAddress -> ByteArray
 parseChildNode p addr nParentAddr bs = case p of
     ParentNode d ->
         let cNodeAndNextAddr = case bs of
-                (flags1::flags2::nextC1::nextC2::prevC1::prevC2::ctr1::ctr2::ctr3::data) ->
+                (flags1::flags2::nextC1::nextC2::prevC1::prevC2::data) ->
                     case nullTermString 24 data of
-                        Ok descr -> case nullTermString 63 (drop 24 data) of
-                            Ok login -> case toByteArray 32 (drop 63 (drop 24 data)) of
-                                Ok pw -> case drop 32 (drop 63 (drop 24 data)) of
-                                    (dateC1::dateC2::dateU1::[dateU2]) ->
-                                        Ok
-                                            (ChildNode
+                        Ok descr -> case drop 24 data of
+                            (dateC1::dateC2::dateU1::dateU2::ctr1::ctr2::ctr3::data') ->
+                                case nullTermString 63 data' of
+                                    Ok login -> case toByteArray 32 (drop 63 data') of
+                                        Ok pw ->
+                                            Ok (ChildNode
                                                 { address      = addr
                                                 , flags        = (flags1,flags2)
                                                 , nextChild    = EmptyChildNode
@@ -283,9 +283,9 @@ parseChildNode p addr nParentAddr bs = case p of
                                                 , dateLastUsed = (dateU1,dateU2)
                                                 }
                                             , (nextC1, nextC2))
-                                    _ -> Err <| "Not enough or too much data: " ++ toString (drop 32 (drop 63 (drop 24 data)))
-                                Err s -> Err <| "Converting password, " ++ s ++ toString bs
-                            Err s -> Err <| "Converting login, " ++ s
+                                        Err s -> Err <| "Converting password, " ++ s ++ toString bs
+                                    Err s -> Err <| "Converting login, " ++ s
+                            _ -> Err "Converting dates and ctr"
                         Err s -> Err <| "Converting description, " ++ s
                 _ -> Err "Not enough data"
             pNodeAndNextAddr (cN, nAddr) =
