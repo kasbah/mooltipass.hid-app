@@ -329,11 +329,11 @@ interpret packet s =
         ReceivedReadFlashNode ba ->
             case s.memoryManage of
                 MemManageReadWaiting d prevBa ->
-                    case length (prevBa ++ ba) of
-                        132 -> case parse d (prevBa ++ ba) of
+                    if length (prevBa ++ ba) == nodeSize
+                        then case parse d (prevBa ++ ba) of
                             Ok d'  -> setMemManage (MemManageRead d' []) s
                             Err err -> setMemManage (MemManageError err) s
-                        _ -> setMemManage (MemManageReadWaiting d (prevBa ++ ba)) s
+                        else setMemManage (MemManageReadWaiting d (prevBa ++ ba)) s
                 _ -> setMemManage (MemManageError (unexpected "flash node")) s
         ReceivedGetFavorite (p,c) ->
             case s.memoryManage of

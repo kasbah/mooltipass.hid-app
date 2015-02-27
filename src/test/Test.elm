@@ -175,11 +175,11 @@ tests =
     , property "- 'lastChild of last child is last child'"
         (\c -> lastChild c == lastChild (lastChild c))
         (linkedChildren 0 10)
-    , property "- 'Write parent node is 132 bytes'"
-        (\(ParentNode d) -> length (parentToArray d) == 132)
+    , property "- 'Write parent node is nodeSize bytes'"
+        (\(ParentNode d) -> length (parentToArray d) == nodeSize)
         (firstParentOfLinkedList 0 0 10)
-    , property "- 'Write child node is 132 bytes'"
-        (\(ChildNode d) -> length (childToArray d) == 132)
+    , property "- 'Write child node is nodeSize bytes'"
+        (\(ChildNode d) -> length (childToArray d) == nodeSize)
         (linkedChildren 1 10)
     , property "- 'Write then parse parent'"
         writeThenParseParentSucceeds

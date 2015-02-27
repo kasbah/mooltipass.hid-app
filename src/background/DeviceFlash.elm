@@ -17,6 +17,8 @@ import Util (..)
 
 type ParentNode = ParentNode ParentNodeData | EmptyParentNode
 
+nodeSize = 132
+
 type alias ParentNodeData =
     { address    : FlashAddress
     , flags      : (Byte,Byte)
@@ -317,7 +319,7 @@ parentToArray d =
         ++ pairToList (pAddress d.nextParent)
         ++ pairToList (cAddress d.firstChild)
         ++ stringToInts d.service
-    in data ++ repeat (132 - length data) 0
+    in data ++ repeat (nodeSize - length data) 0
 
 childToArray : ChildNodeData -> ByteArray
 childToArray d =
