@@ -40,13 +40,22 @@ type MemManageState =
     | MemManageEnd
     | MemManageWaiting
     | MemManageDenied
-    | MemManageRead           (ParentNode, FlashAddress, FlashAddress) ByteArray
-    | MemManageReadWaiting    (ParentNode, FlashAddress, FlashAddress) ByteArray
-    | MemManageReadFav        (ParentNode, List FlashFavorite)
-    | MemManageReadFavWaiting (ParentNode, List FlashFavorite)
-    | MemManageReadSuccess    (ParentNode, List Favorite)
-    | MemManageWrite          (List OutgoingPacket)
-    | MemManageWriteWaiting   (List OutgoingPacket)
+    | MemManageRead
+        (ParentNode, FlashAddress, FlashAddress)
+        ByteArray
+    | MemManageReadWaiting
+        (ParentNode, FlashAddress, FlashAddress)
+        ByteArray
+    | MemManageReadFav
+        (ParentNode, List FlashFavorite)
+    | MemManageReadFavWaiting
+        (ParentNode, List FlashFavorite)
+    | MemManageReadSuccess
+        (ParentNode, List Favorite)
+    | MemManageWrite
+        (List OutgoingPacket)
+    | MemManageWriteWaiting
+        (List OutgoingPacket)
     | MemManageWriteSuccess
     | MemManageError  String
 

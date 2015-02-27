@@ -6,7 +6,6 @@ import Maybe
 import Result (fromMaybe, Result(..))
 import Result
 import Bitwise (..)
-import Debug(log)
 import String
 
 -- local source
@@ -204,7 +203,7 @@ toCreds firstP =
     let getLogins firstC =
             reverse <| foldlChildren (\c z -> c.login::z) [] firstC
     in reverse <| foldlParents
-            (\p z -> log "toCreds" (p.service, getLogins (log "child" p.firstChild))::z)
+            (\p z -> (p.service, getLogins p.firstChild)::z)
             []
             firstP
 

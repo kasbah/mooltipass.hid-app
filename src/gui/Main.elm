@@ -45,14 +45,23 @@ forBg s =
         mImportRequested = case s.importMedia of
             RequestFile _ -> True
             _ -> False
+        memManage = case s.unsavedMemInfo of
+            Common.MemInfoRequest -> True
+            Common.MemInfoSave  _ -> True
+            _                     -> False
     in if
         | mImportRequested -> case s.importMedia of
             RequestFile p ->
                 ( FromGuiMessage.encode (Common.StartImportMedia p)
                 , SetImportMedia NotRequested)
             _             -> (e, NoOp)
-        | s.unsavedMemInfo == Common.MemInfoRequest ->
-            (FromGuiMessage.encode Common.StartMemManage, SetUnsavedMem Common.MemInfoWaitingForUser)
+        | memManage -> case s.unsavedMemInfo of
+                Common.MemInfoRequest ->
+                        (FromGuiMessage.encode Common.StartMemManage
+                        , SetUnsavedMem Common.MemInfoWaitingForUser)
+                Common.MemInfoSave d ->
+                        (FromGuiMessage.encode (Common.SaveMemManage d)
+                        , SetUnsavedMem (Common.MemInfo d))
         | otherwise -> (e, NoOp)
 
 output : Signal (ToChromeMessage, FromGuiMessage, GuiState)

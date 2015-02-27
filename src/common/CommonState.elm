@@ -34,6 +34,7 @@ type MemInfo =
       MemInfo MemInfoData
     | MemUnsavedInfo MemInfoData
     | MemInfoRequest
+    | MemInfoSave MemInfoData
     | MemInfoWaitingForUser
     | MemInfoWaitingForDevice
     | NoMemInfo
@@ -103,6 +104,7 @@ type CommonAction = SetLog (List String)
                   | StartImportMedia FileId
                   | SetMemInfo MemInfo
                   | StartMemManage
+                  | SaveMemManage MemInfoData
                   | EndMemManage
                   | CommonNoOp
 
@@ -112,11 +114,12 @@ update action s =
     case action of
         SetLog l            -> {s | log <- l}
         AppendToLog str     -> {s | log <- str::s.log}
-        SetDeviceStatus c      -> {s | deviceStatus <- c}
+        SetDeviceStatus c   -> {s | deviceStatus <- c}
         SetImportInfo i     -> {s | importInfo <- i}
         StartImportMedia id -> {s | importInfo <- ImportRequested id}
-        SetMemInfo i     -> {s | memoryInfo <- i}
+        SetMemInfo i        -> {s | memoryInfo <- i}
         StartMemManage      -> {s | memoryInfo <- MemInfoRequest}
+        SaveMemManage d     -> {s | memoryInfo <- MemInfoSave d}
         EndMemManage        -> {s | memoryInfo <- NoMemInfo}
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force

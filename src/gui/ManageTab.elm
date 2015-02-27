@@ -67,7 +67,6 @@ content (w,h) info =
     in case info of
         NoMemInfo             -> reEnter
         MemInfo d             -> showMem d
-        MemUnsavedInfo d      -> showMem d
         MemInfoRequest        -> pleaseAccept
         MemInfoWaitingForUser -> pleaseAccept
         _                     -> Element.empty
@@ -75,9 +74,7 @@ content (w,h) info =
 saveButton : MemInfo -> Element
 saveButton info =
     case info of
-        MemInfo d        -> disabledButton "save"
-        MemUnsavedInfo d -> button (send commonActions CommonNoOp) "save"
-        _                -> Element.empty
+        _ -> button (send commonActions CommonNoOp) "save"
 
 favorites : Int -> MemInfoData -> Element
 favorites w info =

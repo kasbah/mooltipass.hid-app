@@ -2,7 +2,7 @@ var emptyToGuiMessage =
     { setLog          : []
     , setDeviceStatus : 0
     , setImportInfo   : [0,"",0,0]
-    , setMemInfo   : [0,null]
+    , setMemInfo      : [0,null]
     };
 
 var emptyFromGuiMessage =
@@ -11,6 +11,7 @@ var emptyFromGuiMessage =
     , startImportMedia : null
     , startMemManage   : null
     , endMemManage     : null
+    , saveMemManage    : null
     };
 
 messageHasValue = function (message) {
