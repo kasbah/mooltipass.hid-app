@@ -326,9 +326,9 @@ childToArray d =
     in pairToList d.flags
     ++ pairToList (cAddress d.prevChild)
     ++ pairToList (cAddress d.nextChild)
-    ++ (\(x,y,z) -> [x,y,z]) d.ctr
     ++ descr ++ (repeat (24 - length descr) 0)
-    ++ login ++ (repeat (63 - length login) 0)
-    ++ d.password
     ++ pairToList d.dateCreated
     ++ pairToList d.dateLastUsed
+    ++ (\(x,y,z) -> [x,y,z]) d.ctr
+    ++ login ++ (repeat (63 - length login) 0)
+    ++ d.password
