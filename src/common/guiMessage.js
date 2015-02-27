@@ -10,6 +10,7 @@ var emptyFromGuiMessage =
     , getState         : null
     , startImportMedia : null
     , startMemManage   : null
+    , endMemManage     : null
     };
 
 messageHasValue = function (message) {

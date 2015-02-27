@@ -50,7 +50,7 @@ encode s =
             MemManageReadFav _     -> True
             MemManageWrite   _     -> True
             MemManageRequested     -> True
-            MemManageError   _     -> True
+            MemManageEnd           -> True
             _ -> False
 
     in if | not s.deviceConnected -> (connect, [])
@@ -72,7 +72,7 @@ encode s =
             && s.common.deviceStatus == Unlocked
                 -> sendCommand' OutgoingGetVersion []
           | memManageNeedsToSend -> case s.memoryManage of
-              MemManageError _   -> sendCommand'
+              MemManageEnd ->    sendCommand'
                                         OutgoingMemManageModeEnd
                                         [SetMemManage NotManaging]
               MemManageRequested -> sendCommand'

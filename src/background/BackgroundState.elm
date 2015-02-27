@@ -37,6 +37,7 @@ default = { deviceConnected  = False
 type MemManageState =
       NotManaging
     | MemManageRequested
+    | MemManageEnd
     | MemManageWaiting
     | MemManageDenied
     | MemManageRead           (ParentNode, FlashAddress, FlashAddress) ByteArray
@@ -71,6 +72,7 @@ memManageToInfo mm = case mm of
     MemManageRequested      -> MemInfoWaitingForUser
     MemManageWaiting        -> MemInfoWaitingForUser
     MemManageDenied         -> NoMemInfo
+    MemManageEnd            -> NoMemInfo
     MemManageRead _ _       -> MemInfoWaitingForDevice
     MemManageReadWaiting _ _ -> MemInfoWaitingForDevice
     MemManageReadFav _                 -> MemInfoWaitingForDevice
@@ -180,6 +182,7 @@ update action s =
         SetWaitingForDevice b -> {s | waitingForDevice <- b}
         SetMemManage m -> setMemManage m s
         CommonAction StartMemManage -> setMemManage MemManageRequested s
+        CommonAction EndMemManage -> setMemManage MemManageEnd s
         CommonAction (SetDeviceStatus c) ->
             let s' = {s | common <- updateCommon (SetDeviceStatus c)}
             in if c /= s.common.deviceStatus
@@ -365,6 +368,14 @@ setMemManage m s =
                 setManage
                     (MemManageError
                         "manage mode requested while aready in manage mode")
+        MemManageEnd ->
+            if memoryManaging s.memoryManage
+            then
+                setManage MemManageEnd
+            else
+                setManage
+                    (MemManageError
+                        "manage mode end requested while aready in manage mode")
         MemManageDenied ->
             if s.memoryManage == MemManageWaiting
             then setManage MemManageDenied

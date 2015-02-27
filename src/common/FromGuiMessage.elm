@@ -11,6 +11,7 @@ type alias FromGuiMessage =
     , getState         : Maybe ()
     , startImportMedia : Maybe FileId
     , startMemManage   : Maybe ()
+    , endMemManage     : Maybe ()
     }
 
 emptyFromGuiMessage =
@@ -18,6 +19,7 @@ emptyFromGuiMessage =
     , getState         = Nothing
     , startImportMedia = Nothing
     , startMemManage   = Nothing
+    , endMemManage     = Nothing
     }
 
 encode : CommonAction -> FromGuiMessage
@@ -27,6 +29,7 @@ encode action =
         SetLog l           -> {e | setLog <- Just l}
         StartImportMedia p -> {e | startImportMedia <- Just p}
         StartMemManage     -> {e | startMemManage <- Just ()}
+        EndMemManage       -> {e | endMemManage <- Just ()}
         _                  -> e
 
 decode :  FromGuiMessage -> CommonAction
@@ -37,5 +40,6 @@ decode msg =
             , Maybe.map StartImportMedia msg.startImportMedia
             , Maybe.map (\_ -> GetState) msg.getState
             , Maybe.map (\_ -> StartMemManage) msg.startMemManage
+            , Maybe.map (\_ -> EndMemManage) msg.endMemManage
             ]
     in Maybe.withDefault CommonNoOp decode'

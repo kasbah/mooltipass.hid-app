@@ -94,7 +94,7 @@ connectToLog c = case c of
     NoCard       -> "device status: no card present"
     Locked       -> "device status: locked"
 
-{-| All actions that can be performed to change state -}
+{-| All actions that can be performed to change the common state -}
 type CommonAction = SetLog (List String)
                   | SetDeviceStatus DeviceStatus
                   | AppendToLog String
@@ -103,6 +103,7 @@ type CommonAction = SetLog (List String)
                   | StartImportMedia FileId
                   | SetMemInfo MemInfo
                   | StartMemManage
+                  | EndMemManage
                   | CommonNoOp
 
 {-| Transform the state to a new state according to an action -}
@@ -116,6 +117,7 @@ update action s =
         StartImportMedia id -> {s | importInfo <- ImportRequested id}
         SetMemInfo i     -> {s | memoryInfo <- i}
         StartMemManage      -> {s | memoryInfo <- MemInfoRequest}
+        EndMemManage        -> {s | memoryInfo <- NoMemInfo}
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force
         -- an update through if we need to (like when the GUI is newly opened
