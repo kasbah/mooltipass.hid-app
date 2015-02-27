@@ -46,7 +46,7 @@ encode : BackgroundState -> (ToDeviceMessage, List BackgroundAction)
 encode s =
     let e = emptyToDeviceMessage
         memManageNeedsToSend = case s.memoryManage of
-            MemManageRead    _     -> True
+            MemManageRead    _ _   -> True
             MemManageReadFav _     -> True
             MemManageWrite   _     -> True
             MemManageRequested     -> True
@@ -78,24 +78,24 @@ encode s =
               MemManageRequested -> sendCommand'
                                         OutgoingMemManageModeStart
                                         [SetMemManage MemManageWaiting]
-              MemManageRead (p,addr) -> case p of
+              MemManageRead (p,addr,nPAddr) ba -> case p of
                   EmptyParentNode ->
                       if addr == null then
                         sendCommand'
                             OutgoingGetStartingParent
-                            [SetMemManage (MemManageReadWaiting (p,null,0))]
+                            [SetMemManage (MemManageReadWaiting (p,null,null) ba)]
                       else
                         sendCommand'
                             (OutgoingReadFlashNode addr)
-                            [SetMemManage (MemManageReadWaiting (p,addr,0))]
+                            [SetMemManage (MemManageReadWaiting (p,addr,nPAddr) ba)]
                   ParentNode d ->
                         if  | addr /= null ->
                                 sendCommand'
                                     (OutgoingReadFlashNode addr)
-                                    [SetMemManage (MemManageReadWaiting (p,addr,0))]
+                                    [SetMemManage (MemManageReadWaiting (p,addr,nPAddr) ba)]
                             | otherwise ->
                                 sendCommand'
-                                    (OutgoingGetFavorite 1)
+                                    (OutgoingGetFavorite 0)
                                     [SetMemManage (MemManageReadFavWaiting (p,[]))]
               MemManageReadFav (p,favs) ->
                         sendCommand'

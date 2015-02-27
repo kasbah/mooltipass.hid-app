@@ -238,7 +238,7 @@ fromFavs fs firstP =
                 <| map (\f -> parent f `andThen` child f) fs
 
 parseParentNode : ParentNode -> FlashAddress -> ByteArray
-              -> Maybe (ParentNode, FlashAddress)
+              -> Maybe (ParentNode, FlashAddress, FlashAddress)
 parseParentNode p addr bs =
     case bs of
         (flags1::flags2::prevP1::prevP2::nextP1::nextP2::firstC1::firstC2::service) ->
@@ -253,14 +253,14 @@ parseParentNode p addr bs =
                             , firstChild = EmptyChildNode
                             , service    = str
                             }
-                        , (firstC1,firstC2))
+                        , (firstC1,firstC2), (nextP1,nextP2))
                 in Just newP
             Err _ -> Nothing
         _ -> Nothing
 
-parseChildNode : ParentNode -> FlashAddress -> ByteArray
-            -> Result String (ParentNode, FlashAddress)
-parseChildNode p addr bs = case p of
+parseChildNode : ParentNode -> FlashAddress -> FlashAddress -> ByteArray
+            -> Result String (ParentNode, FlashAddress, FlashAddress)
+parseChildNode p addr nParentAddr bs = case p of
     ParentNode d ->
         let cNodeAndNextAddr = case bs of
                 (flags1::flags2::nextC1::nextC2::prevC1::prevC2::ctr1::ctr2::ctr3::data) ->
@@ -288,19 +288,22 @@ parseChildNode p addr bs = case p of
                             Err s -> Err <| "Converting login, " ++ s
                         Err s -> Err <| "Converting description, " ++ s
                 _ -> Err "Not enough data"
-            pNodeAndNextAddr (cN, nAddr) = (ParentNode {d | firstChild <- linkNextChildrenReturnFirst cN}, nAddr)
+            pNodeAndNextAddr (cN, nAddr) =
+                (ParentNode {d | firstChild <- linkNextChildrenReturnFirst cN}
+                , if nAddr == null then nParentAddr else nAddr
+                , nParentAddr)
         in Result.map pNodeAndNextAddr cNodeAndNextAddr
     EmptyParentNode -> Err "Empty parent node"
 
-parse : ParentNode -> FlashAddress -> ByteArray
-      -> Result String (ParentNode, FlashAddress)
-parse p addr bs =
+parse : (ParentNode, FlashAddress, FlashAddress) -> ByteArray
+      -> Result String (ParentNode, FlashAddress, FlashAddress)
+parse (p,addr,nParentAddr) bs =
     let parentOrChild = case bs of
             (_::flags2::_) -> (flags2 `and` 0xC0) `shiftRight` 6
             _ -> (-1)
     in case parentOrChild of
         0 -> fromMaybe "parse parent failed" <| parseParentNode p addr bs
-        1 -> parseChildNode p addr bs
+        1 -> parseChildNode p addr nParentAddr bs
         _ -> Err <| "Invalid flags: " ++ (toString parentOrChild)
 
 pairToList : (a,a) -> List a

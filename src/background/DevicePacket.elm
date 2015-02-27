@@ -118,7 +118,7 @@ type ReceivedPacket =
     | ReceivedCpzCtrPacketExport CpzCtrLutEntry
     | ReceivedSetParameter      ReturnCode
     | ReceivedGetParameter      (Maybe ByteString)
-    | ReceivedGetFavorite       (Maybe (FlashAddress, FlashAddress))
+    | ReceivedGetFavorite       (FlashAddress, FlashAddress)
     | ReceivedResetCard         ReturnCode
     | ReceivedGetCardLogin      (Maybe ByteString)
     | ReceivedGetCardPassword   (Maybe ByteString)
@@ -350,11 +350,9 @@ fromInts (size::messageType::payload) =
                         (addrP1::addrP2::addrC1::addrC2::_) ->
                             let p = (addrP1,addrP2)
                                 c = (addrC1,addrC2)
-                                ok = p /= null && c /= null
-                            in if ok then Ok <| ReceivedGetFavorite (Just (p,c))
-                                     else Err "Received null address from get favorite"
+                            in Ok <| ReceivedGetFavorite (p,c)
                         _ -> Err "Invalid data for get favorite"
-                    else Ok <| ReceivedGetFavorite Nothing
+                    else Err "Invalid data for get favorite"
             0x60 -> doneOrNotDone ReceivedResetCard         "reset card"
             0x61 -> maybeByteStringNull ReceivedGetCardLogin    "get card login"
             0x62 -> maybeByteStringNull ReceivedGetCardPassword "get card password"

@@ -57,6 +57,9 @@ function onDataReceived(reportId, data)
         ints[i] = bytes[i];
     }
     deviceSendToElm({receiveCommand: ints});
+    if (ints[1] == 85)
+        chrome.hid.receive(device.connection, onDataReceived);
+
     device.waitingForMessage = false;
 }
 
@@ -64,8 +67,6 @@ function sendMsg(message)
 {
     if (device.waitingForMessage)
         return;
-    if(message[1] !== 112)
-        console.log("app",message);
     device.waitingForMessage = true;
     //Buffer creation is a bit awkward because windows doesn't like us using
     //the Uint8Array.buffer directly (or maybe it's something to do with the

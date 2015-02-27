@@ -110,28 +110,28 @@ firstParentOfLinkedList minChildren maxChildren maxParents =
 
 tests =
     let writeThenParseParentSucceeds ((ParentNode d),addr) =
-            isOk (parse EmptyParentNode addr (parentToArray d))
-        dataFromParse (Ok ((ParentNode d), addr)) = d
+            isOk (parse (EmptyParentNode,addr,null) (parentToArray d))
+        dataFromParse (Ok (ParentNode d,_,_)) = d
         writeThenParseParentRetains ((ParentNode d),addr) =
             dataFromParse
-                (parse EmptyParentNode addr (parentToArray d))
+                (parse (EmptyParentNode,addr,null) (parentToArray d))
                     == {d | address <- addr}
         writeThenParseParentRetains2 ((ParentNode d),addr) =
             parentToArray
                 (dataFromParse
-                    (parse EmptyParentNode addr (parentToArray d)))
+                    (parse (EmptyParentNode,addr,null) (parentToArray d)))
                         == parentToArray d
         writeThenParseChildSucceeds (p,(ChildNode cd),addr) =
-            isOk (parse p addr (childToArray cd))
+            isOk (parse (p,addr,null) (childToArray cd))
         writeThenParseChildRetains ((ParentNode d),(ChildNode cd),addr) =
             .firstChild
             (dataFromParse
-                (parse (ParentNode d) addr (childToArray cd)))
+                (parse ((ParentNode d),addr,null) (childToArray cd)))
                     == ChildNode {cd | address <- addr}
         writeThenParseChildRetains2 ((ParentNode d),(ChildNode cd),addr) =
             (\(ChildNode d) -> childToArray d)
             (.firstChild (dataFromParse
-                (parse (ParentNode d) addr (childToArray cd))))
+                (parse ((ParentNode d),addr,null) (childToArray cd))))
                     == childToArray cd
     in simpleCheck
     [ property "- 'null term string length remains the same'"
