@@ -316,6 +316,13 @@ interpret packet s =
                  then MemManageRead (EmptyParentNode, null)
                  else MemManageDenied)
                  s
+        ReceivedGetStartingParent a -> case s.memoryManage of
+            MemManageReadWaiting (EmptyParentNode,null) ->
+                if a /= null then
+                    setMemManage (MemManageRead (EmptyParentNode, a)) s
+                else
+                    setMemManage (MemManageError "null starting parent") s
+            _ -> setMemManage (MemManageError (unexpected "starting parent")) s
         ReceivedReadFlashNode ba ->
             case s.memoryManage of
                 MemManageReadWaiting (n,addr) -> case parse n addr ba of

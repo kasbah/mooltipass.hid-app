@@ -11,6 +11,7 @@ import BackgroundState (..)
 import DevicePacket (..)
 import DeviceFlash (..)
 import Util (..)
+import Byte (..)
 
 type alias FromDeviceMessage = { setHidConnected : Maybe Bool
                                , receiveCommand  : Maybe (List Int)
@@ -75,9 +76,14 @@ encode s =
                                         [SetMemManage MemManageWaiting]
               MemManageRead (p,addr) -> case p of
                   EmptyParentNode ->
-                      sendCommand'
-                        OutgoingGetStartingParent
-                        [SetMemManage (MemManageReadWaiting (p,addr))]
+                      if addr == null then
+                        sendCommand'
+                            OutgoingGetStartingParent
+                            [SetMemManage (MemManageReadWaiting (p,null))]
+                      else
+                        sendCommand'
+                            (OutgoingReadFlashNode addr)
+                            [SetMemManage (MemManageReadWaiting (p,addr))]
                   ParentNode d ->
                         if  | addr /= null ->
                                 sendCommand'

@@ -125,7 +125,7 @@ type ReceivedPacket =
     | ReceivedSetCardLogin      ReturnCode
     | ReceivedSetCardPassword   ReturnCode
     | ReceivedGetFreeSlotAddr   (Maybe ByteString)
-    | ReceivedGetStartingParent (Maybe ByteString)
+    | ReceivedGetStartingParent FlashAddress
     | ReceivedGetCtrValue       (Maybe ByteString)
     | ReceivedAddNewCard        ReturnCode
     | ReceivedGetStatus         Status
@@ -350,7 +350,6 @@ fromInts (size::messageType::payload) =
                         (addrP1::addrP2::addrC1::addrC2::_) ->
                             let p = (addrP1,addrP2)
                                 c = (addrC1,addrC2)
-                                null = (0,0)
                                 ok = p /= null && c /= null
                             in if ok then Ok <| ReceivedGetFavorite (Just (p,c))
                                      else Err "Received null address from get favorite"
@@ -362,7 +361,10 @@ fromInts (size::messageType::payload) =
             0x63 -> doneOrNotDone ReceivedSetCardLogin      "set card password"
             0x64 -> doneOrNotDone ReceivedSetCardPassword   "set card password"
             0x65 -> maybeByteString ReceivedGetFreeSlotAddr "get free slot address"
-            0x66 -> maybeByteString ReceivedGetStartingParent "get starting parent address"
+            0x66 -> if size /= 2 then Err "Invalid size for starting parent"
+                    else case payload of
+                        (addr1::addr2::_) -> Ok <| ReceivedGetStartingParent (addr1,addr2)
+                        _ -> Err "Invalid data for starting parent"
             0x67 -> maybeByteString ReceivedGetCtrValue       "get CTR value"
             0x68 -> doneOrNotDone ReceivedAddNewCard "add unknown smartcard"
             0x69 -> Err "Got ReceivedUsbKeyboardPress"

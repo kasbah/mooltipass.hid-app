@@ -171,9 +171,6 @@ parentAddress' c p = queryParents
     .address
     p
 
-null : FlashAddress
-null = (0,0)
-
 foldlChildren : (ChildNodeData -> a -> a) -> a -> ChildNode -> a
 foldlChildren f z n = case n of
     ChildNode data -> f data (foldlChildren f z data.nextChild)
