@@ -40,7 +40,7 @@ type MemManageState =
     | MemManageWaiting
     | MemManageDenied
     | MemManageRead           (ParentNode, FlashAddress)
-    | MemManageReadWaiting    (ParentNode, FlashAddress)
+    | MemManageReadWaiting    (ParentNode, FlashAddress, Int)
     | MemManageReadFav        (ParentNode, List FlashFavorite)
     | MemManageReadFavWaiting (ParentNode, List FlashFavorite)
     | MemManageReadSuccess    (ParentNode, List Favorite)
@@ -317,7 +317,7 @@ interpret packet s =
                  else MemManageDenied)
                  s
         ReceivedGetStartingParent a -> case s.memoryManage of
-            MemManageReadWaiting (EmptyParentNode,null) ->
+            MemManageReadWaiting (EmptyParentNode,null,0) ->
                 if a /= null then
                     setMemManage (MemManageRead (EmptyParentNode, a)) s
                 else
@@ -325,9 +325,12 @@ interpret packet s =
             _ -> setMemManage (MemManageError (unexpected "starting parent")) s
         ReceivedReadFlashNode ba ->
             case s.memoryManage of
-                MemManageReadWaiting (n,addr) -> case parse n addr ba of
+                MemManageReadWaiting (n,addr,2) -> case parse n addr ba of
                     Ok d  -> setMemManage (MemManageRead d) s
                     Err err -> setMemManage (MemManageError err) s
+                MemManageReadWaiting (n,addr,i) -> if i < 2
+                                                   then setMemManage (MemManageReadWaiting (n,addr,i+1)) s
+                                                   else setMemManage (MemManageError ("received too many packets for flash node")) s
                 _ -> setMemManage (MemManageError (unexpected "flash node")) s
         ReceivedGetFavorite ma ->
             case s.memoryManage of
@@ -340,6 +343,10 @@ interpret packet s =
                               setMemManage (MemManageReadFav (n, ffavs')) s
                     Nothing -> setMemManage (MemManageError "favorite read denied") s
                 _ -> setMemManage (MemManageError (unexpected "favorite")) s
+        ReceivedManageModeEnd r ->
+            if r == Done
+            then s
+            else setMemManage (MemManageError "device did not exit mem-manage when asked") s
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s
@@ -351,6 +358,7 @@ setMemManage m s =
         setManage m' = { s' | memoryManage <- m'}
         updateCommon a = Common.update a s.common
     in case m of
+        MemManageError str -> appendToLog ("Mem Manage Error: " ++ str) (setManage m)
         MemManageRequested ->
             if not (memoryManaging s.memoryManage)
             then

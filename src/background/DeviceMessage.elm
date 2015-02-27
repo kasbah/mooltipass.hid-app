@@ -50,6 +50,7 @@ encode s =
             MemManageReadFav _     -> True
             MemManageWrite   _     -> True
             MemManageRequested     -> True
+            MemManageError   _     -> True
             _ -> False
 
     in if | not s.deviceConnected -> (connect, [])
@@ -71,6 +72,9 @@ encode s =
             && s.common.deviceStatus == Unlocked
                 -> sendCommand' OutgoingGetVersion []
           | memManageNeedsToSend -> case s.memoryManage of
+              MemManageError _   -> sendCommand'
+                                        OutgoingMemManageModeEnd
+                                        [SetMemManage NotManaging]
               MemManageRequested -> sendCommand'
                                         OutgoingMemManageModeStart
                                         [SetMemManage MemManageWaiting]
@@ -79,16 +83,16 @@ encode s =
                       if addr == null then
                         sendCommand'
                             OutgoingGetStartingParent
-                            [SetMemManage (MemManageReadWaiting (p,null))]
+                            [SetMemManage (MemManageReadWaiting (p,null,0))]
                       else
                         sendCommand'
                             (OutgoingReadFlashNode addr)
-                            [SetMemManage (MemManageReadWaiting (p,addr))]
+                            [SetMemManage (MemManageReadWaiting (p,addr,0))]
                   ParentNode d ->
                         if  | addr /= null ->
                                 sendCommand'
                                     (OutgoingReadFlashNode addr)
-                                    [SetMemManage (MemManageReadWaiting (p,addr))]
+                                    [SetMemManage (MemManageReadWaiting (p,addr,0))]
                             | otherwise ->
                                 sendCommand'
                                     (OutgoingGetFavorite 1)
