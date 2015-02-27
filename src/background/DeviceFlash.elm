@@ -214,9 +214,9 @@ toFavs ffs firstP =
                 (\p -> fav.parentNode /= null && p.address == fav.parentNode)
                 identity
                 firstP
-        child fav p =
+        child fav' p =
             queryChildren
-                (\c -> fav.childNode /= null && c.address == fav.childNode)
+                (\c -> fav'.childNode /= null && c.address == fav'.childNode)
                 (\c -> (p.service, c.login))
                 p.firstChild
     in reverse <| map (\f -> parent f `andThen` child f) ffs
@@ -234,7 +234,7 @@ fromFavs fs firstP =
                 (\c -> (p.address, c.address))
                 p.firstChild
     in map OutgoingSetFavorite
-        <| map2 (,) [1..15]
+        <| map2 (,) [0..15]
             <| map (Maybe.withDefault (null, null))
                 <| map (\f -> parent f `andThen` child f) fs
 
@@ -264,7 +264,7 @@ parseChildNode : ParentNode -> FlashAddress -> FlashAddress -> ByteArray
 parseChildNode p addr nParentAddr bs = case p of
     ParentNode d ->
         let cNodeAndNextAddr = case bs of
-                (flags1::flags2::nextC1::nextC2::prevC1::prevC2::data) ->
+                (flags1::flags2::prevC1::prevC2::nextC1::nextC2::data) ->
                     case nullTermString 24 data of
                         Ok descr -> case drop 24 data of
                             (dateC1::dateC2::dateU1::dateU2::ctr1::ctr2::ctr3::data') ->
@@ -289,8 +289,8 @@ parseChildNode p addr nParentAddr bs = case p of
                             _ -> Err "Converting dates and ctr"
                         Err s -> Err <| "Converting description, " ++ s
                 _ -> Err "Not enough data"
-            pNodeAndNextAddr (cN, nAddr) =
-                (ParentNode {d | firstChild <- linkNextChildrenReturnFirst cN}
+            pNodeAndNextAddr (cNode, nAddr) =
+                (ParentNode {d | firstChild <- linkNextChildrenReturnFirst cNode}
                 , if nAddr == null then nParentAddr else nAddr
                 , nParentAddr)
         in Result.map pNodeAndNextAddr cNodeAndNextAddr

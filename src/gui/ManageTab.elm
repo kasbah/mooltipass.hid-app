@@ -74,7 +74,7 @@ content (w,h) info =
 saveButton : MemInfo -> Element
 saveButton info =
     case info of
-        _ -> button (send commonActions CommonNoOp) "save"
+        (MemInfo d) -> button (send commonActions (SaveMemManage d) ) "save"
 
 favorites : Int -> MemInfoData -> Element
 favorites w info =

@@ -190,8 +190,12 @@ update action s =
         SetMediaImport t -> setMedia t s
         SetWaitingForDevice b -> {s | waitingForDevice <- b}
         SetMemManage m -> setMemManage m s
-        CommonAction StartMemManage -> setMemManage MemManageRequested s
-        CommonAction EndMemManage -> setMemManage MemManageEnd s
+        CommonAction StartMemManage    -> setMemManage MemManageRequested s
+        CommonAction EndMemManage      -> setMemManage MemManageEnd s
+        CommonAction (SaveMemManage d) -> case s.memoryManage of
+            MemManageReadSuccess (pnode, _) ->
+                setMemManage (MemManageWrite (fromFavs d.favorites pnode)) s
+            _ -> s
         CommonAction (SetDeviceStatus c) ->
             let s' = {s | common <- updateCommon (SetDeviceStatus c)}
             in if c /= s.common.deviceStatus
@@ -348,7 +352,7 @@ interpret packet s =
             case s.memoryManage of
                 MemManageReadFavWaiting (n,ffavs) ->
                     let ffavs' = ({parentNode = p, childNode = c})::ffavs
-                    in if length ffavs' == 14 then
+                    in if length ffavs' == 15 then
                           setMemManage (MemManageReadSuccess (n, toFavs ffavs' n)) s
                        else
                           setMemManage (MemManageReadFav (n, ffavs')) s
@@ -357,6 +361,16 @@ interpret packet s =
             if r == Done
             then s
             else setMemManage (MemManageError "device did not exit mem-manage when asked") s
+        ReceivedSetFavorite r -> case s.memoryManage of
+            MemManageWriteWaiting (p::ps) ->
+                if r == Done
+                then setMemManage (MemManageWrite ps) s
+                else setMemManage (MemManageError "write favorite denied") s
+            MemManageWriteWaiting [] ->
+                if r == Done
+                then setMemManage (MemManageRead (EmptyParentNode, null, null) []) s
+                else setMemManage (MemManageError "write favorite denied") s
+            _ -> setMemManage (MemManageError (unexpected "set favorite")) s
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s

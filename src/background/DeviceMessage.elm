@@ -99,8 +99,16 @@ encode s =
                                     [SetMemManage (MemManageReadFavWaiting (linkNextParentsReturnFirst p,[]))]
               MemManageReadFav (p,favs) ->
                         sendCommand'
-                            (OutgoingGetFavorite ((length favs) + 1))
+                            (OutgoingGetFavorite (length favs))
                             [SetMemManage (MemManageReadFavWaiting (p,favs))]
+              MemManageWrite (p::ps) ->
+                        sendCommand'
+                            p
+                            [SetMemManage (MemManageWriteWaiting (p::ps))]
+              MemManageWrite [] ->
+                        sendCommand'
+                            OutgoingGetStartingParent
+                            [SetMemManage (MemManageReadWaiting (EmptyParentNode,null,null) [])]
           | s.extRequest /= NoRequest && s.common.deviceStatus == Unlocked ->
               ({e | sendCommand <-
                     Maybe.map toInts (extRequestToPacket s.currentContext s.extRequest)}
