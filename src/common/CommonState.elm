@@ -26,6 +26,7 @@ default =
 
 type alias Favorite = Maybe (String, String)
 
+maxFavs = 15
 emptyFavorites = [Nothing,Nothing,Nothing,Nothing,Nothing
                  ,Nothing,Nothing,Nothing,Nothing,Nothing
                  ,Nothing,Nothing,Nothing,Nothing,Nothing]

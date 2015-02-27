@@ -88,7 +88,7 @@ favorites w info =
                     (intersperse (Html.fromElement (spacer 1 5))
                         (map
                             (favorite (w - 48))
-                            (map2 (,) [1..15] (stripNothing info.favorites)))
+                            (map2 (,) [1..maxFavs] (stripNothing info.favorites)))
                     )
                 |> Html.toElement (w - 32) ch
         ch = heights.manageLogin * 5 + (5*6)
@@ -147,7 +147,7 @@ favorite w (n,maybeF) =
                    [ service
                    , sp, login
                    , sp, icon upIcon (n /= 1)
-                   , sp, icon downIcon (n /= 15)
+                   , sp, icon downIcon (n /= maxFavs)
                    , sp, favIcon True (serviceString,loginString)
                    ]
     in Html.div

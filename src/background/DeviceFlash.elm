@@ -94,9 +94,7 @@ type alias FlashFavorite =
 emptyFav : FlashFavorite
 emptyFav = {parentNode = null, childNode = null}
 
-emptyFlashFavorites = [emptyFav,emptyFav,emptyFav,emptyFav,emptyFav
-                      ,emptyFav,emptyFav,emptyFav,emptyFav,emptyFav
-                      ,emptyFav,emptyFav,emptyFav,emptyFav,emptyFav]
+emptyFlashFavorites = map (\_ -> emptyFav) emptyFavorites
 
 foldrParents : (ParentNodeData -> a -> a) -> a -> ParentNode -> a
 foldrParents f z n = case n of
@@ -234,7 +232,7 @@ fromFavs fs firstP =
                 (\c -> (p.address, c.address))
                 p.firstChild
     in map OutgoingSetFavorite
-        <| map2 (,) [0..15]
+        <| map2 (,) [0..maxFavs]
             <| map (Maybe.withDefault (null, null))
                 <| map (\f -> parent f `andThen` child f) fs
 

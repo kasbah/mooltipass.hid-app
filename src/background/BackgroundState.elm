@@ -352,7 +352,7 @@ interpret packet s =
             case s.memoryManage of
                 MemManageReadFavWaiting (n,ffavs) ->
                     let ffavs' = ({parentNode = p, childNode = c})::ffavs
-                    in if length ffavs' == 15 then
+                    in if length ffavs' == maxFavs then
                           setMemManage (MemManageReadSuccess (n, toFavs ffavs' n)) s
                        else
                           setMemManage (MemManageReadFav (n, ffavs')) s
