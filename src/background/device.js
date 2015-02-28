@@ -57,7 +57,12 @@ function onDataReceived(reportId, data)
     {
         ints[i] = bytes[i];
     }
-    deviceSendToElm({receiveCommand: ints});
+    if (ints[1] === 112) {//status update
+        console.log("yo");
+        elm.ports.deviceStatus.send(ints[2]);
+    } else  {
+        deviceSendToElm({receiveCommand: ints});
+    }
 
     //special case for read node reply message as we need to read 3 messages in
     //a row

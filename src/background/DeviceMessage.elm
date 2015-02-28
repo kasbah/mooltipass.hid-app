@@ -3,6 +3,7 @@ module DeviceMessage where
 -- Elm standard library
 import Maybe
 import List (..)
+import Bitwise(and)
 
 -- local source
 import CommonState (..)
@@ -21,6 +22,15 @@ type alias FromDeviceMessage = { setHidConnected : Maybe Bool
 type alias ToDeviceMessage   = { connect     : Maybe ()
                                , sendCommand : Maybe (List Int)
                                }
+
+
+decodeStatus : Int -> BackgroundAction
+decodeStatus i = case i `and` 0x7 of
+    0x0 -> CommonAction (SetDeviceStatus NoCard)
+    0x1 -> CommonAction (SetDeviceStatus Locked)
+    0x3 -> CommonAction (SetDeviceStatus Locked)
+    0x5 -> CommonAction (SetDeviceStatus Unlocked)
+    _   -> appendToLog' "Error: Received invalid status from device"
 
 sendCommand : OutgoingPacket -> ToDeviceMessage
 sendCommand p = {emptyToDeviceMessage | sendCommand <- Just (toInts p)}
@@ -54,7 +64,6 @@ encode s =
             _ -> False
 
     in if | not s.deviceConnected -> (connect, [])
-          | s.waitingForDevice -> (e, [])
           | mediaImportActive s -> case s.mediaImport of
                 MediaImportStart ps ->
                     sendCommand'
@@ -68,9 +77,6 @@ encode s =
                         OutgoingImportMediaEnd
                         [SetMediaImport (MediaImportWaiting [])]
                 _ -> (e, [])
-          | s.deviceVersion == Nothing
-            && s.common.deviceStatus == Unlocked
-                -> sendCommand' OutgoingGetVersion []
           | memManageNeedsToSend -> case s.memoryManage of
               MemManageEnd ->    sendCommand'
                                         OutgoingMemManageModeEnd
@@ -119,6 +125,12 @@ encode s =
                 , SetWaitingForDevice True
                 ]
               )
+          | s.deviceVersion == Nothing
+            && s.common.deviceStatus == Unlocked
+                -> sendCommand' OutgoingGetVersion []
+          | not (mediaImportActive s) && not (memoryManageBusy s.memoryManage) ->
+              ({ e | sendCommand <- Just (toInts OutgoingGetStatus)}
+              , [])
           | otherwise -> (e, [])
 
 sendCommand' : OutgoingPacket

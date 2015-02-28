@@ -18,6 +18,7 @@ var elm = Elm.worker(
     , fromDevice    : emptyFromDeviceMessage
     , fromExtension : emptyFromExtensionMessage
     , fromChrome    : {readFile: []}
+    , deviceStatus  : 0
     }
 );
 

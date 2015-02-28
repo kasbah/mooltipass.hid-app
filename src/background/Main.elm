@@ -27,20 +27,20 @@ port toGUI = map (ToGuiMessage.encode << .common) (dropRepeats state)
 
 port fromDevice : Signal FromDeviceMessage
 
+port deviceStatus : Signal Int
+
 port toDevice : Signal ToDeviceMessage
-port toDevice =
-    merge
-        (map (\(m,_,_) -> m) output)
+port toDevice = map (\(m,_,_) -> m) output
         -- this is the keep-alive
-        <| map2
-            (\_ s -> if | mediaImportActive s && s.deviceConnected
-                            -> emptyToDeviceMessage
-                        | memoryManaging s.memoryManage -> emptyToDeviceMessage
-                        | s.deviceConnected   -> sendCommand OutgoingGetStatus
-                        | otherwise           -> emptyToDeviceMessage
-            )
-            (every second)
-            state
+       -- <| map2
+       --     (\_ s -> if | mediaImportActive s && s.deviceConnected
+       --                     -> emptyToDeviceMessage
+       --                 | memoryManaging s.memoryManage -> emptyToDeviceMessage
+       --                 | s.deviceConnected   -> sendCommand
+       --                 | otherwise           -> emptyToDeviceMessage
+       --     )
+       --     (every second)
+       --     state
 
 port toChrome : Signal ToChromeMessage
 port toChrome = map ChromeBgMessage.encode state
@@ -71,4 +71,6 @@ inputActions = mergeMany
     , map (\m -> [ExtensionMessage.decode m]) fromExtension
     , map (\m -> [ChromeBgMessage.decode m]) fromChrome
     , map DeviceMessage.decode fromDevice
+    , map (\m -> [DeviceMessage.decodeStatus m]) (dropRepeats deviceStatus)
+    , map (\_ -> [NoOp]) (every second)
     ]

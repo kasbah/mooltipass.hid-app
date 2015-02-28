@@ -128,7 +128,6 @@ type ReceivedPacket =
     | ReceivedGetStartingParent FlashAddress
     | ReceivedGetCtrValue       (Maybe ByteString)
     | ReceivedAddNewCard        ReturnCode
-    | ReceivedGetStatus         Status
 
 {-| Carries firmware version and flash memory size -}
 type alias MpVersion = { flashMemSize : Byte
@@ -145,9 +144,6 @@ type CheckPasswordReturn = Incorrect | Correct | RequestBlocked
 
 {-| Return for 'ReceivedSetContext' -}
 type SetContextReturn = UnknownContext | ContextSet | NoCardForContext
-
-{-| Return for 'ReceivedGetStatus' -}
-type Status = PacketNoCard | PacketLocked | PacketLockScreen | PacketUnlocked
 
 {-| You dun it? -}
 type ReturnCode = Done | NotDone
@@ -366,12 +362,5 @@ fromInts (size::messageType::payload) =
             0x67 -> maybeByteString ReceivedGetCtrValue       "get CTR value"
             0x68 -> doneOrNotDone ReceivedAddNewCard "add unknown smartcard"
             0x69 -> Err "Got ReceivedUsbKeyboardPress"
-            0x70 -> if size /= 1
-                    then Err "Invalid data size for 'get status'"
-                    else case (List.head payload) `and` 0x7 of
-                                0x0 -> Ok <| ReceivedGetStatus PacketNoCard
-                                0x1 -> Ok <| ReceivedGetStatus PacketLocked
-                                0x3 -> Ok <| ReceivedGetStatus PacketLockScreen
-                                0x5 -> Ok <| ReceivedGetStatus PacketUnlocked
-                                _   -> Err "Invalid status received in 'get status'"
+            0x70 -> Err "ReceivedGetStatus"
             _    -> Err <| "Got unknown message: " ++ toString messageType

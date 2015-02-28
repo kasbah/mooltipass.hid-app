@@ -291,13 +291,6 @@ interpret packet s =
                          else ExtNotWritten
                      _ -> NoRequest
             }
-        ReceivedGetStatus st ->
-            update (CommonAction (SetDeviceStatus (case st of
-                       PacketNoCard     -> NoCard
-                       PacketLocked     -> Locked
-                       PacketLockScreen -> Locked
-                       PacketUnlocked   -> Unlocked
-                    ))) s
         ReceivedGetVersion v ->
                 appendToLog
                     ("device is "
