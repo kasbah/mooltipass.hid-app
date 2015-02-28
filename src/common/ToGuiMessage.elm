@@ -29,7 +29,6 @@ encode s =
         MemInfoWaitingForUser   -> (2, Nothing)
         MemInfoWaitingForDevice -> (3, Nothing)
         MemInfo d               -> (4, Just d)
-        MemUnsavedInfo d        -> (5, Just d)
     }
 
 decode : ToGuiMessage -> List CommonAction
@@ -52,7 +51,6 @@ decode msg=
             (2, Nothing) -> MemInfoWaitingForUser
             (3, Nothing) -> MemInfoWaitingForDevice
             (4, Just d)  -> MemInfo d
-            (5, Just d)  -> MemUnsavedInfo d
     in  [ SetLog msg.setLog
         , SetDeviceStatus setDeviceStatus
         , SetImportInfo setImportInfo

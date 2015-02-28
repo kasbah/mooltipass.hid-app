@@ -64,12 +64,14 @@ content (w,h) info =
                       ]
         pleaseAccept = leftAligned
             <| whiteText "please accept memory management mode on the device"
+        working = leftAligned
+            <| whiteText "working..."
     in case info of
         NoMemInfo             -> reEnter
         MemInfo d             -> showMem d
         MemInfoRequest        -> pleaseAccept
         MemInfoWaitingForUser -> pleaseAccept
-        _                     -> Element.empty
+        _                     -> working
 
 saveButton : MemInfo -> Element
 saveButton info =
