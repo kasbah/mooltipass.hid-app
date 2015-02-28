@@ -64,6 +64,9 @@ encode s =
             _ -> False
 
     in if | not s.deviceConnected -> (connect, [])
+          | s.deviceVersion == Nothing
+            && s.common.deviceStatus == Unlocked && not s.waitingForDevice
+                -> sendCommand' OutgoingGetVersion []
           | mediaImportActive s -> case s.mediaImport of
                 MediaImportStart ps ->
                     sendCommand'
@@ -125,9 +128,6 @@ encode s =
                 , SetWaitingForDevice True
                 ]
               )
-          | s.deviceVersion == Nothing
-            && s.common.deviceStatus == Unlocked
-                -> sendCommand' OutgoingGetVersion []
           | not (mediaImportActive s) && not (memoryManageBusy s.memoryManage) ->
               ({ e | sendCommand <- Just (toInts OutgoingGetStatus)}
               , [])
@@ -137,6 +137,7 @@ sendCommand' : OutgoingPacket
             -> (List BackgroundAction)
             -> (ToDeviceMessage, List BackgroundAction)
 sendCommand' p a = (sendCommand p, SetWaitingForDevice True::a)
+
 extRequestToPacket : String -> ExtensionRequest -> Maybe OutgoingPacket
 extRequestToPacket cc extRequest =
     case extRequest of

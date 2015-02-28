@@ -31,16 +31,6 @@ port deviceStatus : Signal Int
 
 port toDevice : Signal ToDeviceMessage
 port toDevice = map (\(m,_,_) -> m) output
-        -- this is the keep-alive
-       -- <| map2
-       --     (\_ s -> if | mediaImportActive s && s.deviceConnected
-       --                     -> emptyToDeviceMessage
-       --                 | memoryManaging s.memoryManage -> emptyToDeviceMessage
-       --                 | s.deviceConnected   -> sendCommand
-       --                 | otherwise           -> emptyToDeviceMessage
-       --     )
-       --     (every second)
-       --     state
 
 port toChrome : Signal ToChromeMessage
 port toChrome = map ChromeBgMessage.encode state
@@ -72,5 +62,5 @@ inputActions = mergeMany
     , map (\m -> [ChromeBgMessage.decode m]) fromChrome
     , map DeviceMessage.decode fromDevice
     , map (\m -> [DeviceMessage.decodeStatus m]) (dropRepeats deviceStatus)
-    , map (\_ -> [NoOp]) (every second)
+    , map (\_ -> []) (every second)
     ]

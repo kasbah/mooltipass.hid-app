@@ -1,4 +1,4 @@
-var device = {connection: null, connecting: 0, waitingForMessage: false};
+var device = {connection: null, connecting: 0};
 var device_info = { "vendorId": 0x16d0, "productId": 0x09a0 };      // Mooltipass
 var PACKET_SIZE = 64;
 
@@ -58,7 +58,6 @@ function onDataReceived(reportId, data)
         ints[i] = bytes[i];
     }
     if (ints[1] === 112) {//status update
-        console.log("yo");
         elm.ports.deviceStatus.send(ints[2]);
     } else  {
         deviceSendToElm({receiveCommand: ints});
@@ -68,17 +67,12 @@ function onDataReceived(reportId, data)
     //a row
     if (ints[1] == 85)
         chrome.hid.receive(device.connection, onDataReceived);
-
-    device.waitingForMessage = false;
 }
 
 function sendMsg(message)
 {
-    if (device.waitingForMessage)
-        return;
     if (message[1] !== 112)
         console.log("app", message);
-    device.waitingForMessage = true;
     //Buffer creation is a bit awkward because windows doesn't like us using
     //the Uint8Array.buffer directly (or maybe it's something to do with the
     //ArrayBuffer size argument?). This is what works on all platforms equally.
@@ -96,7 +90,6 @@ function sendMsg(message)
             console.log("hid error", chrome.runtime.lastError);
             device.connecting = 0;
             deviceSendToElm({setHidConnected:false});
-            device.waitingForMessage = false;
         }
     });
 }
