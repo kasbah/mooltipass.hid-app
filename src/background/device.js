@@ -1,4 +1,4 @@
-var device = {connection: null, connecting: false, waitingForMessage: false};
+var device = {connection: null, connecting: 0, waitingForMessage: false};
 var device_info = { "vendorId": 0x16d0, "productId": 0x09a0 };      // Mooltipass
 var PACKET_SIZE = 64;
 
@@ -34,14 +34,15 @@ onDeviceFound = function (devices)
 
 device.connect = function ()
 {
-    if (device.connecting)
+    if (device.connecting === 1)
         return;
-    device.connecting = true;
-    deviceSendToElm({appendToLog:"> looking for device"});
+    else if (device.connecting === 0) {
+        deviceSendToElm({appendToLog:"> looking for device"});
+    }
+    device.connecting = 1;
     device.timeoutId = setTimeout(function () {
-        if (device.connecting) {
-            deviceSendToElm({appendToLog:"device search timed out"});
-            device.connecting = false;
+        if (device.connecting === 1) {
+            device.connecting = 2;
         }
     }, 5000)
     chrome.hid.getDevices(device_info, onDeviceFound);
@@ -88,6 +89,7 @@ function sendMsg(message)
         else
         {
             console.log("hid error", chrome.runtime.lastError);
+            device.connecting = 0;
             deviceSendToElm({setHidConnected:false});
             device.waitingForMessage = false;
         }

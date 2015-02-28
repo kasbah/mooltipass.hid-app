@@ -1,6 +1,6 @@
 # Mooltipass App
 
-An application to configure [the Mooltipass][1] and connect it to [the extension][2].
+An application to configure [the Mooltipass][1] and connect it to [it's Chrome extension][2].
 
 ![screenshot](image_src/screenshot.png)
 
