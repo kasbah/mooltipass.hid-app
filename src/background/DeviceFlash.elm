@@ -196,12 +196,12 @@ queryChildren fb fc c =
         Nothing
         (firstChild c)
 
-toCreds : ParentNode -> List (String, List String)
+toCreds : ParentNode -> List Service
 toCreds firstP =
     let getLogins firstC =
-            reverse <| foldlChildren (\c z -> c.login::z) [] firstC
+            reverse <| foldlChildren (\c z -> (c.login,c.address)::z) [] firstC
     in reverse <| foldlParents
-            (\p z -> (p.service, getLogins p.firstChild)::z)
+            (\p z -> ((p.service,p.address), getLogins p.firstChild)::z)
             []
             firstP
 

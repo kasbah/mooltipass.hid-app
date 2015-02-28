@@ -5,23 +5,24 @@ import List (..)
 import String
 
 -- local source
+import Byte (..)
 
 {-| The background state excluding gui components -}
 type alias CommonState =
-    { deviceStatus   : DeviceStatus
-    , log         : List String
-    , importInfo  : ImportInfo
-    , memoryInfo  : MemInfo
-    , forceUpdate : Bool
+    { deviceStatus : DeviceStatus
+    , log          : List String
+    , importInfo   : ImportInfo
+    , memoryInfo   : MemInfo
+    , forceUpdate  : Bool
     }
 
 default : CommonState
 default =
-    { deviceStatus   = NotConnected
-    , log         = []
-    , importInfo  = NoImport
-    , memoryInfo  = NoMemInfo
-    , forceUpdate = True
+    { deviceStatus = NotConnected
+    , log          = []
+    , importInfo   = NoImport
+    , memoryInfo   = NoMemInfo
+    , forceUpdate  = True
     }
 
 type alias Favorite = Maybe (String, String)
@@ -39,8 +40,10 @@ type MemInfo =
     | MemInfoWaitingForDevice
     | NoMemInfo
 
+type alias Service = ((String, FlashAddress), List (String, FlashAddress))
+
 type alias MemInfoData =
-    { credentials : List (String, List String)
+    { credentials : List Service
     , favorites   : List Favorite
     }
 

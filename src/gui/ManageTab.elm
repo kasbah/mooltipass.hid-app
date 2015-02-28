@@ -24,6 +24,7 @@ import CustomGraphics (..)
 import Layout (..)
 import Actions (..)
 import Util (..)
+import Byte (..)
 
 
 manageTab : (Int, Int) -> MemInfo -> Element
@@ -182,35 +183,39 @@ credentials (w,h) i =
             , flow right [spacer 16 1, credentials']
             ]
 
-service : Int -> List (Maybe (String,String)) -> (String, List String) -> Html
-service w favs (serviceString, loginStrings) =
+service : Int -> List Favorite -> Service -> Html
+service w favs ((serviceString,addr), logins) =
     let bg = roundedRect w h lightGrey
         service' = leftAligned <| Text.height 14 <| whiteText serviceString
         cw = widthOf service' + 32
         ch = heightOf service' + 10
-        (cw',ch') = (toFloat cw, toFloat ch)
-        serviceBg = roundedRect cw ch lightGrey'
-        service   = layers [serviceBg, container cw ch middle service']
-        title  = flow right [spacer 8 1, service]
-        logins = flow right
+        (cw',ch')  = (toFloat cw, toFloat ch)
+        serviceBg  = roundedRect cw ch lightGrey'
+        service    = layers [serviceBg, container cw ch middle service']
+        title      = flow right [spacer 8 1, service]
+        showLogins = flow right
             [ spacer 32 1
             , flow down
                 (intersperse
                     (spacer 5 5)
                     (map
-                        (\l -> login (w - 64) (serviceString,l) ((serviceString,l) `member` (justs favs)))
-                        loginStrings
+                        (\(l,laddr) ->
+                            login
+                                (w - 64)
+                                (serviceString,l)
+                                ((serviceString,l) `member` (justs favs)))
+                        logins
                     )
                 )
             ]
-        h = ch + (length loginStrings) * (32 + 5) + 5
+        h = ch + (length logins) * (32 + 5) + 5
     in Html.div
        [Html.Attributes.style [("position", "relative")]]
        [Html.fromElement
             <| layers
                 [ bg
                 , container w h topLeft
-                    <| flow down [title, spacer 1 5, logins]
+                    <| flow down [title, spacer 1 5, showLogins]
                 ]
        ]
 
@@ -254,7 +259,11 @@ login w (serviceString,loginString) fav =
         spw      = 2
         iw       = 32
         iw'      = toFloat iw
-    in flow right [username, sp, password, sp, delIcon, sp, favIcon fav (serviceString,loginString)]
+    in flow right [username
+                  , sp, password
+                  , sp, delIcon
+                  , sp, favIcon fav (serviceString,loginString)
+                  ]
 
 
 favIcon isFav credential =
