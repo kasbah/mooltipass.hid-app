@@ -8,6 +8,7 @@ import Maybe
 import CommonState as Common
 import CommonState (..)
 import Util (..)
+import Byte (..)
 
 type Tab = Log | Settings | Manage | Developer
 
@@ -33,10 +34,10 @@ type Action = ChangeTab Tab
             | SetImportMedia ImportRequest
             | SetUnsavedMem MemInfo
             | CommonAction CommonAction
-            | AddFav (String, String)
-            | RemoveFav (String, String)
-            | MoveFavUp (String, String)
-            | MoveFavDown (String, String)
+            | AddFav (FlashAddress, FlashAddress)
+            | RemoveFav (FlashAddress, FlashAddress)
+            | MoveFavUp (FlashAddress, FlashAddress)
+            | MoveFavDown (FlashAddress, FlashAddress)
             | NoOp
 
 {-| The initial state -}
@@ -134,26 +135,26 @@ update action s =
                 _ -> s'
         NoOp -> s
 
-removeFromFavs : (String, String) -> MemInfoData -> MemInfo
+removeFromFavs : (FlashAddress, FlashAddress) -> MemInfoData -> MemInfo
 removeFromFavs f info =
     MemInfo
     {info | favorites <-
         map (\x -> if x == (Just f) then Nothing else x) info.favorites
     }
 
-addToFavs : (String, String) -> MemInfoData -> MemInfo
+addToFavs : (FlashAddress, FlashAddress) -> MemInfoData -> MemInfo
 addToFavs f info =
     MemInfo
     {info | favorites <- replaceFirst Nothing (Just f) info.favorites}
 
-moveFavUp : (String, String) -> MemInfoData -> MemInfo
+moveFavUp : (FlashAddress, FlashAddress) -> MemInfoData -> MemInfo
 moveFavUp f info =
     MemInfo
     {info | favorites <-
         reverse <| foldl (switchFav f) [] info.favorites
     }
 
-moveFavDown : (String, String) -> MemInfoData -> MemInfo
+moveFavDown : (FlashAddress, FlashAddress) -> MemInfoData -> MemInfo
 moveFavDown f info =
     MemInfo
     {info | favorites <-

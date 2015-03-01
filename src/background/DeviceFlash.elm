@@ -215,7 +215,7 @@ toFavs ffs firstP =
         child fav' p =
             queryChildren
                 (\c -> fav'.childNode /= null && c.address == fav'.childNode)
-                (\c -> (p.service, c.login))
+                (\c -> (p.address, c.address))
                 p.firstChild
     in reverse <| map (\f -> parent f `andThen` child f) ffs
 
@@ -223,12 +223,12 @@ fromFavs : List Favorite -> ParentNode -> List OutgoingPacket
 fromFavs fs firstP =
     let parent fav =
             queryParents
-                (\p -> fav /= Nothing && p.service == fst (fromJust fav))
+                (\p -> fav /= Nothing && p.address == fst (fromJust fav))
                 identity
                 firstP
         child fav p =
             queryChildren
-                (\c -> c.login == snd (fromJust fav))
+                (\c -> c.address == snd (fromJust fav))
                 (\c -> (p.address, c.address))
                 p.firstChild
     in map OutgoingSetFavorite

@@ -91,8 +91,8 @@ favorites w info =
                     (intersperse (Html.fromElement (spacer 1 5))
                         (map
                             (favorite (w - 48))
-                            (map2 (,) [1..maxFavs] (stripNothing info.favorites)))
-                    )
+                            (map2 (,) [1..maxFavs]
+                                (stripNothing (addrToStrings info.favorites info.credentials)))))
                 |> Html.toElement (w - 32) ch
         ch = heights.manageLogin * 5 + (5*6)
     in box (w, ch + 20 + heights.manageTitle) "Favorites"
@@ -101,7 +101,17 @@ favorites w info =
             , flow right [spacer 16 1, favorites']
             ]
 
-favorite : Int -> (Int, Maybe (String, String)) -> Html
+addrToStrings : List Favorite -> List Service -> List (Maybe ((String, FlashAddress), (String, FlashAddress)))
+addrToStrings favs servs =
+    let findService pa = foldl (\s z -> if snd (fst s) == pa then Just s else z) Nothing servs
+        findLogin ca s = foldl (\l z -> if snd l == ca then Just (fst s,l) else z) Nothing (snd s)
+    in map
+            (\f -> case f of
+                     Just (pa,ca) -> findService pa `Maybe.andThen` findLogin ca
+                     Nothing -> Nothing)
+            favs
+
+favorite : Int -> (Int, Maybe ((String, FlashAddress), (String, FlashAddress))) -> Html
 favorite w (n,maybeF) =
     let service = layers [sBg lightGrey', sTxt]
         fh      = heights.manageLogin
@@ -125,7 +135,7 @@ favorite w (n,maybeF) =
         sp       = spacer spw 1
         spw      = 2
         upIcon     = Input.customButton
-            (send guiActions (MoveFavUp (serviceString, loginString))) iUpUp iUpHover iUpDown
+            (send guiActions (MoveFavUp (saddr, laddr))) iUpUp iUpHover iUpDown
         iUpUp      = layers [iUpBg lightGrey' , upIcon']
         iUpHover   = layers [iUpBg lightGrey'', upIcon']
         iUpDown    = layers [iUpBg lightGrey'', upIcon']
@@ -134,7 +144,7 @@ favorite w (n,maybeF) =
         iUpBg  c  = collage iw fh
             [rect iw' fh' |> filled c]
         downIcon     = Input.customButton
-            (send guiActions (MoveFavDown (serviceString, loginString))) iDownUp iDownHover iDownDown
+            (send guiActions (MoveFavDown (saddr, laddr))) iDownUp iDownHover iDownDown
         iDownUp      = layers [iDownBg lightGrey' , downIcon']
         iDownHover   = layers [iDownBg lightGrey'', downIcon']
         iDownDown    = layers [iDownBg lightGrey'', downIcon']
@@ -143,7 +153,7 @@ favorite w (n,maybeF) =
         iDownBg  c  = collage iw fh
             [rect iw' fh' |> filled c]
         rect' w h c = collage w h [rect (toFloat w) (toFloat h) |> filled c]
-        (serviceString, loginString) = Maybe.withDefault ("","") maybeF
+        ((serviceString, saddr), (loginString, laddr)) = Maybe.withDefault (("",null),("",null)) maybeF
         icon f b = if b then f else rect' iw fh lightGrey'
         elem = if maybeF == Nothing then spacer w fh
                else flow right
@@ -151,7 +161,7 @@ favorite w (n,maybeF) =
                    , sp, login
                    , sp, icon upIcon (n /= 1)
                    , sp, icon downIcon (n /= maxFavs)
-                   , sp, favIcon True (serviceString,loginString)
+                   , sp, favIcon True (saddr,laddr)
                    ]
     in Html.div
        [Html.Attributes.style [("position", "relative")]]
@@ -184,7 +194,7 @@ credentials (w,h) i =
             ]
 
 service : Int -> List Favorite -> Service -> Html
-service w favs ((serviceString,addr), logins) =
+service w favs ((serviceString,saddr), logins) =
     let bg = roundedRect w h lightGrey
         service' = leftAligned <| Text.height 14 <| whiteText serviceString
         cw = widthOf service' + 32
@@ -202,8 +212,8 @@ service w favs ((serviceString,addr), logins) =
                         (\(l,laddr) ->
                             login
                                 (w - 64)
-                                (serviceString,l)
-                                ((serviceString,l) `member` (justs favs)))
+                                ((serviceString,saddr),(l,laddr))
+                                ((saddr,laddr) `member` (justs favs)))
                         logins
                     )
                 )
@@ -219,8 +229,8 @@ service w favs ((serviceString,addr), logins) =
                 ]
        ]
 
-login : Int -> (String,String) -> Bool -> Element
-login w (serviceString,loginString) fav =
+login : Int -> ((String,FlashAddress),(String,FlashAddress)) -> Bool -> Element
+login w ((serviceString,saddr),(loginString,laddr)) fav =
     let username = uUp -- button disabled for beta release
         --username = Input.customButton (send guiActions NoOp) uUp uHover uDown
         uUp      = layers [ubg lightGrey', utxt]
@@ -262,7 +272,7 @@ login w (serviceString,loginString) fav =
     in flow right [username
                   , sp, password
                   , sp, delIcon
-                  , sp, favIcon fav (serviceString,loginString)
+                  , sp, favIcon fav (saddr,laddr)
                   ]
 
 

@@ -25,7 +25,7 @@ default =
     , forceUpdate  = True
     }
 
-type alias Favorite = Maybe (String, String)
+type alias Favorite = Maybe (FlashAddress, FlashAddress)
 
 maxFavs = 15
 emptyFavorites = [Nothing,Nothing,Nothing,Nothing,Nothing
