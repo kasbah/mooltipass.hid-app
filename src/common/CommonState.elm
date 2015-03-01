@@ -88,7 +88,9 @@ update : CommonAction -> CommonState -> CommonState
 update action s =
     case action of
         SetLog l            -> {s | log <- l}
-        AppendToLog str     -> {s | log <- str::s.log}
+        AppendToLog str     -> if length s.log < 5000
+                               then {s | log <- str::s.log}
+                               else {s | log <- take 5000 (str::s.log)}
         SetDeviceStatus c   -> {s | deviceStatus <- c}
         SetImportInfo i     -> {s | importInfo <- i}
         StartImportMedia id -> {s | importInfo <- ImportRequested id}
