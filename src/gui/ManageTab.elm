@@ -275,7 +275,6 @@ login w ((serviceString,saddr),(loginString,laddr)) fav =
                   , sp, favIcon fav (saddr,laddr)
                   ]
 
-
 favIcon isFav credential =
     let iFavC fav     = if fav then favIcon' "blue" else favIcon' "white"
         iFavUp fav    = layers [iFavBg lightGrey' , iFavC fav]

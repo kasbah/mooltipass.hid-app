@@ -35,13 +35,13 @@ screen (w,h) t =
                     "import media"
             ]
 
-infoText : ImportInfo -> String
+infoText : ImportInfo -> Text
 infoText t = case t of
-    ImportRequested id -> "importing " ++ fileName id
-    Importing id _ _   -> "importing " ++ fileName id
-    Imported id        -> "sucessfully imported " ++ fileName id
-    ImportError str  -> "import error: " ++ str
-    _                  -> ""
+    ImportRequested id -> whiteText <| "importing " ++ fileName id
+    Importing id _ _   -> whiteText <| "importing " ++ fileName id
+    Imported id        -> text <| "sucessfully imported " ++ fileName id
+    ImportError str    -> text <| "import error: " ++ str
+    _                  -> text <| ""
 
 widget : (Int, Int) -> ImportInfo -> Element
 widget (w,h) t =
@@ -56,5 +56,5 @@ widget (w,h) t =
             Imported id        -> progressBar' 1.0 cyan
             ImportError str  -> progressBar' 1.0 Color.red
             _                  -> Element.empty
-        txt s = container w h middle <| leftAligned (text s)
+        txt s = container w h middle <| leftAligned s
     in layers [bg, progressBar, txt (infoText t) ]
