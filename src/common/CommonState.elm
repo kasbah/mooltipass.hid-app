@@ -47,7 +47,7 @@ type alias MemInfoData =
     , favorites   : List Favorite
     }
 
-type DeviceStatus = NotConnected | Unlocked | NoCard | Locked
+type DeviceStatus = NotConnected | Unlocked | NoCard | Locked | ManageMode
 
 type ImportInfo =
       ImportRequested FileId
@@ -69,6 +69,7 @@ connectToLog c = case c of
     Unlocked     -> "device status: unlocked"
     NoCard       -> "device status: no card present"
     Locked       -> "device status: locked"
+    ManageMode   -> "device status: memory management mode"
 
 {-| All actions that can be performed to change the common state -}
 type CommonAction = SetLog (List String)

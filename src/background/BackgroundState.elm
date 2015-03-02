@@ -325,11 +325,11 @@ interpret packet s =
                     else setMedia (MediaImportError "Import end-write failed") s
                 _ -> setMedia (MediaImportError (unexpected "ImportMediaEnd")) s
         ReceivedManageModeStart r ->
-            setMemManage
-                (if r == Done
-                 then MemManageRead (EmptyParentNode, null, null) []
-                 else MemManageDenied)
-                 s
+            if r == Done
+            then setMemManage (MemManageRead (EmptyParentNode, null, null) [])
+                    (update (CommonAction (SetDeviceStatus ManageMode)) s)
+            else setMemManage MemManageDenied
+                    (update (CommonAction (SetDeviceStatus Unlocked)) s)
         ReceivedGetStartingParent a -> case s.memoryManage of
             MemManageReadWaiting (EmptyParentNode,null,null) [] ->
                 if a /= null then
@@ -357,7 +357,7 @@ interpret packet s =
                 _ -> setMemManage (MemManageError (unexpected "favorite")) s
         ReceivedManageModeEnd r ->
             if r == Done
-            then s
+            then update (CommonAction (SetDeviceStatus Unlocked)) s
             else setMemManage (MemManageError "device did not exit mem-manage when asked") s
         ReceivedSetFavorite r -> case s.memoryManage of
             MemManageWriteWaiting (p::ps) ->
@@ -388,7 +388,7 @@ setMemManage m s =
             else
                 setManage
                     (MemManageError
-                        "manage mode requested while aready in manage mode")
+                        "Manage mode requested while aready in manage mode")
         MemManageEnd ->
             if memoryManaging s.memoryManage
             then
@@ -396,7 +396,7 @@ setMemManage m s =
             else
                 setManage
                     (MemManageError
-                        "manage mode end requested while aready in manage mode")
+                        "Manage mode end requested while aready in manage mode")
         MemManageDenied ->
             if s.memoryManage == MemManageWaiting
             then setManage MemManageDenied

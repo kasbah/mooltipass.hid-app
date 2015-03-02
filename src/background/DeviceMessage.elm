@@ -56,12 +56,12 @@ encode : BackgroundState -> (ToDeviceMessage, List BackgroundAction)
 encode s =
     let e = emptyToDeviceMessage
         memManageNeedsToSend = case s.memoryManage of
-            MemManageRead    _ _   -> True
-            MemManageReadFav _     -> True
-            MemManageWrite   _     -> True
-            MemManageRequested     -> True
-            MemManageEnd           -> True
-            _ -> False
+            MemManageRead    _ _ -> True
+            MemManageReadFav _   -> True
+            MemManageWrite   _   -> True
+            MemManageRequested   -> True
+            MemManageEnd         -> True
+            _                    -> False
         extNeedsToSend' = case s.extRequest of
             NoRequest        -> False
             ExtNoCredentials -> False
@@ -102,7 +102,7 @@ encode s =
                                         [SetMemManage NotManaging]
               MemManageRequested -> sendCommand'
                                         OutgoingMemManageModeStart
-                                        [SetMemManage MemManageWaiting]
+                                        [SetMemManage MemManageWaiting, CommonAction (SetDeviceStatus ManageMode)]
               MemManageRead (p,addr,nPAddr) ba -> case p of
                   EmptyParentNode ->
                       if addr == null then

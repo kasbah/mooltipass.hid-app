@@ -59,6 +59,7 @@ disabledTabs s =
         Common.NotConnected -> [Settings, Manage, Developer]
         Common.NoCard       -> [Settings, Manage]
         Common.Locked       -> [Settings, Manage, Developer]
+        Common.ManageMode   -> [Settings]
 
 {-| Transform the state to a new state according to an action -}
 update : Action -> GuiState -> GuiState

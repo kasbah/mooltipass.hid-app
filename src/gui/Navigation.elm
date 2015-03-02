@@ -33,6 +33,7 @@ statusIcon c =
         clickIcon color = clickable (send guiActions ClickIcon) (img color)
         icon            = case c of
             Unlocked     -> clickIcon "blue"
+            ManageMode   -> clickIcon "manage"
             NotConnected -> clickIcon "red"
             NoCard       -> clickIcon "orange"
             Locked       -> clickIcon "purple"

@@ -17,6 +17,7 @@ encode s =
                     Unlocked     -> 1
                     NoCard       -> 2
                     Locked       -> 3
+                    ManageMode   -> 4
     , setImportInfo = case s.importInfo of
         NoImport           -> (0,"",0,0)
         ImportRequested id -> (1,id,0,0)
@@ -39,6 +40,7 @@ decode msg=
             1 -> Unlocked
             2 -> NoCard
             3 -> Locked
+            4 -> ManageMode
         setImportInfo = case msg.setImportInfo of
            (0,"",0,0)   -> NoImport
            (1,id,0,0)   -> ImportRequested id
