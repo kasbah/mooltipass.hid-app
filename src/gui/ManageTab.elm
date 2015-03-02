@@ -257,7 +257,7 @@ login w ((serviceString,saddr),(loginString,laddr)) fav =
         lh       = heights.manageLogin
         lh'      = toFloat lh
         delIcon     = Input.customButton
-            (send guiActions NoOp) iDelUp iDelHover iDelDown
+            (send guiActions (RemoveCred (saddr,laddr))) iDelUp iDelHover iDelDown
         iDelUp      = layers [iDelBg lightGrey' , delIcon']
         iDelHover   = layers [iDelBg lightGrey'', delIcon']
         iDelDown    = layers [iDelBg lightGrey'', delIcon']

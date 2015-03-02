@@ -38,6 +38,7 @@ type Action = ChangeTab Tab
             | RemoveFav (FlashAddress, FlashAddress)
             | MoveFavUp (FlashAddress, FlashAddress)
             | MoveFavDown (FlashAddress, FlashAddress)
+            | RemoveCred (FlashAddress, FlashAddress)
             | NoOp
 
 {-| The initial state -}
@@ -67,7 +68,7 @@ update action s =
     let updateCommon a = Common.update a s.common
         errorTryingTo str =
             appendToLog
-                ("Error: trying to " ++ str ++ " favorite without having memory data")
+                ("Error: trying to " ++ str ++ " without having memory data")
                 s
     in case action of
         ChangeTab t -> if t == Manage && s.unsavedMemInfo == NoMemInfo
@@ -98,19 +99,23 @@ update action s =
         AddFav f        ->
             case s.unsavedMemInfo of
                 MemInfo d -> {s | unsavedMemInfo <- addToFavs f d}
-                _ -> errorTryingTo "add"
+                _ -> errorTryingTo "add favorite"
         RemoveFav f   ->
             case s.unsavedMemInfo of
                 MemInfo d -> {s | unsavedMemInfo <- removeFromFavs f d}
-                _ -> errorTryingTo "remove"
+                _ -> errorTryingTo "remove favorite"
         MoveFavUp f   ->
             case s.unsavedMemInfo of
                 MemInfo d -> {s | unsavedMemInfo <- moveFavUp f d}
-                _ -> errorTryingTo "move"
+                _ -> errorTryingTo "move favorite"
         MoveFavDown f   ->
             case s.unsavedMemInfo of
                 MemInfo d -> {s | unsavedMemInfo <- moveFavDown f d}
-                _ -> errorTryingTo "move"
+                _ -> errorTryingTo "move favorite"
+        RemoveCred c ->
+            case s.unsavedMemInfo of
+                MemInfo d -> {s | unsavedMemInfo <- removeCred c d}
+                _ -> errorTryingTo "remove credential"
         SetUnsavedMem i -> {s | unsavedMemInfo <- i}
         -- An action on the common state can have an affect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
@@ -161,6 +166,20 @@ moveFavDown f info =
     {info | favorites <-
         foldr (switchFav f) [] info.favorites
     }
+
+
+removeCred : (FlashAddress, FlashAddress) -> MemInfoData -> MemInfo
+removeCred (addr1,addr2) info =
+    removeFromFavs (addr1, addr2)
+        {info | credentials <-
+                filter (\((s,sAddr),ls) -> not (isEmpty ls))
+                <| map
+                    (\((s,sAddr),ls) ->
+                        if sAddr == addr1
+                        then ((s,sAddr), filter (\(l,lAddr) -> lAddr /= addr2) ls)
+                        else ((s,sAddr),ls))
+                    info.credentials
+        }
 
 switchFav f x zs = if | zs == []   -> [x]
                    | x == (Just f) -> head zs::x::(tail zs)
