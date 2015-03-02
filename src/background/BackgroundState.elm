@@ -188,6 +188,9 @@ update action s =
                , if mediaImportActive s
                  then SetMediaImport (MediaImportError "device disconnected")
                  else NoOp
+               , if memoryManaging s.memoryManage
+                 then SetMemManage NotManaging
+                 else NoOp
                ]
                {s | deviceConnected <-  False}
             else {s | deviceConnected <- True}
@@ -206,9 +209,12 @@ update action s =
             let s' = {s | common <- updateCommon (SetDeviceStatus c)}
             in if c /= s.common.deviceStatus
                then update
-                        ( if mediaImportActive s && (c == Locked || c == NotConnected)
-                          then SetMediaImport (MediaImportError "interrupted by device")
-                          else NoOp )
+                        ( if
+                            | mediaImportActive s && (c == Locked || c == NotConnected) ->
+                                SetMediaImport (MediaImportError "interrupted by device")
+                            | memoryManaging s.memoryManage && c == Locked ->
+                                SetMemManage NotManaging
+                            | otherwise -> NoOp )
                     {s' | common <-
                             Common.update
                                 (AppendToLog (connectToLog c))

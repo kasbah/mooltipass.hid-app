@@ -53,7 +53,7 @@ content (w,h) info =
                 <| flow right [exitButton, spacer 16 1, saveButton info]
             ]
         reEnterButton = button (send commonActions StartMemManage) "re-enter"
-        modeExited    = leftAligned <| whiteText "manage mode exited"
+        modeExited    = leftAligned <| whiteText "memory management mode exited"
         reEnter       =
             flow down [ modeExited
                       , spacer 1 16
