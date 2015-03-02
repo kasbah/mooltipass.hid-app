@@ -65,6 +65,7 @@ encode s =
         extNeedsToSend' = case s.extRequest of
             NoRequest        -> False
             ExtNoCredentials -> False
+            ExtCredentials _ -> False
             _                -> True
         extNeedsToSend = extNeedsToSend' && not s.waitingForDevice
                         && s.common.deviceStatus == Unlocked
@@ -75,7 +76,7 @@ encode s =
               , [ Maybe.withDefault NoOp
                     (Maybe.map
                         (CommonAction << AppendToLog)
-                        (extensionRequestToLog s.extRequest))
+                        (outgoingExtRequestToLog s.extRequest))
                 , SetWaitingForDevice True
                 ]
               )
@@ -136,7 +137,7 @@ encode s =
           | not (mediaImportActive s) && not (memoryManageBusy s.memoryManage) ->
               ({ e | sendCommand <- Just (toInts OutgoingGetStatus)}
               , [])
-          | otherwise -> (e, [appendToLog' (toString s.extRequest)])
+          | otherwise -> (e,[])
 
 sendCommand' : OutgoingPacket
             -> (List BackgroundAction)
@@ -149,6 +150,8 @@ extRequestToPacket cc extRequest =
         ExtNeedsNewContext {context, login, password} ->
             Just (OutgoingAddContext context)
         ExtWantsCredentials {context} ->
+            Just (OutgoingSetContext context)
+        ExtNeedsLogin {context} ->
             if cc == context then Just OutgoingGetLogin
             else Just (OutgoingSetContext context)
         ExtNeedsPassword {context, login} ->

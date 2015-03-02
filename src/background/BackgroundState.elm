@@ -113,6 +113,8 @@ mediaImportActive s = case s.mediaImport of
 type ExtensionRequest =
       ExtWantsCredentials     { context : ByteString }
 
+    | ExtNeedsLogin           { context : ByteString }
+
     | ExtNeedsPassword        { context : ByteString
                               , login   : ByteString
                               }
@@ -144,14 +146,18 @@ type ExtensionRequest =
 
     | NoRequest
 
-extensionRequestToLog : ExtensionRequest -> Maybe String
-extensionRequestToLog d = case d of
-    ExtWantsCredentials {context} ->
+outgoingExtRequestToLog : ExtensionRequest -> Maybe String
+outgoingExtRequestToLog r = case r of
+    ExtNeedsLogin {context} ->
         Just <| "> requesting credentials for " ++ context
     ExtWantsToWrite {context, login, password} ->
         Just <| "> requesting to write credentials for " ++ context
     ExtNeedsNewContext {context, login, password} ->
-        Just <| "> adding new credentials for " ++ context
+        Just <| "> adding new service: " ++ context
+    _ -> Nothing
+
+incomingExtRequestToLog : ExtensionRequest -> Maybe String
+incomingExtRequestToLog r = case r of
     ExtNoCredentials    -> Just "access denied or no credentials"
     ExtNotWritten       -> Just "access denied"
     ExtWriteComplete _  -> Just "credentials written"
@@ -224,44 +230,44 @@ update action s =
 
 interpret : ReceivedPacket -> BackgroundState -> BackgroundState
 interpret packet s =
-    case packet of
+    let setExtRequest r = case incomingExtRequestToLog r of
+        Just str -> appendToLog str {s | extRequest <- r}
+        Nothing -> {s | extRequest <- r}
+    in case packet of
         ReceivedGetLogin ml -> case ml of
             Just l ->
-                {s | extRequest <- case s.extRequest of
-                          ExtWantsCredentials c ->
-                              ExtNeedsPassword {c | login = l}
-                          _ -> NoRequest
-                }
-            Nothing -> {s | extRequest <- ExtNoCredentials}
+                case s.extRequest of
+                ExtNeedsLogin c ->
+                    setExtRequest (ExtNeedsPassword {c | login = l})
+                _ -> setExtRequest NoRequest
+            Nothing -> setExtRequest ExtNoCredentials
         ReceivedGetPassword mp -> case mp of
             Just p ->
-                {s | extRequest <- case s.extRequest of
-                          ExtNeedsPassword c ->
-                              ExtCredentials {c | password = p}
-                          _ -> NoRequest
-                }
-            Nothing -> {s | extRequest <- ExtNoCredentials}
+                case s.extRequest of
+                ExtNeedsPassword c ->
+                    setExtRequest (ExtCredentials {c | password = p})
+                _ -> setExtRequest NoRequest
+            Nothing -> setExtRequest ExtNoCredentials
         ReceivedSetLogin r ->
-            {s | extRequest <- case s.extRequest of
-                     ExtWantsToWrite c ->
-                         if r == Done
-                         then ExtNeedsToWritePassword { c - login }
-                         else ExtNotWritten
-                     _ -> NoRequest
-            }
+            case s.extRequest of
+                 ExtWantsToWrite c ->
+                     if r == Done
+                     then setExtRequest (ExtNeedsToWritePassword { c - login })
+                     else setExtRequest ExtNotWritten
+                 _ -> setExtRequest NoRequest
         ReceivedSetPassword r ->
-            {s | extRequest <- case s.extRequest of
-                     ExtNeedsToWritePassword c ->
-                         if r == Done
-                         then ExtWriteComplete { c - password }
-                         else ExtNotWritten
-                     _ -> NoRequest
-            }
+            case s.extRequest of
+                 ExtNeedsToWritePassword c ->
+                     if r == Done
+                     then setExtRequest (ExtWriteComplete { c - password })
+                     else setExtRequest ExtNotWritten
+                 _ -> setExtRequest NoRequest
         ReceivedSetContext r ->
             case r of
                 ContextSet -> case s.extRequest of
                     ExtWantsCredentials c ->
-                        {s | currentContext <- c.context}
+                        {s | currentContext <- c.context
+                           , extRequest <- ExtNeedsLogin c}
                     ExtWantsToWrite c ->
                         {s | currentContext <- c.context}
                     ExtNeedsPassword c  ->
@@ -284,13 +290,12 @@ interpret packet s =
                 NoCardForContext ->
                     update (CommonAction (SetDeviceStatus NoCard)) s
         ReceivedAddContext r ->
-            {s | extRequest <- case s.extRequest of
-                     ExtNeedsNewContext c ->
-                         if r == Done
-                         then ExtWantsToWrite c
-                         else ExtNotWritten
-                     _ -> NoRequest
-            }
+            case s.extRequest of
+                 ExtNeedsNewContext c ->
+                     if r == Done
+                     then setExtRequest (ExtWantsToWrite c)
+                     else setExtRequest ExtNotWritten
+                 _ -> setExtRequest NoRequest
         ReceivedGetVersion v ->
                 appendToLog
                     ("device is "
