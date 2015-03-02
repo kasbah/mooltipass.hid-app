@@ -236,7 +236,7 @@ login w ((serviceString,saddr),(loginString,laddr)) fav =
         uUp      = layers [ubg lightGrey', utxt]
         --uHover   = layers [ubg lightGrey'', utxt]
         --uDown    = uUp
-        uw       = (w//2) - spw
+        uw       = w - spw - iw
         uw'      = toFloat uw
         ubg c    = collage uw lh
             [roundedRectShape Left uw' lh' 5 |> filled c]
@@ -270,8 +270,9 @@ login w ((serviceString,saddr),(loginString,laddr)) fav =
         iw       = 32
         iw'      = toFloat iw
     in flow right [username
-                  , sp, password
-                  , sp, delIcon
+                  -- disabled for beta release
+                  --, sp, password
+                  --, sp, delIcon
                   , sp, favIcon fav (saddr,laddr)
                   ]
 
