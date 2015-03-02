@@ -62,8 +62,23 @@ encode s =
             MemManageRequested     -> True
             MemManageEnd           -> True
             _ -> False
-
+        extNeedsToSend' = case s.extRequest of
+            NoRequest        -> False
+            ExtNoCredentials -> False
+            _                -> True
+        extNeedsToSend = extNeedsToSend' && not s.waitingForDevice
+                        && s.common.deviceStatus == Unlocked
     in if | not s.deviceConnected -> (connect, [])
+          | extNeedsToSend ->
+              ({e | sendCommand <-
+                    Maybe.map toInts (extRequestToPacket s.currentContext s.extRequest)}
+              , [ Maybe.withDefault NoOp
+                    (Maybe.map
+                        (CommonAction << AppendToLog)
+                        (extensionRequestToLog s.extRequest))
+                , SetWaitingForDevice True
+                ]
+              )
           | s.deviceVersion == Nothing
             && s.common.deviceStatus == Unlocked && not s.waitingForDevice
                 -> sendCommand' OutgoingGetVersion []
@@ -118,20 +133,10 @@ encode s =
                         sendCommand'
                             OutgoingGetStartingParent
                             [SetMemManage (MemManageReadWaiting (EmptyParentNode,null,null) [])]
-          | s.extRequest /= NoRequest && s.common.deviceStatus == Unlocked ->
-              ({e | sendCommand <-
-                    Maybe.map toInts (extRequestToPacket s.currentContext s.extRequest)}
-              , [ Maybe.withDefault NoOp
-                    (Maybe.map
-                        (CommonAction << AppendToLog)
-                        (extensionRequestToLog s.extRequest))
-                , SetWaitingForDevice True
-                ]
-              )
           | not (mediaImportActive s) && not (memoryManageBusy s.memoryManage) ->
               ({ e | sendCommand <- Just (toInts OutgoingGetStatus)}
               , [])
-          | otherwise -> (e, [])
+          | otherwise -> (e, [appendToLog' (toString s.extRequest)])
 
 sendCommand' : OutgoingPacket
             -> (List BackgroundAction)

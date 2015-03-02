@@ -21,7 +21,7 @@ type alias FromExtensionMessage =
     }
 
 type alias ToExtensionMessage =
-    { deviceStatus : Maybe { deviceStatus : Bool, version : String }
+    { deviceStatus : Maybe { connected : Bool, version : String }
     , credentials  : Maybe { context  : String
                            , login    : String
                            , password : String
@@ -73,7 +73,7 @@ encode s =
     let e = emptyToExtensionMessage
     in  if | s.extAwaitingPing ->
             ({e | deviceStatus <- Just <|
-                { deviceStatus = s.common.deviceStatus == Unlocked
+                { connected = s.common.deviceStatus == Unlocked
                 , version   = Maybe.withDefault "unknown"
                                 (Maybe.map (\v -> v.version) s.deviceVersion)
                 }
