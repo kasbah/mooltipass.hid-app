@@ -146,12 +146,11 @@ lastChild child = foldlChildren (\d _ -> ChildNode d) EmptyChildNode child
 lastParent : ParentNode -> ParentNode
 lastParent parent = foldlParents (\d _ -> ParentNode d) EmptyParentNode parent
 
-mapParents : (ParentNode -> ParentNode) -> ParentNode -> ParentNode
+mapParents : (ParentNodeData -> a) -> ParentNode -> List a
 mapParents fn parent =
-    linkNextParentsReturnFirst
-        <| foldlParents
-            (\d z -> ParentNode {d | prevParent <- fn z})
-            EmptyParentNode
+        foldlParents
+            (\d z -> fn d::z)
+            []
             parent
 
 pAddress : ParentNode -> FlashAddress
