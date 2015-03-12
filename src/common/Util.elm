@@ -3,6 +3,9 @@ module Util where
 import List (..)
 import Debug (log)
 
+pairToList : (a,a) -> List a
+pairToList (x,y) = [x,y]
+
 isJust : Maybe a -> Bool
 isJust x = case x of
     (Just _) -> True

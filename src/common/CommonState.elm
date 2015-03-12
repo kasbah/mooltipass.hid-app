@@ -28,9 +28,9 @@ default =
 type alias Favorite = Maybe (FlashAddress, FlashAddress)
 
 maxFavs = 15
-emptyFavorites = [Nothing,Nothing,Nothing,Nothing,Nothing
-                 ,Nothing,Nothing,Nothing,Nothing,Nothing
-                 ,Nothing,Nothing,Nothing,Nothing,Nothing]
+
+emptyFavorites : List Favorite
+emptyFavorites = repeat maxFavs Nothing
 
 type MemInfo =
       MemInfo MemInfoData

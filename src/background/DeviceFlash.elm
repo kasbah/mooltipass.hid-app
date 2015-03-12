@@ -181,7 +181,7 @@ foldlParents f z n = case n of
     EmptyParentNode -> z
 
 queryParents : (ParentNodeData -> Bool) -> (ParentNodeData -> a)
-           -> ParentNode -> Maybe a
+             -> ParentNode -> Maybe a
 queryParents fb fp p =
     foldlParents
         (\p z -> if z == Nothing && fb p then Just (fp p) else z)
@@ -189,7 +189,7 @@ queryParents fb fp p =
         (firstParent p)
 
 queryChildren : (ChildNodeData -> Bool) -> (ChildNodeData -> a)
-          -> ChildNode -> Maybe a
+              -> ChildNode -> Maybe a
 queryChildren fb fc c =
     foldlChildren
         (\c z -> if z == Nothing && fb c then Just (fc c) else z)
@@ -237,7 +237,7 @@ fromFavs fs firstP =
                 <| map (\f -> parent f `andThen` child f) fs
 
 parseParentNode : ParentNode -> FlashAddress -> ByteArray
-              -> Maybe (ParentNode, FlashAddress, FlashAddress)
+                -> Maybe (ParentNode, FlashAddress, FlashAddress)
 parseParentNode p addr bs =
     case bs of
         (flags1::flags2::prevP1::prevP2::nextP1::nextP2::firstC1::firstC2::service) ->
@@ -258,7 +258,7 @@ parseParentNode p addr bs =
         _ -> Nothing
 
 parseChildNode : ParentNode -> FlashAddress -> FlashAddress -> ByteArray
-            -> Result String (ParentNode, FlashAddress, FlashAddress)
+               -> Result String (ParentNode, FlashAddress, FlashAddress)
 parseChildNode p addr nParentAddr bs = case p of
     ParentNode d ->
         let cNodeAndNextAddr = case bs of
@@ -282,7 +282,9 @@ parseChildNode p addr nParentAddr bs = case p of
                                                 , dateLastUsed = (dateU1,dateU2)
                                                 }
                                             , (nextC1, nextC2))
-                                        Err s -> Err <| "Converting password, " ++ s ++ toString bs
+                                        Err s ->
+                                            Err <| "Converting password, "
+                                                ++ s ++ toString bs
                                     Err s -> Err <| "Converting login, " ++ s
                             _ -> Err "Converting dates and ctr"
                         Err s -> Err <| "Converting description, " ++ s
@@ -304,9 +306,6 @@ parse (p,addr,nParentAddr) bs =
         0 -> fromMaybe "parse parent failed" <| parseParentNode p addr bs
         1 -> parseChildNode p addr nParentAddr bs
         _ -> Err <| "Invalid flags: " ++ (toString parentOrChild)
-
-pairToList : (a,a) -> List a
-pairToList (x,y) = [x,y]
 
 parentToArray : ParentNodeData -> ByteArray
 parentToArray d =
