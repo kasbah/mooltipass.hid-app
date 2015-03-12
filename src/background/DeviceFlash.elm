@@ -148,10 +148,10 @@ lastParent parent = foldlParents (\d _ -> ParentNode d) EmptyParentNode parent
 
 mapParents : (ParentNodeData -> a) -> ParentNode -> List a
 mapParents fn parent =
-        foldlParents
+        foldrParents
             (\d z -> fn d::z)
             []
-            parent
+            (lastParent parent)
 
 pAddress : ParentNode -> FlashAddress
 pAddress p = case p of
@@ -195,14 +195,11 @@ queryChildren fb fc c =
         Nothing
         (firstChild c)
 
-
-removeChildren c = let c' = {c - nextChild}
-                   in {c' - prevChild}
-
 toCreds : ParentNode -> List Service
 toCreds firstP =
     let getLogins firstC =
             reverse <| foldlChildren (\c z -> removeChildren c::z) [] firstC
+        removeChildren c = let c' = {c - nextChild} in {c' - prevChild}
     in reverse <| foldlParents
             (\p z -> ((p.service,p.address), getLogins p.firstChild)::z)
             []
@@ -242,15 +239,18 @@ fromFavs fs firstP =
 
 fromCreds : List Service -> ParentNode -> List OutgoingPacket
 fromCreds creds firstP =
-    let delete pNode fp z = (deleteNode pNode.address ++ z, deleteNode' pNode fp)
+    let delete pNode fp z = (deleteNodePackets pNode.address ++ z, deleteNode pNode fp)
         (ps, firstP') =
-    in fst <| foldlParents
-        (\pNode (z,fp) -> if not (any (\((_,a),_) -> a == pNode.address) creds) then delete pNode fp z else (z,fp))
-        ([],firstP)
-        firstP
+            foldlParents
+                (\pNode (z,fp) ->
+                    if not (any (\((_,a),_) -> a == pNode.address) creds)
+                    then delete pNode fp z else (z,fp))
+                ([],firstP)
+                firstP
+    in ps ++ (concat <| mapParents (\d -> parentToPackets d) firstP')
 
-deleteNode' : ParentNodeData -> ParentNode -> ParentNode
-deleteNode' pNode firstP =
+deleteNode : ParentNodeData -> ParentNode -> ParentNode
+deleteNode pNode firstP =
     let replaceLink d nodeZ = case nodeZ of
         ParentNode z -> if z.address == pNode.address
                         then ParentNode {d | prevParent <- z.prevParent}
@@ -338,8 +338,8 @@ parentToPackets d =
        , OutgoingWriteFlashNode d.address 2 (take 59 (drop 59 (drop 59 ba)))
        ]
 
-deleteNode : FlashAddress -> List OutgoingPacket
-deleteNode addr =
+deleteNodePackets : FlashAddress -> List OutgoingPacket
+deleteNodePackets addr =
     [ OutgoingWriteFlashNode addr 0 (repeat 59 0xFF)
     , OutgoingWriteFlashNode addr 1 []
     , OutgoingWriteFlashNode addr 2 []
