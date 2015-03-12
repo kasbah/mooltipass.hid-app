@@ -242,11 +242,22 @@ fromFavs fs firstP =
 
 fromCreds : List Service -> ParentNode -> List OutgoingPacket
 fromCreds creds firstP =
-    let delete pNode = deleteNode pNode.address
-    in foldlParents
-        (\pNode z -> if not (any (\((_,a),_) -> a == pNode.address) creds) then delete pNode ++ z else z)
-        []
+    let delete pNode fp z = (deleteNode pNode.address ++ z, deleteNode' pNode fp)
+        (ps, firstP') =
+    in fst <| foldlParents
+        (\pNode (z,fp) -> if not (any (\((_,a),_) -> a == pNode.address) creds) then delete pNode fp z else (z,fp))
+        ([],firstP)
         firstP
+
+deleteNode' : ParentNodeData -> ParentNode -> ParentNode
+deleteNode' pNode firstP =
+    let replaceLink d nodeZ = case nodeZ of
+        ParentNode z -> if z.address == pNode.address
+                        then ParentNode {d | prevParent <- z.prevParent}
+                        else ParentNode d
+        _            -> ParentNode d
+    in linkNextParentsReturnFirst
+       <| foldlParents replaceLink EmptyParentNode firstP
 
 parseParentNode : ParentNode -> FlashAddress -> ByteArray
                 -> Maybe (ParentNode, FlashAddress, FlashAddress)
