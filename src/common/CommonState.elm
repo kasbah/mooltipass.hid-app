@@ -40,7 +40,18 @@ type MemInfo =
     | MemInfoWaitingForDevice
     | NoMemInfo
 
-type alias Service = ((String, FlashAddress), List (String, FlashAddress))
+type alias Login =
+    { address      : FlashAddress
+    , flags        : (Byte,Byte)
+    , ctr          : (Byte, Byte, Byte)
+    , description  : ByteString
+    , login        : ByteString
+    , password     : ByteArray
+    , dateCreated  : (Byte, Byte)
+    , dateLastUsed : (Byte, Byte)
+    }
+
+type alias Service = ((String, FlashAddress), List Login)
 
 type alias MemInfoData =
     { credentials : List Service

@@ -176,7 +176,7 @@ removeCred (addr1,addr2) info =
                 <| map
                     (\((s,sAddr),ls) ->
                         if sAddr == addr1
-                        then ((s,sAddr), filter (\(l,lAddr) -> lAddr /= addr2) ls)
+                        then ((s,sAddr), filter (\{address} -> address /= addr2) ls)
                         else ((s,sAddr),ls))
                     info.credentials
         }
