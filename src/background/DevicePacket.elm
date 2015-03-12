@@ -44,7 +44,7 @@ type OutgoingPacket =
    | OutgoingImportMedia        ByteArray
    | OutgoingImportMediaEnd
    | OutgoingReadFlashNode      FlashAddress
-   | OutgoingWriteFlashNode     FlashAddress Byte ByteString
+   | OutgoingWriteFlashNode     FlashAddress Byte ByteArray
    | OutgoingSetFavorite        (Byte,(FlashAddress,FlashAddress))
    | OutgoingSetStartingParent  FlashAddress
    -- CPZ = code protected zone
@@ -211,14 +211,14 @@ toInts msg =
         OutgoingExportFlashStart      -> zeroSize 0x45
         OutgoingExportEepromStart     -> zeroSize 0x46
         OutgoingGetRandomNumber       -> zeroSize 0x4B
-        OutgoingMemManageModeStart -> zeroSize 0x50
-        OutgoingMemManageModeEnd   -> zeroSize 0x51
+        OutgoingMemManageModeStart    -> zeroSize 0x50
+        OutgoingMemManageModeEnd      -> zeroSize 0x51
         OutgoingImportMediaStart      -> zeroSize 0x52
         OutgoingImportMedia  a        -> byteArray 0x53 a
         OutgoingImportMediaEnd        -> zeroSize 0x54
         OutgoingReadFlashNode (a1,a2) -> [2, 0x55, a1, a2]
-        OutgoingWriteFlashNode (a1,a2) n s       ->
-            (String.length s + 3)::0x56::a1::a2::n::stringToInts s
+        OutgoingWriteFlashNode (a1,a2) n ba ->
+            (List.length ba + 3)::0x56::a1::a2::n::ba
         OutgoingSetFavorite (id,((p1,p2),(c1,c2))) ->
             [5, 0x57, id, p1, p2, c1, c2]
         OutgoingSetStartingParent (a1,a2)    -> [2, 0x58, a1, a2]

@@ -202,8 +202,8 @@ update action s =
         CommonAction StartMemManage    -> setMemManage MemManageRequested s
         CommonAction EndMemManage      -> setMemManage MemManageEnd s
         CommonAction (SaveMemManage d) -> case s.memoryManage of
-            MemManageReadSuccess (pnode, _) ->
-                setMemManage (MemManageWrite (fromFavs d.favorites pnode)) s
+            MemManageReadSuccess (pNode, _) ->
+                setMemManage (MemManageWrite (fromFavs d.favorites pNode ++ fromCreds d.credentials pNode)) s
             _ -> s
         CommonAction (SetDeviceStatus c) ->
             let s' = {s | common <- updateCommon (SetDeviceStatus c)}
@@ -375,6 +375,16 @@ interpret packet s =
                 then setMemManage (MemManageRead (EmptyParentNode, null, null) []) s
                 else setMemManage (MemManageError "write favorite denied") s
             _ -> setMemManage (MemManageError (unexpected "set favorite")) s
+        ReceivedWriteFlashNode r -> case s.memoryManage of
+            MemManageWriteWaiting (p::ps) ->
+                if r == Done
+                then setMemManage (MemManageWrite ps) s
+                else setMemManage (MemManageError "write node denied") s
+            MemManageWriteWaiting [] ->
+                if r == Done
+                then setMemManage (MemManageRead (EmptyParentNode, null, null) []) s
+                else setMemManage (MemManageError "write node denied") s
+            _ -> setMemManage (MemManageError (unexpected "write node")) s
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s

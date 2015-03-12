@@ -239,6 +239,15 @@ fromFavs fs firstP =
             <| map (Maybe.withDefault (null, null))
                 <| map (\f -> parent f `andThen` child f) fs
 
+
+fromCreds : List Service -> ParentNode -> List OutgoingPacket
+fromCreds creds firstP =
+    let delete pNode = deleteNode pNode.address
+    in foldlParents
+        (\pNode z -> if not (any (\((_,a),_) -> a == pNode.address) creds) then delete pNode ++ z else z)
+        []
+        firstP
+
 parseParentNode : ParentNode -> FlashAddress -> ByteArray
                 -> Maybe (ParentNode, FlashAddress, FlashAddress)
 parseParentNode p addr bs =
@@ -309,6 +318,29 @@ parse (p,addr,nParentAddr) bs =
         0 -> fromMaybe "parse parent failed" <| parseParentNode p addr bs
         1 -> parseChildNode p addr nParentAddr bs
         _ -> Err <| "Invalid flags: " ++ (toString parentOrChild)
+
+parentToPackets : ParentNodeData -> List OutgoingPacket
+parentToPackets d =
+    let ba = parentToArray d
+    in [ OutgoingWriteFlashNode d.address 0 (take 59 ba)
+       , OutgoingWriteFlashNode d.address 1 (take 59 (drop 59 ba))
+       , OutgoingWriteFlashNode d.address 2 (take 59 (drop 59 (drop 59 ba)))
+       ]
+
+deleteNode : FlashAddress -> List OutgoingPacket
+deleteNode addr =
+    [ OutgoingWriteFlashNode addr 0 (repeat 59 0xFF)
+    , OutgoingWriteFlashNode addr 1 []
+    , OutgoingWriteFlashNode addr 2 []
+    ]
+
+childToPackets : ChildNodeData -> List OutgoingPacket
+childToPackets d =
+    let ba = childToArray d
+    in [ OutgoingWriteFlashNode d.address 0 (take 59 ba)
+       , OutgoingWriteFlashNode d.address 1 (take 59 (drop 59 ba))
+       , OutgoingWriteFlashNode d.address 2 (take 59 (drop 59 (drop 59 ba)))
+       ]
 
 parentToArray : ParentNodeData -> ByteArray
 parentToArray d =

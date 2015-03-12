@@ -167,7 +167,6 @@ moveFavDown f info =
         foldr (switchFav f) [] info.favorites
     }
 
-
 removeCred : (FlashAddress, FlashAddress) -> MemInfoData -> MemInfo
 removeCred (addr1,addr2) info =
     removeFromFavs (addr1, addr2)
