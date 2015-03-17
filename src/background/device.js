@@ -25,6 +25,7 @@ onDeviceFound = function (devices)
 		{
             device.connection = connectInfo.connectionId;
             deviceSendToElm({setHidConnected:true});
+            elm.ports.deviceStatus.send(7);
             deviceSendToElm({appendToLog:"device found, connection made"});
         }
         clearTimeout(device.timeoutId);
@@ -71,8 +72,22 @@ function onDataReceived(reportId, data)
         chrome.hid.receive(device.connection, onDataReceived);
 }
 
+function hidErrorDisconnect(message) {
+        console.log("hid error: ", message);
+        device.connecting = 0;
+        device.connection = null;
+        device.waitingForStatus = false;
+        deviceSendToElm({setHidConnected:false});
+        //make sure then next status won't be dropped because of dropRepeats
+        elm.ports.deviceStatus.send(7);
+}
+
 function sendMsg(message)
 {
+    if (device.connection == null) {
+        hidErrorDisconnect("no connection when trying to send message")
+        return;
+    }
     if (message[1] === 112) { //status update
         if (device.waitingForStatus)
             return;
@@ -95,11 +110,7 @@ function sendMsg(message)
         }
         else
         {
-            console.log("hid error", chrome.runtime.lastError);
-            device.connecting = 0;
-            device.connection = null;
-            device.waitingForStatus = false;
-            deviceSendToElm({setHidConnected:false});
+            hidErrorDisconnect(chrome.runtime.lastError.message)
         }
     });
 }
