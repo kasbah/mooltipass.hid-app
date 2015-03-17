@@ -341,7 +341,7 @@ interpret packet s =
                 if a /= null then
                     setMemManage (MemManageRead (EmptyParentNode, a, null) []) s
                 else
-                    setMemManage (MemManageError "null starting parent") s
+                    setMemManage (MemManageReadSuccess (EmptyParentNode, emptyFavorites)) s
             _ -> setMemManage (MemManageError (unexpected "starting parent")) s
         ReceivedReadFlashNode ba ->
             case s.memoryManage of
