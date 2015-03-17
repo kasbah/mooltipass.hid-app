@@ -62,17 +62,13 @@ encode s =
             MemManageRequested   -> True
             MemManageEnd         -> True
             _                    -> False
-        extNeedsToSend' = case s.extRequest of
-            NoRequest        -> False
-            ExtNoCredentials -> False
-            ExtCredentials _ -> False
-            _                -> True
-        extNeedsToSend = extNeedsToSend' && not s.waitingForDevice
+        extNeedsToSend' = extNeedsToSend s.extRequest && not s.waitingForDevice
                         && s.common.deviceStatus == Unlocked
     in if | not s.deviceConnected -> (connect, [])
-          | extNeedsToSend ->
+          | extNeedsToSend' ->
               ({e | sendCommand <-
-                    Maybe.map toInts (extRequestToPacket s.currentContext s.extRequest)}
+                    Maybe.map toInts
+                        (extRequestToPacket s.currentContext s.extRequest)}
               , [ Maybe.withDefault NoOp
                     (Maybe.map
                         (CommonAction << AppendToLog)
@@ -143,6 +139,15 @@ sendCommand' : OutgoingPacket
             -> (List BackgroundAction)
             -> (ToDeviceMessage, List BackgroundAction)
 sendCommand' p a = (sendCommand p, SetWaitingForDevice True::a)
+
+extNeedsToSend r = case r of
+    ExtNeedsNewContext _       -> True
+    ExtWantsCredentials _      -> True
+    ExtNeedsLogin _            -> True
+    ExtNeedsPassword _         -> True
+    ExtWantsToWrite _          -> True
+    ExtNeedsToWritePassword _  -> True
+    _                          -> False
 
 extRequestToPacket : String -> ExtensionRequest -> Maybe OutgoingPacket
 extRequestToPacket cc extRequest =
