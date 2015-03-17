@@ -30,6 +30,7 @@ decodeStatus i = case i `and` 0x7 of
     0x1 -> CommonAction (SetDeviceStatus Locked)
     0x3 -> CommonAction (SetDeviceStatus Locked)
     0x5 -> CommonAction (SetDeviceStatus Unlocked)
+    0x7 -> NoOp -- used to get past dropRepeats
     _   -> appendToLog' "Error: Received invalid status from device"
 
 sendCommand : OutgoingPacket -> ToDeviceMessage
