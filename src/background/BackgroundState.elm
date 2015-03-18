@@ -41,17 +41,17 @@ type MemManageState =
     | MemManageWaiting
     | MemManageDenied
     | MemManageRead
-        (ParentNode, FlashAddress, FlashAddress)
+        (List ParentNode, FlashAddress, FlashAddress)
         ByteArray
     | MemManageReadWaiting
-        (ParentNode, FlashAddress, FlashAddress)
+        (List ParentNode, FlashAddress, FlashAddress)
         ByteArray
     | MemManageReadFav
-        (ParentNode, List FlashFavorite)
+        (List ParentNode, List FlashFavorite)
     | MemManageReadFavWaiting
-        (ParentNode, List FlashFavorite)
+        (List ParentNode, List FlashFavorite)
     | MemManageReadSuccess
-        (ParentNode, List Favorite)
+        (List ParentNode, List Favorite)
     | MemManageWrite
         (List OutgoingPacket)
     | MemManageWriteWaiting
@@ -203,7 +203,7 @@ update action s =
         CommonAction EndMemManage      -> setMemManage MemManageEnd s
         CommonAction (SaveMemManage d) -> case s.memoryManage of
             MemManageReadSuccess (pNode, _) ->
-                setMemManage (MemManageWrite (favsToPackets d.favorites pNode ++ credsToPackets d.credentials pNode)) s
+                setMemManage (MemManageWrite (favsToPackets d.favorites ++ credsToPackets d.credentials pNode)) s
             _ -> s
         CommonAction (SetDeviceStatus c) ->
             let s' = {s | common <- updateCommon (SetDeviceStatus c)}
@@ -332,16 +332,16 @@ interpret packet s =
                 _ -> setMedia (MediaImportError (unexpected "ImportMediaEnd")) s
         ReceivedManageModeStart r ->
             if r == Done
-            then setMemManage (MemManageRead (EmptyParentNode, null, null) [])
+            then setMemManage (MemManageRead ([], null, null) [])
                     (update (CommonAction (SetDeviceStatus ManageMode)) s)
             else setMemManage MemManageDenied
                     (update (CommonAction (SetDeviceStatus Unlocked)) s)
         ReceivedGetStartingParent a -> case s.memoryManage of
-            MemManageReadWaiting (EmptyParentNode,null,null) [] ->
+            MemManageReadWaiting ([],null,null) [] ->
                 if a /= null then
-                    setMemManage (MemManageRead (EmptyParentNode, a, null) []) s
+                    setMemManage (MemManageRead ([], a, null) []) s
                 else
-                    setMemManage (MemManageReadSuccess (EmptyParentNode, emptyFavorites)) s
+                    setMemManage (MemManageReadSuccess ([], emptyFavorites)) s
             _ -> setMemManage (MemManageError (unexpected "starting parent")) s
         ReceivedReadFlashNode ba ->
             case s.memoryManage of
@@ -372,7 +372,7 @@ interpret packet s =
                 else setMemManage (MemManageError "write favorite denied") s
             MemManageWriteWaiting [] ->
                 if r == Done
-                then setMemManage (MemManageRead (EmptyParentNode, null, null) []) s
+                then setMemManage (MemManageRead ([], null, null) []) s
                 else setMemManage (MemManageError "write favorite denied") s
             _ -> setMemManage (MemManageError (unexpected "set favorite")) s
         ReceivedWriteFlashNode r -> case s.memoryManage of
@@ -382,7 +382,7 @@ interpret packet s =
                 else setMemManage (MemManageError "write node denied") s
             MemManageWriteWaiting [] ->
                 if r == Done
-                then setMemManage (MemManageRead (EmptyParentNode, null, null) []) s
+                then setMemManage (MemManageRead ([], null, null) []) s
                 else setMemManage (MemManageError "write node denied") s
             _ -> setMemManage (MemManageError (unexpected "write node")) s
         x -> appendToLog

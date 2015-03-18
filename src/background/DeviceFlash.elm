@@ -98,7 +98,7 @@ toCreds ps =
         removeNodes p = let p'  = {p - prevParent}
                             p'' = {p' - nextParent}
                         in {p'' - firstChild}
-    in map (\p -> (removeNodes p, getLogins p.firstChild)) ps
+    in reverse <| map (\p -> (removeNodes p, getLogins p.firstChild)) ps
 
 fromCreds : List Service -> List ParentNode
 fromCreds creds =
@@ -110,7 +110,7 @@ fromCreds creds =
             , firstChild = fromLogins logins
             , service    = sName.service
             }
-    in linkParents <| map newParent creds
+    in linkParents <| reverse <| map newParent creds
 
 toFavs : List FlashFavorite -> List ParentNode -> List Favorite
 toFavs ffs ps =
@@ -181,7 +181,7 @@ credsToDelete creds ps =
 
 deleteNodePackets : FlashAddress -> List OutgoingPacket
 deleteNodePackets addr =
-    [ OutgoingWriteFlashNode addr 0 (repeat 59 0xFF)
+    [ OutgoingWriteFlashNode addr 0 [0xFF, 0xFF]
     , OutgoingWriteFlashNode addr 1 []
     , OutgoingWriteFlashNode addr 2 []
     ]
@@ -282,7 +282,7 @@ parentToArray d =
         ++ stringToInts d.service
     in data ++ repeat (nodeSize - length data) 0
 
-childToArray : ChildNode-> ByteArray
+childToArray : ChildNode -> ByteArray
 childToArray d =
     let descr = stringToInts d.description
         login = stringToInts d.login

@@ -101,7 +101,7 @@ encode s =
                                         OutgoingMemManageModeStart
                                         [SetMemManage MemManageWaiting, CommonAction (SetDeviceStatus ManageMode)]
               MemManageRead (p,addr,nPAddr) ba -> case p of
-                  EmptyParentNode ->
+                  [] ->
                       if addr == null then
                         sendCommand'
                             OutgoingGetStartingParent
@@ -110,15 +110,15 @@ encode s =
                         sendCommand'
                             (OutgoingReadFlashNode addr)
                             [SetMemManage (MemManageReadWaiting (p,addr,nPAddr) ba)]
-                  ParentNode d ->
-                        if  | addr /= null ->
-                                sendCommand'
-                                    (OutgoingReadFlashNode addr)
-                                    [SetMemManage (MemManageReadWaiting (p,addr,nPAddr) ba)]
-                            | otherwise ->
-                                sendCommand'
-                                    (OutgoingGetFavorite 0)
-                                    [SetMemManage (MemManageReadFavWaiting (linkNextParentsReturnFirst p,[]))]
+                  _ ->
+                      if  | addr /= null ->
+                              sendCommand'
+                                  (OutgoingReadFlashNode addr)
+                                  [SetMemManage (MemManageReadWaiting (p,addr,nPAddr) ba)]
+                          | otherwise ->
+                              sendCommand'
+                                  (OutgoingGetFavorite 0)
+                                  [SetMemManage (MemManageReadFavWaiting (p,[]))]
               MemManageReadFav (p,favs) ->
                         sendCommand'
                             (OutgoingGetFavorite (length favs))
@@ -130,7 +130,7 @@ encode s =
               MemManageWrite [] ->
                         sendCommand'
                             OutgoingGetStartingParent
-                            [SetMemManage (MemManageReadWaiting (EmptyParentNode,null,null) [])]
+                            [SetMemManage (MemManageReadWaiting ([],null,null) [])]
           | not (mediaImportActive s) && not (memoryManageBusy s.memoryManage) ->
               ({ e | sendCommand <- Just (toInts OutgoingGetStatus)}
               , [])
