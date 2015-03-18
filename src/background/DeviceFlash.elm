@@ -200,8 +200,11 @@ toCreds firstP =
     let getLogins firstC =
             reverse <| foldlChildren (\c z -> removeChildren c::z) [] firstC
         removeChildren c = let c' = {c - nextChild} in {c' - prevChild}
+        removeNodes p = let p'  = {p - prevParent}
+                            p'' = {p' - nextParent}
+                        in {p'' - firstChild}
     in reverse <| foldlParents
-            (\p z -> ((p.service,p.address), getLogins p.firstChild)::z)
+            (\p z -> (removeNodes p, getLogins p.firstChild)::z)
             []
             firstP
 
@@ -243,7 +246,7 @@ fromCreds creds firstP =
         (ps, firstP') =
             foldlParents
                 (\pNode (z,fp) ->
-                    if not (any (\((_,a),_) -> a == pNode.address) creds)
+                    if not (any (\(sName,_) -> sName.address == pNode.address) creds)
                     then delete pNode fp z else (z,fp))
                 ([],firstP)
                 firstP

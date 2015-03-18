@@ -171,12 +171,12 @@ removeCred : (FlashAddress, FlashAddress) -> MemInfoData -> MemInfo
 removeCred (addr1,addr2) info =
     removeFromFavs (addr1, addr2)
         {info | credentials <-
-                filter (\((s,sAddr),ls) -> not (isEmpty ls))
+                filter (\(s,ls) -> not (isEmpty ls))
                 <| map
-                    (\((s,sAddr),ls) ->
-                        if sAddr == addr1
-                        then ((s,sAddr), filter (\{address} -> address /= addr2) ls)
-                        else ((s,sAddr),ls))
+                    (\(s,ls) ->
+                        if s.address == addr1
+                        then (s, filter (\{address} -> address /= addr2) ls)
+                        else (s,ls))
                     info.credentials
         }
 

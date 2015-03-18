@@ -103,8 +103,8 @@ favorites w info =
 
 addrToStrings : List Favorite -> List Service -> List (Maybe ((String, FlashAddress), (String, FlashAddress)))
 addrToStrings favs servs =
-    let findService pa = foldl (\s z -> if snd (fst s) == pa then Just s else z) Nothing servs
-        findLogin ca s = foldl (\l z -> if l.address == ca then Just (fst s,(l.login,l.address)) else z) Nothing (snd s)
+    let findService pa = foldl (\s z -> if (fst s).address == pa then Just s else z) Nothing servs
+        findLogin ca (s,ls) = foldl (\l z -> if l.address == ca then Just ((s.service,s.address),(l.login,l.address)) else z) Nothing ls
     in map
             (\f -> case f of
                      Just (pa,ca) -> findService pa `Maybe.andThen` findLogin ca
@@ -194,8 +194,9 @@ credentials (w,h) i =
             ]
 
 service : Int -> List Favorite -> Service -> Html
-service w favs ((serviceString,saddr), logins) =
+service w favs (serviceName, logins) =
     let bg = roundedRect w h lightGrey
+        serviceString = serviceName.service
         service' = leftAligned <| Text.height 14 <| whiteText serviceString
         cw = widthOf service' + 32
         ch = heightOf service' + 10
@@ -213,8 +214,8 @@ service w favs ((serviceString,saddr), logins) =
                                        laddr = cdata.address
                                    in login
                                 (w - 64)
-                                ((serviceString,saddr),(l,laddr))
-                                ((saddr,laddr) `member` (justs favs)))
+                                ((serviceString,serviceName.address),(l,laddr))
+                                ((serviceName.address,laddr) `member` (justs favs)))
                         logins
                     )
                 )
