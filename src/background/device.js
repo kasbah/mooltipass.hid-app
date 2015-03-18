@@ -25,6 +25,7 @@ onDeviceFound = function (devices)
 		{
             device.connection = connectInfo.connectionId;
             deviceSendToElm({setHidConnected:true});
+            //make sure then next status won't be dropped because of dropRepeats
             elm.ports.deviceStatus.send(7);
             deviceSendToElm({appendToLog:"device found, connection made"});
         }
@@ -68,7 +69,7 @@ function onDataReceived(reportId, data)
 
     //special case for read node reply message as we need to read 3 messages in
     //a row
-    if (ints[1] == 85)
+    if (ints[1] === 85)
         chrome.hid.receive(device.connection, onDataReceived);
 }
 
@@ -96,7 +97,7 @@ function sendMsg(message)
     }
     else
         console.log("app", message);
-    //Buffer creation is a bit awkward because windows doesn't like us using
+    //Buffer creation is a bit awkward because Windows doesn't like us using
     //the Uint8Array.buffer directly (or maybe it's something to do with the
     //ArrayBuffer size argument?). This is what works on all platforms equally.
     var buffer = new ArrayBuffer(PACKET_SIZE);
