@@ -7,6 +7,7 @@ import Result (fromMaybe, Result(..))
 import Result
 import Bitwise (..)
 import String
+import Debug
 
 -- local source
 import Byte (..)
@@ -222,8 +223,8 @@ toFavs ffs firstP =
                 p.firstChild
     in reverse <| map (\f -> parent f `andThen` child f) ffs
 
-fromFavs : List Favorite -> ParentNode -> List OutgoingPacket
-fromFavs fs firstP =
+favsToPackets : List Favorite -> ParentNode -> List OutgoingPacket
+favsToPackets fs firstP =
     let parent fav =
             queryParents
                 (\p -> fav /= Nothing && p.address == fst (fromJust fav))
@@ -240,27 +241,44 @@ fromFavs fs firstP =
                 <| map (\f -> parent f `andThen` child f) fs
 
 
-fromCreds : List Service -> ParentNode -> List OutgoingPacket
-fromCreds creds firstP =
-    let delete pNode fp z = (deleteNodePackets pNode.address ++ z, deleteNode pNode fp)
-        (ps, firstP') =
-            foldlParents
-                (\pNode (z,fp) ->
-                    if not (any (\(sName,_) -> sName.address == pNode.address) creds)
-                    then delete pNode fp z else (z,fp))
-                ([],firstP)
-                firstP
-    in ps ++ (concat <| mapParents (\d -> parentToPackets d) firstP')
+credsToPackets : List Service -> ParentNode -> List OutgoingPacket
+credsToPackets creds firstP = Debug.crash ""
 
-deleteNode : ParentNodeData -> ParentNode -> ParentNode
-deleteNode pNode firstP =
-    let replaceLink d nodeZ = case nodeZ of
-        ParentNode z -> if z.address == pNode.address
-                        then ParentNode {d | prevParent <- z.prevParent}
-                        else ParentNode d
-        _            -> ParentNode d
-    in linkNextParentsReturnFirst
-       <| foldlParents replaceLink EmptyParentNode firstP
+fromCreds : List Service -> ParentNode
+fromCreds creds =
+    let newChild l z =
+            ChildNode
+                { address      = l.address
+                , flags        = l.flags
+                , nextChild    = z
+                , prevChild    = EmptyChildNode
+                , ctr          = l.ctr
+                , description  = l.description
+                , login        = l.login
+                , password     = l.password
+                , dateCreated  = l.dateCreated
+                , dateLastUsed = l.dateLastUsed
+                }
+        newParent (sName, logins) z =
+            ParentNode
+                { address    = sName.address
+                , flags      = sName.flags
+                , nextParent = z
+                , prevParent = EmptyParentNode
+                , firstChild = linkPrevChildrenReturnLast
+                    <| foldr newChild EmptyChildNode (reverse logins)
+                , service    = sName.service
+                }
+    in linkPrevParentsReturnLast (foldr newParent EmptyParentNode (reverse creds))
+
+credsToDelete : List Service -> ParentNode -> List OutgoingPacket
+credsToDelete creds firstP =
+    foldlParents
+        (\pNode z ->
+            if not (any (\(sName,_) -> sName.address == pNode.address) creds)
+            then z ++ deleteNodePackets pNode.address else z)
+        []
+        firstP
 
 parseParentNode : ParentNode -> FlashAddress -> ByteArray
                 -> Maybe (ParentNode, FlashAddress, FlashAddress)

@@ -7,6 +7,7 @@ import Debug (..)
 import List (length)
 import String
 import Result
+import Debug
 
 import Text (..)
 import Bitwise (..)
@@ -94,7 +95,7 @@ partiallyLinkedParents minChildren maxChildren minParents maxParents =
           if depth <= 0 then always EmptyParentNode
           else
               parentNode
-              `map` flashAddress
+              `map` always (0,depth)
               `andMap` parentFlags
               `andMap` parent (depth - 1)
               `andMap` always EmptyParentNode
@@ -199,6 +200,8 @@ tests =
     , property "- 'Write then parse child retains 2'"
         writeThenParseChildRetains2
         ((,,) `map` (firstParentOfLinkedList 0 0 1) `andMap` (linkedChildren 1 1) `andMap` flashAddress)
+    , property "- 'Credential conversion retains'"
+        (\p -> (fromCreds (toCreds p)) == p) (firstParentOfLinkedList 1 3 3)
     ]
 
 main = display tests
