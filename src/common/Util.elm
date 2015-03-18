@@ -1,7 +1,7 @@
 module Util where
 
 import List (..)
-import Debug (log)
+import Debug
 
 pairToList : (a,a) -> List a
 pairToList (x,y) = [x,y]
@@ -13,6 +13,12 @@ isJust x = case x of
 
 fromJust : Maybe a -> a
 fromJust (Just a) = a
+
+last : List a -> Maybe a
+last xs = case xs of
+    (x::[]) -> Just x
+    (x::xs) -> last xs
+    _       -> Nothing
 
 maybeHead : List a -> Maybe a
 maybeHead xs = case xs of

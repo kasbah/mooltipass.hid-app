@@ -17,6 +17,48 @@ import Util (..)
 
 nodeSize = 132
 
+parentNode :
+    FlashAddress
+    -> (Byte,Byte)
+    -> FlashAddress
+    -> FlashAddress
+    -> List ChildNode
+    -> ByteString
+    -> ParentNode
+parentNode a f n p fc s =
+        { address    = a
+        , flags      = f
+        , nextParent = n
+        , prevParent = p
+        , firstChild = fc
+        , service    = s
+        }
+
+childNode :
+    FlashAddress
+    -> (Byte,Byte)
+    -> FlashAddress
+    -> FlashAddress
+    -> (Byte, Byte, Byte)
+    -> ByteString
+    -> ByteString
+    -> ByteArray
+    -> (Byte, Byte)
+    -> (Byte, Byte)
+    -> ChildNode
+childNode a f n p c d l pw dC dU =
+        { address      = a
+        , flags        = f
+        , nextChild    = n
+        , prevChild    = p
+        , ctr          = c
+        , description  = d
+        , login        = l
+        , password     = pw
+        , dateCreated  = dC
+        , dateLastUsed = dU
+        }
+
 type alias ParentNode =
     { address    : FlashAddress
     , flags      : (Byte,Byte)
@@ -205,15 +247,17 @@ parseChildNode d addr nParentAddr bs =
                 , nParentAddr)
         in Result.map pNodeAndNextAddr cNodeAndNextAddr
 
-parse : (ParentNode, FlashAddress, FlashAddress) -> ByteArray
-      -> Result String (ParentNode, FlashAddress, FlashAddress)
-parse (p,addr,nParentAddr) bs =
+parse : (List ParentNode, FlashAddress, FlashAddress) -> ByteArray
+      -> Result String (List ParentNode, FlashAddress, FlashAddress)
+parse (ps,addr,nParentAddr) bs =
     let parentOrChild = case bs of
             (_::flags2::_) -> (flags2 `and` 0xC0) `shiftRight` 6
             _ -> (-1)
     in case parentOrChild of
-        0 -> fromMaybe "parse parent failed" <| parseParentNode addr bs
-        1 -> parseChildNode p addr nParentAddr bs
+        0 -> Result.map (\(p,a1,a2) -> (p::ps,a1,a2)) <| fromMaybe "parse parent failed" <| parseParentNode addr bs
+        1 -> case ps of
+            (p::ps') -> Result.map (\(p',a1,a2) -> (p'::ps',a1,a2)) <| parseChildNode p addr nParentAddr bs
+            _ -> Err <| "No parent nodes when parsing child node"
         _ -> Err <| "Invalid flags: " ++ (toString parentOrChild)
 
 parentToPackets : ParentNode -> List OutgoingPacket

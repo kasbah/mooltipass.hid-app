@@ -1,16 +1,17 @@
-import Check (..)
-import Random (..)
 import DeviceFlash (..)
 import Byte (..)
 import Util (..)
-import Debug (..)
-import List (length)
+
+import Check (..)
+import Random (..)
+import Text (..)
+import Bitwise (..)
 import String
 import Result
 import Debug
-
-import Text (..)
-import Bitwise (..)
+import Debug (..)
+import List (length)
+import Maybe
 
 pairOf : Generator a -> Generator (a,a)
 pairOf generator = (,) `map` generator `andMap` generator
@@ -63,145 +64,92 @@ always x = customGenerator <| \seed -> (x,seed)
 andMap : Generator (a -> b) -> Generator a -> Generator b
 andMap = map2 (<|)
 
-partiallyLinkedChildren : Int -> Int -> Generator ChildNode
-partiallyLinkedChildren minChildren maxChildren =
-    let child : Int -> Generator ChildNode
-        child depth =
-            if depth <= 0 then always EmptyChildNode
-            else
-                childNode
-                `map` flashAddress
-                `andMap` childFlags
-                `andMap` child (depth - 1)     -- next child
-                `andMap` always EmptyChildNode -- prev child, linked later
-                `andMap` tripleOf byte         -- ctr
-                `andMap` byteString 23         -- description
-                `andMap` byteString 62         -- login
-                `andMap` byteArray 32          -- password
-                `andMap` pairOf byte           -- date last used
-                `andMap` pairOf byte           -- date created
-    in (int minChildren maxChildren) `andThen` child
+genChildNode : Generator ChildNode
+genChildNode =
+    childNode
+        `map` flashAddress
+        `andMap` childFlags
+        `andMap` always null     -- next child
+        `andMap` always null     -- prev child, linked later
+        `andMap` tripleOf byte   -- ctr
+        `andMap` byteString 23   -- description
+        `andMap` byteString 62   -- login
+        `andMap` byteArray 32    -- password
+        `andMap` pairOf byte     -- date last used
+        `andMap` pairOf byte     -- date created
 
-linkedChildren : Int -> Int -> Generator ChildNode
-linkedChildren minDepth maxDepth =
-    map
-        (firstChild << linkPrevChildrenReturnLast)
-        (partiallyLinkedChildren minDepth maxDepth)
+genParentNode : Int -> Int -> Generator ParentNode
+genParentNode minChildren maxChildren =
+    parentNode
+    `map` flashAddress
+    `andMap` parentFlags
+    `andMap` always null
+    `andMap` always null
+    `andMap` (map linkKids (childNodes minChildren maxChildren))
+    `andMap` byteString 32
 
-partiallyLinkedParents : Int -> Int -> Int -> Int -> Generator ParentNode
-partiallyLinkedParents minChildren maxChildren minParents maxParents =
-    let parent : Int -> Generator ParentNode
-        parent depth =
-          if depth <= 0 then always EmptyParentNode
-          else
-              parentNode
-              `map` always (0,depth)
-              `andMap` parentFlags
-              `andMap` parent (depth - 1)
-              `andMap` always EmptyParentNode
-              `andMap` linkedChildren minChildren maxChildren
-              `andMap` byteString 32
-    in (int minParents maxParents) `andThen` parent
+childNodes : Int -> Int -> Generator (List ChildNode)
+childNodes minChildren maxChildren =
+    int minChildren maxChildren `andThen` (\n -> list n genChildNode)
 
-firstParentOfLinkedList : Int -> Int -> Int -> Generator ParentNode
-firstParentOfLinkedList minChildren maxChildren maxParents =
-    map
-        (firstParent << linkPrevParentsReturnLast)
-        <| partiallyLinkedParents minChildren maxChildren 1 maxParents
+flashData : Int -> Int -> Generator (List ParentNode)
+flashData maxChildren maxParents =
+    map2 (,) (int 1 maxParents) (int 1 maxChildren)
+    `andThen` (\(np,maxC) -> list np (genParentNode 1 maxC))
 
 tests =
-    let writeThenParseParentSucceeds ((ParentNode d),addr) =
-            isOk (parse (EmptyParentNode,addr,null) (parentToArray d))
-        dataFromParse (Ok (ParentNode d,_,_)) = d
-        writeThenParseParentRetains ((ParentNode d),addr) =
+    let writeThenParseParentSucceeds (d,addr) =
+            isOk (parse ([],addr,null) (parentToArray d))
+        dataFromParse (Ok ((d::_),_,_)) = d
+        writeThenParseParentRetains (d,addr) =
             dataFromParse
-                (parse (EmptyParentNode,addr,null) (parentToArray d))
+                (parse ([],addr,null) (parentToArray d))
                     == {d | address <- addr}
-        writeThenParseParentRetains2 ((ParentNode d),addr) =
+        writeThenParseParentRetains2 (d,addr) =
             parentToArray
                 (dataFromParse
-                    (parse (EmptyParentNode,addr,null) (parentToArray d)))
+                    (parse ([],addr,null) (parentToArray d)))
                         == parentToArray d
-        writeThenParseChildSucceeds (p,(ChildNode cd),addr) =
-            isOk (parse (p,addr,null) (childToArray cd))
-        writeThenParseChildRetains ((ParentNode d),(ChildNode cd),addr) =
-            .firstChild
+        writeThenParseChildSucceeds (ps,cd,addr) =
+            isOk (parse (ps,addr,null) (childToArray cd))
+        writeThenParseChildRetains (ps,cd,addr) =
+            last
+            (.firstChild
             (dataFromParse
-                (parse ((ParentNode d),addr,null) (childToArray cd)))
-                    == ChildNode {cd | address <- addr}
-        writeThenParseChildRetains2 ((ParentNode d),(ChildNode cd),addr) =
-            (\(ChildNode d) -> childToArray d)
-            (.firstChild (dataFromParse
-                (parse ((ParentNode d),addr,null) (childToArray cd))))
-                    == childToArray cd
+                (parse (ps,addr,null) (childToArray cd))))
+                    == Just {cd | address <- addr}
+        writeThenParseChildRetains2 (d,cd,addr) =
+            Maybe.map childToArray (last (.firstChild (dataFromParse (parse (d,addr,null) (childToArray cd))))) == Just (childToArray cd)
     in simpleCheck
     [ property "- 'null term string length remains the same'"
         (\str -> Result.map String.length (nullTermString (String.length str + 3) ((stringToInts str) ++ [0, 0, 0])) == Ok (String.length str))
         (byteString 255)
-    , property
-        "- 'Going to lastParent and then to firstParent is the same as staying on firstParent'"
-        (\p -> firstParent (lastParent p) == p)
-        (firstParentOfLinkedList 0 0 10)
-    , property
-        "- 'foldlParents returns same node'"
-        (\p -> foldlParents (\a _ -> ParentNode a) EmptyParentNode p == p)
-        (firstParentOfLinkedList 0 0 10)
-    , property
-        "- 'foldrParents returns same node'"
-        (\p -> foldrParents (\a _ -> ParentNode a) EmptyParentNode p == p)
-        (map lastParent (firstParentOfLinkedList 0 0 10))
-    , property
-        "- 'firstParent of first parent is first parent'"
-        (\p -> firstParent p == p)
-        (firstParentOfLinkedList 0 0 10)
-    , property "- 'lastParent of last parent is last parent'"
-        (\p -> lastParent p == lastParent (lastParent p))
-        (firstParentOfLinkedList 0 0 10)
-    , property
-        "- 'Going to last child and then to first child is the same as staying on first child'"
-        (\c -> firstChild (lastChild c) == c)
-        (linkedChildren 0 10)
-    , property
-        "- 'foldlChildren returns same node'"
-        (\c -> foldlChildren (\a _ -> ChildNode a) EmptyChildNode c == c)
-        (linkedChildren 0 10)
-    , property
-        "- 'foldrChildren returns same node'"
-        (\c -> foldrChildren (\a _ -> ChildNode a) EmptyChildNode c == c)
-        (map lastChild (linkedChildren 0 10))
-    , property
-        "- 'firstChild of first child is first child'"
-        (\c -> firstChild c == c)
-        (linkedChildren 0 10)
-    , property "- 'lastChild of last child is last child'"
-        (\c -> lastChild c == lastChild (lastChild c))
-        (linkedChildren 0 10)
     , property "- 'Write parent node is nodeSize bytes'"
-        (\(ParentNode d) -> length (parentToArray d) == nodeSize)
-        (firstParentOfLinkedList 0 0 10)
+        (\d -> length (parentToArray d) == nodeSize)
+        (genParentNode 0 0)
     , property "- 'Write child node is nodeSize bytes'"
-        (\(ChildNode d) -> length (childToArray d) == nodeSize)
-        (linkedChildren 1 10)
+        (\d -> length (childToArray d) == nodeSize)
+        genChildNode
     , property "- 'Write then parse parent'"
         writeThenParseParentSucceeds
-        (map2 (,) (firstParentOfLinkedList 0 0 1) flashAddress)
+        (map2 (,) (genParentNode 0 0) flashAddress)
     , property "- 'Write then parse parent retains'"
         writeThenParseParentRetains
-        (map2 (,) (firstParentOfLinkedList 0 0 1) flashAddress)
+        (map2 (,) (genParentNode 0 0 ) flashAddress)
     , property "- 'Write then parse parent retains 2'"
         writeThenParseParentRetains2
-        (map2 (,) (firstParentOfLinkedList 0 0 1) flashAddress)
+        (map2 (,) (genParentNode 0 0) flashAddress)
     , property "- 'Write then parse child'"
         writeThenParseChildSucceeds
-        ((,,) `map` (firstParentOfLinkedList 0 0 1) `andMap` (linkedChildren 1 1) `andMap` flashAddress)
+        ((,,) `map` (flashData 1 1) `andMap` genChildNode `andMap` flashAddress)
     , property "- 'Write then parse child retains'"
         writeThenParseChildRetains
-        ((,,) `map` (firstParentOfLinkedList 0 0 1) `andMap` (linkedChildren 1 1) `andMap` flashAddress)
+        ((,,) `map` (flashData 1 1) `andMap` genChildNode `andMap` flashAddress)
     , property "- 'Write then parse child retains 2'"
         writeThenParseChildRetains2
-        ((,,) `map` (firstParentOfLinkedList 0 0 1) `andMap` (linkedChildren 1 1) `andMap` flashAddress)
-    , property "- 'Credential conversion retains'"
-        (\p -> (fromCreds (toCreds p)) == p) (firstParentOfLinkedList 1 3 3)
+        ((,,) `map` (flashData 1 1) `andMap` genChildNode `andMap` flashAddress)
+    --, property "- 'Credential conversion retains'"
+    --    (\p -> (fromCreds (toCreds p)) == p) (firstParentOfLinkedList 1 3 3)
     ]
 
 main = display tests
