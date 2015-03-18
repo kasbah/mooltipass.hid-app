@@ -14,6 +14,11 @@ isJust x = case x of
 fromJust : Maybe a -> a
 fromJust (Just a) = a
 
+maybeHead : List a -> Maybe a
+maybeHead xs = case xs of
+    (x::_) -> Just x
+    _      -> Nothing
+
 justs : List (Maybe a) -> List a
 justs = filterMap identity
 
