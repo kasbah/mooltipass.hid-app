@@ -95,7 +95,7 @@ childNodes minChildren maxChildren =
 flashData : Int -> Int -> Generator (List ParentNode)
 flashData maxChildren maxParents =
     map2 (,) (int 1 maxParents) (int 1 maxChildren)
-    `andThen` (\(np,maxC) -> list np (genParentNode 1 maxC))
+    `andThen` (\(np,maxC) -> map linkParents (list np (genParentNode 1 maxC)))
 
 tests =
     let writeThenParseParentSucceeds (d,addr) =
@@ -148,8 +148,8 @@ tests =
     , property "- 'Write then parse child retains 2'"
         writeThenParseChildRetains2
         ((,,) `map` (flashData 1 1) `andMap` genChildNode `andMap` flashAddress)
-    --, property "- 'Credential conversion retains'"
-    --    (\p -> (fromCreds (toCreds p)) == p) (firstParentOfLinkedList 1 3 3)
+    , property "- 'Credential conversion retains'"
+        (\p -> fromCreds (toCreds p) == p) (flashData 10 10)
     ]
 
 main = display tests

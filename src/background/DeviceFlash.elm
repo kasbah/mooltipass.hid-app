@@ -93,16 +93,24 @@ emptyFlashFavorites = map (\_ -> emptyFav) emptyFavorites
 
 toCreds : List ParentNode -> List Service
 toCreds ps =
-    let getLogins firstC =
-            reverse <| foldl (\c z -> removeChildren c::z) [] firstC
+    let getLogins firstC = map removeChildren firstC
         removeChildren c = let c' = {c - nextChild} in {c' - prevChild}
         removeNodes p = let p'  = {p - prevParent}
                             p'' = {p' - nextParent}
                         in {p'' - firstChild}
-    in reverse <| foldl
-            (\p z -> (removeNodes p, getLogins p.firstChild)::z)
-            []
-            ps
+    in map (\p -> (removeNodes p, getLogins p.firstChild)) ps
+
+fromCreds : List Service -> List ParentNode
+fromCreds creds =
+    let newParent (sName, logins)=
+            { address    = sName.address
+            , flags      = sName.flags
+            , nextParent = null
+            , prevParent = null
+            , firstChild = fromLogins logins
+            , service    = sName.service
+            }
+    in linkParents <| map newParent creds
 
 toFavs : List FlashFavorite -> List ParentNode -> List Favorite
 toFavs ffs ps =
@@ -154,25 +162,13 @@ linkParents : List ParentNode -> List ParentNode
 linkParents ps =
     let linkPrev p z = {p | prevParent <- headAddress z}::z
         linkNext p z = {p | nextParent <- headAddress z}::z
-    in foldr linkNext [] <| foldl linkPrev [] ps
+    in reverse <| foldl linkPrev [] <| foldr linkNext [] ps
 
 linkKids : List ChildNode -> List ChildNode
 linkKids ps =
     let linkPrev p z = {p | prevChild <- headAddress z}::z
         linkNext p z = {p | nextChild <- headAddress z}::z
-    in foldr linkNext [] <| foldl linkPrev [] ps
-
-fromCreds : List Service -> List ParentNode
-fromCreds creds =
-    let newParent (sName, logins)=
-            { address    = sName.address
-            , flags      = sName.flags
-            , nextParent = null
-            , prevParent = null
-            , firstChild = fromLogins logins
-            , service    = sName.service
-            }
-    in linkParents <| map newParent creds
+    in reverse <| foldl linkPrev [] <| foldr linkNext [] ps
 
 credsToDelete : List Service -> List ParentNode -> List OutgoingPacket
 credsToDelete creds ps =
