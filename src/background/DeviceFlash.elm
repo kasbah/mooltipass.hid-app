@@ -74,7 +74,7 @@ fromCreds creds =
             , children = fromLogins logins
             , service  = sName.service
             }
-    in linkNodes <| map newParent <| reverse creds
+    in linkNodes <| map newParent <| creds
 
 toFavs : List FlashFavorite -> List ParentNode -> List Favorite
 toFavs ffs ps =
@@ -139,12 +139,19 @@ linkNodes ns =
 
 credsToDelete : List Service -> List ParentNode -> List OutgoingPacket
 credsToDelete creds ps =
-    foldl
-        (\pNode z ->
+    let findDeletedKids p (sName, ls) z =
+            if sName.address == p.address
+            then z ++ foldl (findDeletedKids' ls) [] p.children
+            else z
+        findDeletedKids' logins c z =
+            if not (any (\l -> l.address == c.address) logins)
+            then z ++ deleteNodePackets c.address
+            else z
+        findDeleted pNode z =
             if not (any (\(sName,_) -> sName.address == pNode.address) creds)
-            then z ++ deleteNodePackets pNode.address else z)
-        []
-        ps
+            then z ++ deleteNodePackets pNode.address
+            else z ++ foldl (findDeletedKids pNode) [] creds
+    in foldl findDeleted [] ps
 
 deleteNodePackets : FlashAddress -> List OutgoingPacket
 deleteNodePackets addr =
@@ -231,7 +238,7 @@ childToPackets d = toPackets d.address (childToArray d)
 
 toPackets : FlashAddress -> ByteArray -> List OutgoingPacket
 toPackets addr ba =
-    [ OutgoingWriteFlashNode addr 0 (take 6 ba)
+    [ OutgoingWriteFlashNode addr 0 (take 8 ba)
     , OutgoingWriteFlashNode addr 1 [] --(take 59 (drop 59 ba))
     , OutgoingWriteFlashNode addr 2 [] --(take 59 (drop 59 (drop 59 ba)))
     ]
