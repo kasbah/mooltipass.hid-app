@@ -99,7 +99,13 @@ favsToPackets fs =
             <| map (Maybe.withDefault (null, null)) fs
 
 credsToPackets : List Service -> List ParentNode -> List OutgoingPacket
-credsToPackets creds ps = Debug.crash ""
+credsToPackets creds ps =
+    let newPNodes  = fromCreds creds
+        delPackets = credsToDelete creds ps
+        newCs cs   = concat (map childToPackets cs)
+        newPackets = concat
+            <| map (\p -> parentToPackets p ++ newCs p.children) newPNodes
+    in delPackets ++ newPackets
 
 headAddress : List (Node a) -> FlashAddress
 headAddress nodes = Maybe.withDefault null (Maybe.map (.address) (maybeHead nodes))
@@ -213,20 +219,17 @@ parse (ps,addr,nParentAddr) bs =
         _ -> Err <| "Invalid flags: " ++ (toString parentOrChild)
 
 parentToPackets : ParentNode -> List OutgoingPacket
-parentToPackets d =
-    let ba = parentToArray d
-    in [ OutgoingWriteFlashNode d.address 0 (take 59 ba)
-       , OutgoingWriteFlashNode d.address 1 (take 59 (drop 59 ba))
-       , OutgoingWriteFlashNode d.address 2 (take 59 (drop 59 (drop 59 ba)))
-       ]
+parentToPackets d = toPackets d.address (parentToArray d)
 
 childToPackets : ChildNode -> List OutgoingPacket
-childToPackets d =
-    let ba = childToArray d
-    in [ OutgoingWriteFlashNode d.address 0 (take 59 ba)
-       , OutgoingWriteFlashNode d.address 1 (take 59 (drop 59 ba))
-       , OutgoingWriteFlashNode d.address 2 (take 59 (drop 59 (drop 59 ba)))
-       ]
+childToPackets d = toPackets d.address (childToArray d)
+
+toPackets : FlashAddress -> ByteArray -> List OutgoingPacket
+toPackets addr ba =
+    [ OutgoingWriteFlashNode addr 0 (take 59 ba)
+    , OutgoingWriteFlashNode addr 1 (take 59 (drop 59 ba))
+    , OutgoingWriteFlashNode addr 2 (take 59 (drop 59 (drop 59 ba)))
+    ]
 
 parentToArray : ParentNode -> ByteArray
 parentToArray d =
