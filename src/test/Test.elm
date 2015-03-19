@@ -64,12 +64,54 @@ always x = customGenerator <| \seed -> (x,seed)
 andMap : Generator (a -> b) -> Generator a -> Generator b
 andMap = map2 (<|)
 
+parentNode :
+    FlashAddress
+    -> (Byte,Byte)
+    -> FlashAddress
+    -> FlashAddress
+    -> List ChildNode
+    -> ByteString
+    -> ParentNode
+parentNode a f n p fc s =
+        { address  = a
+        , flags    = f
+        , next     = n
+        , prev     = p
+        , children = fc
+        , service  = s
+        }
+
+childNode :
+    FlashAddress
+    -> (Byte,Byte)
+    -> FlashAddress
+    -> FlashAddress
+    -> (Byte, Byte, Byte)
+    -> ByteString
+    -> ByteString
+    -> ByteArray
+    -> (Byte, Byte)
+    -> (Byte, Byte)
+    -> ChildNode
+childNode a f n p c d l pw dC dU =
+        { address      = a
+        , flags        = f
+        , next         = n
+        , prev         = p
+        , ctr          = c
+        , description  = d
+        , login        = l
+        , password     = pw
+        , dateCreated  = dC
+        , dateLastUsed = dU
+        }
+
 genChildNode : Generator ChildNode
 genChildNode =
     childNode
         `map` flashAddress
         `andMap` childFlags
-        `andMap` always null     -- next child
+        `andMap` always null     -- next child, linked later
         `andMap` always null     -- prev child, linked later
         `andMap` tripleOf byte   -- ctr
         `andMap` byteString 23   -- description
@@ -85,7 +127,7 @@ genParentNode minChildren maxChildren =
     `andMap` parentFlags
     `andMap` always null
     `andMap` always null
-    `andMap` (map linkKids (childNodes minChildren maxChildren))
+    `andMap` (map linkNodes (childNodes minChildren maxChildren))
     `andMap` byteString 32
 
 childNodes : Int -> Int -> Generator (List ChildNode)
@@ -95,7 +137,7 @@ childNodes minChildren maxChildren =
 flashData : Int -> Int -> Generator (List ParentNode)
 flashData maxChildren maxParents =
     map2 (,) (int 1 maxParents) (int 1 maxChildren)
-    `andThen` (\(np,maxC) -> map linkParents (list np (genParentNode 1 maxC)))
+    `andThen` (\(np,maxC) -> map linkNodes (list np (genParentNode 1 maxC)))
 
 tests =
     let writeThenParseParentSucceeds (d,addr) =
@@ -114,12 +156,12 @@ tests =
             isOk (parse (ps,addr,null) (childToArray cd))
         writeThenParseChildRetains (ps,cd,addr) =
             last
-            (.firstChild
+            (.children
             (dataFromParse
                 (parse (ps,addr,null) (childToArray cd))))
                     == Just {cd | address <- addr}
         writeThenParseChildRetains2 (d,cd,addr) =
-            Maybe.map childToArray (last (.firstChild (dataFromParse (parse (d,addr,null) (childToArray cd))))) == Just (childToArray cd)
+            Maybe.map childToArray (last (.children (dataFromParse (parse (d,addr,null) (childToArray cd))))) == Just (childToArray cd)
     in simpleCheck
     [ property "- 'null term string length remains the same'"
         (\str -> Result.map String.length (nullTermString (String.length str + 3) ((stringToInts str) ++ [0, 0, 0])) == Ok (String.length str))

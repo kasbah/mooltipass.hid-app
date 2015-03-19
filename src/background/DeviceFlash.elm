@@ -17,62 +17,27 @@ import Util (..)
 
 nodeSize = 132
 
-parentNode :
-    FlashAddress
-    -> (Byte,Byte)
-    -> FlashAddress
-    -> FlashAddress
-    -> List ChildNode
-    -> ByteString
-    -> ParentNode
-parentNode a f n p fc s =
-        { address    = a
-        , flags      = f
-        , nextParent = n
-        , prevParent = p
-        , firstChild = fc
-        , service    = s
-        }
-
-childNode :
-    FlashAddress
-    -> (Byte,Byte)
-    -> FlashAddress
-    -> FlashAddress
-    -> (Byte, Byte, Byte)
-    -> ByteString
-    -> ByteString
-    -> ByteArray
-    -> (Byte, Byte)
-    -> (Byte, Byte)
-    -> ChildNode
-childNode a f n p c d l pw dC dU =
-        { address      = a
-        , flags        = f
-        , nextChild    = n
-        , prevChild    = p
-        , ctr          = c
-        , description  = d
-        , login        = l
-        , password     = pw
-        , dateCreated  = dC
-        , dateLastUsed = dU
-        }
+type alias Node a =
+    { a | address : FlashAddress
+    , flags   : (Byte,Byte)
+    , next    : FlashAddress
+    , prev    : FlashAddress
+    }
 
 type alias ParentNode =
-    { address    : FlashAddress
-    , flags      : (Byte,Byte)
-    , nextParent : FlashAddress
-    , prevParent : FlashAddress
-    , firstChild : List ChildNode
-    , service    : ByteString
+    { address  : FlashAddress
+    , flags    : (Byte,Byte)
+    , next     : FlashAddress
+    , prev     : FlashAddress
+    , children : List ChildNode
+    , service  : ByteString
     }
 
 type alias ChildNode =
     { address      : FlashAddress
     , flags        : (Byte,Byte)
-    , nextChild    : FlashAddress
-    , prevChild    : FlashAddress
+    , next         : FlashAddress
+    , prev         : FlashAddress
     , ctr          : (Byte, Byte, Byte)
     , description  : ByteString
     , login        : ByteString
@@ -89,28 +54,27 @@ type alias FlashFavorite =
 emptyFav : FlashFavorite
 emptyFav = {parentNode = null, childNode = null}
 
-emptyFlashFavorites = map (\_ -> emptyFav) emptyFavorites
+emptyFlashFavorites = repeat maxFavs emptyFavorites
 
 toCreds : List ParentNode -> List Service
 toCreds ps =
-    let getLogins firstC = map removeChildren firstC
-        removeChildren c = let c' = {c - nextChild} in {c' - prevChild}
-        removeNodes p = let p'  = {p - prevParent}
-                            p'' = {p' - nextParent}
-                        in {p'' - firstChild}
-    in reverse <| map (\p -> (removeNodes p, getLogins p.firstChild)) ps
+    let getLogins firstC   = map removeAddresses firstC
+        removeAddresses c  = let c' = {c - next} in {c' - prev}
+        removeAddresses' p = let p'  = removeAddresses p
+                             in {p' - children}
+    in reverse <| map (\p -> (removeAddresses' p, getLogins p.children)) ps
 
 fromCreds : List Service -> List ParentNode
 fromCreds creds =
     let newParent (sName, logins)=
-            { address    = sName.address
-            , flags      = sName.flags
-            , nextParent = null
-            , prevParent = null
-            , firstChild = fromLogins logins
-            , service    = sName.service
+            { address  = sName.address
+            , flags    = sName.flags
+            , next     = null
+            , prev     = null
+            , children = fromLogins logins
+            , service  = sName.service
             }
-    in linkParents <| reverse <| map newParent creds
+    in linkNodes <| map newParent <| reverse creds
 
 toFavs : List FlashFavorite -> List ParentNode -> List Favorite
 toFavs ffs ps =
@@ -124,7 +88,7 @@ toFavs ffs ps =
                 <| maybeHead
                     <| filter
                         (\c -> fav.childNode /= null && c.address == fav.childNode)
-                        p.firstChild
+                        p.children
     in reverse <| map (\f -> parent f `andThen` child f) ffs
 
 
@@ -134,12 +98,10 @@ favsToPackets fs =
         <| map2 (,) [0..maxFavs]
             <| map (Maybe.withDefault (null, null)) fs
 
-
 credsToPackets : List Service -> List ParentNode -> List OutgoingPacket
 credsToPackets creds ps = Debug.crash ""
 
-
-headAddress : List { a | address : FlashAddress } -> FlashAddress
+headAddress : List (Node a) -> FlashAddress
 headAddress nodes = Maybe.withDefault null (Maybe.map (.address) (maybeHead nodes))
 
 fromLogins : List Login -> List ChildNode
@@ -147,8 +109,8 @@ fromLogins ls =
     let newChild l =
             { address      = l.address
             , flags        = l.flags
-            , nextChild    = null
-            , prevChild    = null
+            , next         = null
+            , prev         = null
             , ctr          = l.ctr
             , description  = l.description
             , login        = l.login
@@ -156,19 +118,13 @@ fromLogins ls =
             , dateCreated  = l.dateCreated
             , dateLastUsed = l.dateLastUsed
             }
-    in linkKids <| map newChild ls
+    in linkNodes <| map newChild ls
 
-linkParents : List ParentNode -> List ParentNode
-linkParents ps =
-    let linkPrev p z = {p | prevParent <- headAddress z}::z
-        linkNext p z = {p | nextParent <- headAddress z}::z
-    in reverse <| foldl linkPrev [] <| foldr linkNext [] ps
-
-linkKids : List ChildNode -> List ChildNode
-linkKids ps =
-    let linkPrev p z = {p | prevChild <- headAddress z}::z
-        linkNext p z = {p | nextChild <- headAddress z}::z
-    in reverse <| foldl linkPrev [] <| foldr linkNext [] ps
+linkNodes : List (Node a) -> List (Node a)
+linkNodes ns =
+    let linkPrev p z = {p | prev <- headAddress z}::z
+        linkNext p z = {p | next <- headAddress z}::z
+    in reverse <| foldl linkPrev [] <| foldr linkNext [] ns
 
 credsToDelete : List Service -> List ParentNode -> List OutgoingPacket
 credsToDelete creds ps =
@@ -194,12 +150,12 @@ parseParentNode addr bs =
             case nullTermString 58 service of
             Ok str ->
                 let newP =
-                        ( { address    = addr
-                          , flags      = (flags1,flags2)
-                          , nextParent = (nextP1,nextP2)
-                          , prevParent = (prevP1,prevP2)
-                          , firstChild = []
-                          , service    = str
+                        ( { address  = addr
+                          , flags    = (flags1,flags2)
+                          , next     = (nextP1,nextP2)
+                          , prev     = (prevP1,prevP2)
+                          , children = []
+                          , service  = str
                           }
                         , (firstC1,firstC2), (nextP1,nextP2))
                 in Just newP
@@ -220,8 +176,8 @@ parseChildNode d addr nParentAddr bs =
                                             Ok (
                                                 { address      = addr
                                                 , flags        = (flags1,flags2)
-                                                , nextChild    = (nextC1, nextC2)
-                                                , prevChild    = (prevC1, prevC2)
+                                                , next         = (nextC1, nextC2)
+                                                , prev         = (prevC1, prevC2)
                                                 , ctr          = (ctr1,ctr2,ctr3)
                                                 , description  = descr
                                                 , login        = login
@@ -238,7 +194,7 @@ parseChildNode d addr nParentAddr bs =
                         Err s -> Err <| "Converting description, " ++ s
                 _ -> Err "Not enough data"
             pNodeAndNextAddr (cNode, nAddr) =
-                ({d | firstChild <- d.firstChild ++ [cNode]}
+                ({d | children <- d.children ++ [cNode]}
                 , if nAddr == null then nParentAddr else nAddr
                 , nParentAddr)
         in Result.map pNodeAndNextAddr cNodeAndNextAddr
@@ -276,9 +232,9 @@ parentToArray : ParentNode -> ByteArray
 parentToArray d =
     let data =
         pairToList d.flags
-        ++ pairToList d.prevParent
-        ++ pairToList d.nextParent
-        ++ pairToList (headAddress d.firstChild)
+        ++ pairToList d.prev
+        ++ pairToList d.next
+        ++ pairToList (headAddress d.children)
         ++ stringToInts d.service
     in data ++ repeat (nodeSize - length data) 0
 
@@ -287,8 +243,8 @@ childToArray d =
     let descr = stringToInts d.description
         login = stringToInts d.login
     in pairToList d.flags
-    ++ pairToList d.prevChild
-    ++ pairToList d.nextChild
+    ++ pairToList d.prev
+    ++ pairToList d.next
     ++ descr ++ (repeat (24 - length descr) 0)
     ++ pairToList d.dateCreated
     ++ pairToList d.dateLastUsed
