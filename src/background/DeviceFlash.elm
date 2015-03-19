@@ -110,7 +110,7 @@ credsToPackets creds ps =
                 <| Maybe.withDefault null
                     <| Maybe.map (.address)
                         <| maybeHead newPNodes]
-    in delPackets ++ newStartingP ++ newPackets
+    in newStartingP ++ newPackets ++ delPackets
 
 headAddress : List (Node a) -> FlashAddress
 headAddress nodes = Maybe.withDefault null (Maybe.map (.address) (maybeHead nodes))
