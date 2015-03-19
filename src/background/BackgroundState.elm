@@ -385,6 +385,12 @@ interpret packet s =
                 then setMemManage (MemManageRead ([], null, null) []) s
                 else setMemManage (MemManageError "write node denied") s
             _ -> setMemManage (MemManageError (unexpected "write node")) s
+        ReceivedSetStartingParent r -> case s.memoryManage of
+            MemManageWriteWaiting (p::ps) ->
+                if r == Done
+                then setMemManage (MemManageWrite ps) s
+                else setMemManage (MemManageError "set starting parent denied") s
+            _ -> setMemManage (MemManageError (unexpected "set starting parent")) s
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s

@@ -105,7 +105,12 @@ credsToPackets creds ps =
         newCs cs   = concat (map childToPackets cs)
         newPackets = concat
             <| map (\p -> parentToPackets p ++ newCs p.children) newPNodes
-    in delPackets ++ newPackets
+        newStartingP =
+            [OutgoingSetStartingParent
+                <| Maybe.withDefault null
+                    <| Maybe.map (.address)
+                        <| maybeHead newPNodes]
+    in delPackets ++ newStartingP ++ newPackets
 
 headAddress : List (Node a) -> FlashAddress
 headAddress nodes = Maybe.withDefault null (Maybe.map (.address) (maybeHead nodes))
@@ -226,9 +231,9 @@ childToPackets d = toPackets d.address (childToArray d)
 
 toPackets : FlashAddress -> ByteArray -> List OutgoingPacket
 toPackets addr ba =
-    [ OutgoingWriteFlashNode addr 0 (take 59 ba)
-    , OutgoingWriteFlashNode addr 1 (take 59 (drop 59 ba))
-    , OutgoingWriteFlashNode addr 2 (take 59 (drop 59 (drop 59 ba)))
+    [ OutgoingWriteFlashNode addr 0 (take 6 ba)
+    , OutgoingWriteFlashNode addr 1 [] --(take 59 (drop 59 ba))
+    , OutgoingWriteFlashNode addr 2 [] --(take 59 (drop 59 (drop 59 ba)))
     ]
 
 parentToArray : ParentNode -> ByteArray
