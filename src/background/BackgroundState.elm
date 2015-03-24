@@ -54,8 +54,12 @@ type MemManageState =
         (List ParentNode, List Favorite)
     | MemManageReadFreeSlotsWaiting
         (List ParentNode, List Favorite)
-    | MemManageReadSuccess
+    | MemManageReadCtr
         (List ParentNode, List Favorite, List FlashAddress)
+    | MemManageReadCtrWaiting
+        (List ParentNode, List Favorite, List FlashAddress)
+    | MemManageReadSuccess
+        (List ParentNode, List Favorite, List FlashAddress, (Byte,Byte,Byte))
     | MemManageWrite
         (List OutgoingPacket)
     | MemManageWriteWaiting
@@ -92,10 +96,11 @@ memManageToInfo mm = case mm of
     MemManageReadFavWaiting _          -> MemInfoWaitingForDevice
     MemManageReadFreeSlots _                 -> MemInfoWaitingForDevice
     MemManageReadFreeSlotsWaiting _          -> MemInfoWaitingForDevice
-    MemManageReadSuccess (pnode, favs, addrs) ->
+    MemManageReadSuccess (pnode, favs, addrs, ctr) ->
         MemInfo { credentials = toCreds pnode
                 , favorites  = favs
                 , addresses = addrs
+                , ctr = ctr
                 }
     MemManageWrite        _ -> MemInfoWaitingForDevice
     MemManageWriteWaiting _ -> MemInfoWaitingForDevice
@@ -211,7 +216,7 @@ update action s =
         CommonAction StartMemManage    -> setMemManage MemManageRequested s
         CommonAction EndMemManage      -> setMemManage MemManageEnd s
         CommonAction (SaveMemManage d) -> case s.memoryManage of
-            MemManageReadSuccess (pNode, _, _) ->
+            MemManageReadSuccess (pNode, _, _, _) ->
                 setMemManage (MemManageWrite (favsToPackets d.favorites ++ credsToPackets d.credentials pNode)) s
             _ -> s
         CommonAction (SetDeviceStatus c) ->
@@ -401,8 +406,12 @@ interpret packet s =
                 else setMemManage (MemManageError "set starting parent denied") s
             _ -> setMemManage (MemManageError (unexpected "set starting parent")) s
         ReceivedGet30FreeSlots addrs -> case s.memoryManage of
-            MemManageReadFreeSlotsWaiting (x,y) -> setMemManage (MemManageReadSuccess (x,y,addrs)) s
+            MemManageReadFreeSlotsWaiting (x,y) -> setMemManage (MemManageReadCtr (x,y,addrs)) s
             _ -> setMemManage (MemManageError (unexpected "30 free slots")) s
+        ReceivedGetCtrValue ctr -> case s.memoryManage of
+            MemManageReadCtrWaiting (x,y,z) -> setMemManage (MemManageReadSuccess (x,y,z,ctr)) s
+            _ -> setMemManage (MemManageError (unexpected "get ctr value")) s
+        ReceivedGetCtrValue ctr -> case s.memoryManage of
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s

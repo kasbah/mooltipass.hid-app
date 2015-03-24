@@ -127,7 +127,7 @@ type ReceivedPacket =
     | ReceivedSetCardPassword   ReturnCode
     | ReceivedGetFreeSlotAddr   (Maybe ByteString)
     | ReceivedGetStartingParent FlashAddress
-    | ReceivedGetCtrValue       (Maybe ByteString)
+    | ReceivedGetCtrValue       (Byte,Byte,Byte)
     | ReceivedAddNewCard        ReturnCode
     | ReceivedGet30FreeSlots    (List FlashAddress)
 
@@ -362,7 +362,10 @@ fromInts (size::messageType::payload) =
                     else case payload of
                         (addr1::addr2::_) -> Ok <| ReceivedGetStartingParent (addr1,addr2)
                         _ -> Err "Invalid data for starting parent"
-            0x67 -> maybeByteString ReceivedGetCtrValue       "get CTR value"
+            0x67 -> if size == 3
+                    then case payload of
+                        (ctr1::ctr2::ctr3::_) -> Ok <| ReceivedGetCtrValue (ctr1,ctr2,ctr3)
+                    else Err "Invalid data for GetCtrValue"
             0x68 -> doneOrNotDone ReceivedAddNewCard "add unknown smartcard"
             0x69 -> Err "Received UsbKeyboardPress"
             0x70 -> Err "Received GetStatus" -- this is handled separately in JS

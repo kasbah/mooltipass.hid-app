@@ -63,6 +63,7 @@ type alias MemInfoData =
     { credentials : List Service
     , favorites   : List Favorite
     , addresses   : List FlashAddress
+    , ctr         : (Byte,Byte,Byte)
     }
 
 type DeviceStatus = NotConnected | Unlocked | NoCard | Locked | ManageMode
