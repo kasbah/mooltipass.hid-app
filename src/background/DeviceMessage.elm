@@ -57,12 +57,13 @@ encode : BackgroundState -> (ToDeviceMessage, List BackgroundAction)
 encode s =
     let e = emptyToDeviceMessage
         memManageNeedsToSend = case s.memoryManage of
-            MemManageRead    _ _ -> True
-            MemManageReadFav _   -> True
-            MemManageWrite   _   -> True
-            MemManageRequested   -> True
-            MemManageEnd         -> True
-            _                    -> False
+            MemManageRead    _ _     -> True
+            MemManageReadFav _       -> True
+            MemManageWrite   _       -> True
+            MemManageRequested       -> True
+            MemManageEnd             -> True
+            MemManageReadFreeSlots _ -> True
+            _                        -> False
         extNeedsToSend' = extNeedsToSend s.extRequest && not s.waitingForDevice
                         && s.common.deviceStatus == Unlocked
     in if | not s.deviceConnected -> (connect, [])
@@ -120,17 +121,21 @@ encode s =
                                   (OutgoingGetFavorite 0)
                                   [SetMemManage (MemManageReadFavWaiting (p,[]))]
               MemManageReadFav (p,favs) ->
-                        sendCommand'
-                            (OutgoingGetFavorite (length favs))
-                            [SetMemManage (MemManageReadFavWaiting (p,favs))]
+                    sendCommand'
+                        (OutgoingGetFavorite (length favs))
+                        [SetMemManage (MemManageReadFavWaiting (p,favs))]
               MemManageWrite (p::ps) ->
-                        sendCommand'
-                            p
-                            [SetMemManage (MemManageWriteWaiting (p::ps))]
+                    sendCommand'
+                        p
+                        [SetMemManage (MemManageWriteWaiting (p::ps))]
               MemManageWrite [] ->
-                        sendCommand'
-                            OutgoingGetStartingParent
-                            [SetMemManage (MemManageReadWaiting ([],null,null) [])]
+                    sendCommand'
+                        OutgoingGetStartingParent
+                        [SetMemManage (MemManageReadWaiting ([],null,null) [])]
+              MemManageReadFreeSlots d ->
+                    sendCommand'
+                        OutgoingGet30FreeSlots
+                        [SetMemManage (MemManageReadFreeSlotsWaiting d)]
           | not (mediaImportActive s) && not (memoryManageBusy s.memoryManage) ->
               ({ e | sendCommand <- Just (toInts OutgoingGetStatus)}
               , [])
