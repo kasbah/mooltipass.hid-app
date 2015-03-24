@@ -4,7 +4,7 @@ module DevicePacket where
 import Result (..)
 import Result
 import List
-import List ((::))
+import List ((::), foldl)
 import Maybe
 import String
 import Char
@@ -65,6 +65,7 @@ type OutgoingPacket =
    | OutgoingGetCtrValue
    | OutgoingAddNewCard
    | OutgoingGetStatus
+   | OutgoingGet30FreeSlots
 -- disabled developer types:
     --OutgoingEraseEeprom      -> 0x40
     --OutgoingEraseFlash       -> 0x41
@@ -128,6 +129,7 @@ type ReceivedPacket =
     | ReceivedGetStartingParent FlashAddress
     | ReceivedGetCtrValue       (Maybe ByteString)
     | ReceivedAddNewCard        ReturnCode
+    | ReceivedGet30FreeSlots    (List FlashAddress)
 
 {-| Carries firmware version and flash memory size -}
 type alias MpVersion = { flashMemSize : Byte
@@ -238,6 +240,7 @@ toInts msg =
         OutgoingGetCtrValue        -> zeroSize 0x67
         OutgoingAddNewCard         -> zeroSize 0x68
         OutgoingGetStatus          -> zeroSize 0x70
+        OutgoingGet30FreeSlots     -> zeroSize 0x73
 
 {-| Convert a list of ints received through a port from chrome.hid.receive into
     a packet we can interpret -}
@@ -361,6 +364,13 @@ fromInts (size::messageType::payload) =
                         _ -> Err "Invalid data for starting parent"
             0x67 -> maybeByteString ReceivedGetCtrValue       "get CTR value"
             0x68 -> doneOrNotDone ReceivedAddNewCard "add unknown smartcard"
-            0x69 -> Err "Got ReceivedUsbKeyboardPress"
-            0x70 -> Err "ReceivedGetStatus"
+            0x69 -> Err "Received UsbKeyboardPress"
+            0x70 -> Err "Received GetStatus" -- this is handled separately in JS
+            0x73 -> if (size `rem` 2) /= 0 then Err "Invalid data for Get30FreeSlot"
+                    else Ok <| ReceivedGet30FreeSlots <| snd <| foldl
+                            (\x (x',z) -> case x' of
+                                    Just x'' -> (Nothing, (x'',x)::z)
+                                    Nothing  -> (Just x, z))
+                            (Nothing,[])
+                            payload
             _    -> Err <| "Got unknown message: " ++ toString messageType
