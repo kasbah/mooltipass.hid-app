@@ -90,11 +90,13 @@ memManageToInfo mm = case mm of
     MemManageReadWaiting _ _ -> MemInfoWaitingForDevice
     MemManageReadFav _                 -> MemInfoWaitingForDevice
     MemManageReadFavWaiting _          -> MemInfoWaitingForDevice
+    MemManageReadFreeSlots _                 -> MemInfoWaitingForDevice
+    MemManageReadFreeSlotsWaiting _          -> MemInfoWaitingForDevice
     MemManageReadSuccess (pnode, favs, addrs) ->
-        MemInfo
-            { credentials = toCreds pnode
-            , favorites  = favs
-            }
+        MemInfo { credentials = toCreds pnode
+                , favorites  = favs
+                , addresses = addrs
+                }
     MemManageWrite        _ -> MemInfoWaitingForDevice
     MemManageWriteWaiting _ -> MemInfoWaitingForDevice
     MemManageWriteSuccess   -> MemInfoWaitingForDevice

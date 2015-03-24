@@ -62,6 +62,7 @@ type alias Service = (ServiceName, List Login)
 type alias MemInfoData =
     { credentials : List Service
     , favorites   : List Favorite
+    , addresses   : List FlashAddress
     }
 
 type DeviceStatus = NotConnected | Unlocked | NoCard | Locked | ManageMode

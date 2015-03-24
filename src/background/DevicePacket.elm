@@ -4,7 +4,7 @@ module DevicePacket where
 import Result (..)
 import Result
 import List
-import List ((::), foldl)
+import List (..)
 import Maybe
 import String
 import Char
@@ -367,7 +367,8 @@ fromInts (size::messageType::payload) =
             0x69 -> Err "Received UsbKeyboardPress"
             0x70 -> Err "Received GetStatus" -- this is handled separately in JS
             0x73 -> if (size `rem` 2) /= 0 then Err "Invalid data for Get30FreeSlot"
-                    else Ok <| ReceivedGet30FreeSlots <| snd <| foldl
+                    else Ok <| ReceivedGet30FreeSlots
+                            <| take 30 <| reverse <| snd <| foldl
                             (\x (x',z) -> case x' of
                                     Just x'' -> (Nothing, (x'',x)::z)
                                     Nothing  -> (Just x, z))

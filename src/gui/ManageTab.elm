@@ -26,6 +26,7 @@ import Actions (..)
 import Util (..)
 import Byte (..)
 
+import Debug
 
 manageTab : (Int, Int) -> MemInfo -> Element
 manageTab (w,h) i =
@@ -37,7 +38,7 @@ manageTab (w,h) i =
 
 content : (Int, Int) -> MemInfo -> Element
 content (w,h) info =
-    let exitButton     = button (send commonActions EndMemManage) "exit"
+    let exitButton       = button (send commonActions EndMemManage) "exit"
         showMem infodata = container w h midTop <| flow down
             [ favorites w infodata
             , spacer 1 heights.manageSpacer
@@ -95,6 +96,7 @@ favorites w info =
                                 (stripNothing (addrToStrings info.favorites info.credentials)))))
                 |> Html.toElement (w - 32) ch
         ch = heights.manageLogin * 5 + (5*6)
+        l = Debug.log "addresses" info.addresses
     in box (w, ch + 20 + heights.manageTitle) "Favorites"
         <| flow down
             [ spacer 1 10
