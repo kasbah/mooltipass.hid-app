@@ -50,8 +50,12 @@ type MemManageState =
         (List ParentNode, List FlashFavorite)
     | MemManageReadFavWaiting
         (List ParentNode, List FlashFavorite)
-    | MemManageReadSuccess
+    | MemManageReadFreeSlots
         (List ParentNode, List Favorite)
+    | MemManageReadFreeSlotsWaiting
+        (List ParentNode, List Favorite)
+    | MemManageReadSuccess
+        (List ParentNode, List Favorite, List FlashAddress)
     | MemManageWrite
         (List OutgoingPacket)
     | MemManageWriteWaiting
@@ -86,8 +90,11 @@ memManageToInfo mm = case mm of
     MemManageReadWaiting _ _ -> MemInfoWaitingForDevice
     MemManageReadFav _                 -> MemInfoWaitingForDevice
     MemManageReadFavWaiting _          -> MemInfoWaitingForDevice
-    MemManageReadSuccess (pnode, favs) -> MemInfo {credentials = toCreds pnode
-                                                  , favorites  = favs}
+    MemManageReadSuccess (pnode, favs, addrs) ->
+        MemInfo
+            { credentials = toCreds pnode
+            , favorites  = favs
+            }
     MemManageWrite        _ -> MemInfoWaitingForDevice
     MemManageWriteWaiting _ -> MemInfoWaitingForDevice
     MemManageWriteSuccess   -> MemInfoWaitingForDevice
@@ -202,7 +209,7 @@ update action s =
         CommonAction StartMemManage    -> setMemManage MemManageRequested s
         CommonAction EndMemManage      -> setMemManage MemManageEnd s
         CommonAction (SaveMemManage d) -> case s.memoryManage of
-            MemManageReadSuccess (pNode, _) ->
+            MemManageReadSuccess (pNode, _, _) ->
                 setMemManage (MemManageWrite (favsToPackets d.favorites ++ credsToPackets d.credentials pNode)) s
             _ -> s
         CommonAction (SetDeviceStatus c) ->
@@ -341,7 +348,7 @@ interpret packet s =
                 if a /= null then
                     setMemManage (MemManageRead ([], a, null) []) s
                 else
-                    setMemManage (MemManageReadSuccess ([], emptyFavorites)) s
+                    setMemManage (MemManageReadFreeSlots ([], emptyFavorites)) s
             _ -> setMemManage (MemManageError (unexpected "starting parent")) s
         ReceivedReadFlashNode ba ->
             case s.memoryManage of
@@ -357,7 +364,7 @@ interpret packet s =
                 MemManageReadFavWaiting (n,ffavs) ->
                     let ffavs' = ({parentNode = p, childNode = c})::ffavs
                     in if length ffavs' == maxFavs then
-                          setMemManage (MemManageReadSuccess (n, toFavs ffavs' n)) s
+                          setMemManage (MemManageReadFreeSlots (n, toFavs ffavs' n)) s
                        else
                           setMemManage (MemManageReadFav (n, ffavs')) s
                 _ -> setMemManage (MemManageError (unexpected "favorite")) s
@@ -391,6 +398,9 @@ interpret packet s =
                 then setMemManage (MemManageWrite ps) s
                 else setMemManage (MemManageError "set starting parent denied") s
             _ -> setMemManage (MemManageError (unexpected "set starting parent")) s
+        ReceivedGet30FreeSlots addrs -> case s.memoryManage of
+            MemManageReadFreeSlotsWaiting (x,y) -> setMemManage (MemManageReadSuccess (x,y,addrs)) s
+            _ -> setMemManage (MemManageError (unexpected "30 free slots")) s
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s
@@ -398,8 +408,8 @@ interpret packet s =
 setMemManage : MemManageState -> BackgroundState -> BackgroundState
 setMemManage m s =
     let s' = setInfo (memManageToInfo m)
-        setInfo i = {s | common <- updateCommon (SetMemInfo i )}
-        setManage m' = { s' | memoryManage <- m'}
+        setInfo i      = {s | common <- updateCommon (SetMemInfo i )}
+        setManage m'   = { s' | memoryManage <- m'}
         updateCommon a = Common.update a s.common
     in case m of
         MemManageError str -> appendToLog ("Mem Manage Error: " ++ str) (setManage m)
@@ -427,8 +437,8 @@ setMemManage m s =
 
 setMedia : MediaImport -> BackgroundState -> BackgroundState
 setMedia imp s =
-    let c             = s.common
-        s'            = {s | mediaImport <- imp}
+    let c  = s.common
+        s' = {s | mediaImport <- imp}
         updateInfo i =
             {s' | common <- updateCommon (SetImportInfo i)}
         updateCommon a = Common.update a s.common
@@ -457,7 +467,6 @@ fromResult :  Result Error ReceivedPacket -> BackgroundAction
 fromResult r = case r of
     Err err -> appendToLog' ("HID Error: " ++ err)
     Ok p    -> Interpret p
-
 
 appendToLog' str = CommonAction (AppendToLog str)
 appendToLog str state = update (appendToLog' str) state
