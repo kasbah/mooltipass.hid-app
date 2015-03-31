@@ -69,7 +69,7 @@ function onDataReceived(reportId, data)
 
     //special case for read node reply message as we need to read 3 messages in
     //a row
-    if (ints[1] === 0xA0)
+    if (ints[1] === 0xC5)
         chrome.hid.receive(device.connection, onDataReceived);
 }
 
