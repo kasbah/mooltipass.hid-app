@@ -85,7 +85,7 @@ elm.ports.toExtension.subscribe(function(message) {
 deviceSendToElm = function (message) {
     var messageWithNulls = {};
     //if (message.receiveCommand !== undefined)
-    //    if (message.receiveCommand[1] !== 112)
+    //    if (message.receiveCommand[1] !== 0xB9)
     //        console.log("device",message.receiveCommand);
     //replace undefined with null so it becomes 'Nothing' in Elm
     for (var prop in emptyFromDeviceMessage) {

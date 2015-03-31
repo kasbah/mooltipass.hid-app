@@ -59,7 +59,7 @@ function onDataReceived(reportId, data)
     {
         ints[i] = bytes[i];
     }
-    if (ints[1] === 112) {//status update
+    if (ints[1] === 0xB9) {//status update
         //console.log("<<");
         elm.ports.deviceStatus.send(ints[2]);
         device.waitingForStatus = false;
@@ -69,7 +69,7 @@ function onDataReceived(reportId, data)
 
     //special case for read node reply message as we need to read 3 messages in
     //a row
-    if (ints[1] === 85)
+    if (ints[1] === 0xA0)
         chrome.hid.receive(device.connection, onDataReceived);
 }
 
@@ -89,7 +89,7 @@ function sendMsg(message)
         hidErrorDisconnect("no connection when trying to send message")
         return;
     }
-    if (message[1] === 112) { //status update
+    if (message[1] === 0xB9) { //status update
         if (device.waitingForStatus)
             return;
         else
