@@ -52,7 +52,7 @@ default =
     , common         = Common.default
     }
 
-{-| The non-visible tabs according to the 'CommonState.DeviceStatus' -}
+{-| The non-selectable tabs according to the 'CommonState.DeviceStatus' -}
 disabledTabs : Common.DeviceStatus -> List Tab
 disabledTabs s =
     case s of
@@ -117,7 +117,7 @@ update action s =
                 MemInfo d -> {s | unsavedMemInfo <- removeCred c d}
                 _ -> errorTryingTo "remove credential"
         SetUnsavedMem i -> {s | unsavedMemInfo <- i}
-        -- An action on the common state can have an affect on the gui-only
+        -- An action on the common state can have a effect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
         -- device state for instance.
         CommonAction a ->

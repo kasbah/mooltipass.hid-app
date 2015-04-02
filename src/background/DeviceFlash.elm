@@ -62,7 +62,7 @@ toCreds ps =
         removeAddresses c  = let c' = {c - next} in {c' - prev}
         removeAddresses' p = let p'  = removeAddresses p
                              in {p' - children}
-    in reverse <| map (\p -> (removeAddresses' p, getLogins p.children)) ps
+    in filter (\(s,ls) -> not (isEmpty ls)) <| reverse <| map (\p -> (removeAddresses' p, getLogins p.children)) ps
 
 fromCreds : List Service -> List ParentNode
 fromCreds creds =
@@ -175,7 +175,10 @@ parseParentNode addr bs =
                           , children = []
                           , service  = str
                           }
-                        , (firstC1,firstC2), (nextP1,nextP2))
+                        , if (firstC1,firstC2) /= null
+                          then (firstC1,firstC2)
+                          else (nextP1,nextP2)
+                        , (nextP1,nextP2))
                 in Just newP
             Err _ -> Nothing
         _ -> Nothing
