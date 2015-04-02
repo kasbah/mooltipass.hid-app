@@ -27,7 +27,7 @@ default =
 
 type alias Favorite = Maybe (FlashAddress, FlashAddress)
 
-maxFavs = 15
+maxFavs = 14
 
 emptyFavorites : List Favorite
 emptyFavorites = repeat maxFavs Nothing
