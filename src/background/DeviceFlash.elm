@@ -160,8 +160,12 @@ deleteNodePackets addr =
     , OutgoingWriteFlashNode addr 2 []
     ]
 
+{-| Parse received bytes as a ParentNode. The resulting triple, when
+    successful, is the parsed node, the next address to read and the next
+    parent address (these will be the same address on an empty parent node).
+-}
 parseParentNode : FlashAddress -> ByteArray
-                -> Maybe (ParentNode, FlashAddress, FlashAddress)
+                -> Result String (ParentNode, FlashAddress, FlashAddress)
 parseParentNode addr bs =
     case bs of
         (flags1::flags2::prevP1::prevP2::nextP1::nextP2::firstC1::firstC2::service) ->
@@ -179,9 +183,9 @@ parseParentNode addr bs =
                           then (firstC1,firstC2)
                           else (nextP1,nextP2)
                         , (nextP1,nextP2))
-                in Just newP
-            Err _ -> Nothing
-        _ -> Nothing
+                in Ok newP
+            Err e -> Err <| "Parse failed: " ++ e
+        _ -> Err "Parse failed: invalid data size"
 
 parseChildNode : ParentNode -> FlashAddress -> FlashAddress -> ByteArray
                -> Result String (ParentNode, FlashAddress, FlashAddress)
@@ -227,7 +231,7 @@ parse (ps,addr,nParentAddr) bs =
             (_::flags2::_) -> (flags2 `and` 0xC0) `shiftRight` 6
             _ -> (-1)
     in case parentOrChild of
-        0 -> Result.map (\(p,a1,a2) -> (p::ps,a1,a2)) <| fromMaybe "parse parent failed" <| parseParentNode addr bs
+        0 -> Result.map (\(p,a1,a2) -> (p::ps,a1,a2)) <| parseParentNode addr bs
         1 -> case ps of
             (p::ps') -> Result.map (\(p',a1,a2) -> (p'::ps',a1,a2)) <| parseChildNode p addr nParentAddr bs
             _ -> Err <| "No parent nodes when parsing child node"
