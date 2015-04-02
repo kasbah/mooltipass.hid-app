@@ -111,8 +111,8 @@ genChildNode =
     childNode
         `map` flashAddress
         `andMap` childFlags
-        `andMap` always null     -- next child, linked later
-        `andMap` always null     -- prev child, linked later
+        `andMap` always nullAddress     -- next child, linked later
+        `andMap` always nullAddress     -- prev child, linked later
         `andMap` tripleOf byte   -- ctr
         `andMap` byteString 23   -- description
         `andMap` byteString 62   -- login
@@ -125,8 +125,8 @@ genParentNode minChildren maxChildren =
     parentNode
     `map` flashAddress
     `andMap` parentFlags
-    `andMap` always null
-    `andMap` always null
+    `andMap` always nullAddress
+    `andMap` always nullAddress
     `andMap` (map linkNodes (childNodes minChildren maxChildren))
     `andMap` byteString 32
 
@@ -141,27 +141,27 @@ flashData maxChildren maxParents =
 
 tests =
     let writeThenParseParentSucceeds (d,addr) =
-            isOk (parse ([],addr,null) (parentToArray d))
+            isOk (parse ([],addr,nullAddress) (parentToArray d))
         dataFromParse (Ok ((d::_),_,_)) = d
         writeThenParseParentRetains (d,addr) =
             dataFromParse
-                (parse ([],addr,null) (parentToArray d))
+                (parse ([],addr,nullAddress) (parentToArray d))
                     == {d | address <- addr}
         writeThenParseParentRetains2 (d,addr) =
             parentToArray
                 (dataFromParse
-                    (parse ([],addr,null) (parentToArray d)))
+                    (parse ([],addr,nullAddress) (parentToArray d)))
                         == parentToArray d
         writeThenParseChildSucceeds (ps,cd,addr) =
-            isOk (parse (ps,addr,null) (childToArray cd))
+            isOk (parse (ps,addr,nullAddress) (childToArray cd))
         writeThenParseChildRetains (ps,cd,addr) =
             last
             (.children
             (dataFromParse
-                (parse (ps,addr,null) (childToArray cd))))
+                (parse (ps,addr,nullAddress) (childToArray cd))))
                     == Just {cd | address <- addr}
         writeThenParseChildRetains2 (d,cd,addr) =
-            Maybe.map childToArray (last (.children (dataFromParse (parse (d,addr,null) (childToArray cd))))) == Just (childToArray cd)
+            Maybe.map childToArray (last (.children (dataFromParse (parse (d,addr,nullAddress) (childToArray cd))))) == Just (childToArray cd)
     in simpleCheck
     [ property "- 'null term string length remains the same'"
         (\str -> Result.map String.length (nullTermString (String.length str + 3) ((stringToInts str) ++ [0, 0, 0])) == Ok (String.length str))

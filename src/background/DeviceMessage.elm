@@ -103,16 +103,16 @@ encode s =
                                         [SetMemManage MemManageWaiting, CommonAction (SetDeviceStatus ManageMode)]
               MemManageRead (p,addr,nPAddr) ba -> case p of
                   [] ->
-                      if addr == null then
+                      if addr == nullAddress then
                         sendCommand'
                             OutgoingGetStartingParent
-                            [SetMemManage (MemManageReadWaiting (p,null,null) ba)]
+                            [SetMemManage (MemManageReadWaiting (p,nullAddress,nullAddress) ba)]
                       else
                         sendCommand'
                             (OutgoingReadFlashNode addr)
                             [SetMemManage (MemManageReadWaiting (p,addr,nPAddr) ba)]
                   _ ->
-                      if  | addr /= null ->
+                      if  | addr /= nullAddress ->
                               sendCommand'
                                   (OutgoingReadFlashNode addr)
                                   [SetMemManage (MemManageReadWaiting (p,addr,nPAddr) ba)]
@@ -131,7 +131,7 @@ encode s =
               MemManageWrite [] ->
                     sendCommand'
                         OutgoingGetStartingParent
-                        [SetMemManage (MemManageReadWaiting ([],null,null) [])]
+                        [SetMemManage (MemManageReadWaiting ([],nullAddress,nullAddress) [])]
               MemManageReadFreeSlots d ->
                     sendCommand'
                         OutgoingGet30FreeSlots

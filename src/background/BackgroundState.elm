@@ -346,14 +346,14 @@ interpret packet s =
                 _ -> setMedia (MediaImportError (unexpected "ImportMediaEnd")) s
         ReceivedManageModeStart r ->
             if r == Done
-            then setMemManage (MemManageRead ([], null, null) [])
+            then setMemManage (MemManageRead ([], nullAddress, nullAddress) [])
                     (update (CommonAction (SetDeviceStatus ManageMode)) s)
             else setMemManage MemManageDenied
                     (update (CommonAction (SetDeviceStatus Unlocked)) s)
         ReceivedGetStartingParent a -> case s.memoryManage of
-            MemManageReadWaiting ([],null,null) [] ->
-                if a /= null then
-                    setMemManage (MemManageRead ([], a, null) []) s
+            MemManageReadWaiting ([],nullAddress,nullAddress) [] ->
+                if a /= nullAddress then
+                    setMemManage (MemManageRead ([], a, nullAddress) []) s
                 else
                     setMemManage (MemManageReadFreeSlots ([], emptyFavorites)) s
             _ -> setMemManage (MemManageError (unexpected "starting parent")) s
@@ -386,7 +386,7 @@ interpret packet s =
                 else setMemManage (MemManageError "write favorite denied") s
             MemManageWriteWaiting [] ->
                 if r == Done
-                then setMemManage (MemManageRead ([], null, null) []) s
+                then setMemManage (MemManageRead ([], nullAddress, nullAddress) []) s
                 else setMemManage (MemManageError "write favorite denied") s
             _ -> setMemManage (MemManageError (unexpected "set favorite")) s
         ReceivedWriteFlashNode r -> case s.memoryManage of
@@ -396,7 +396,7 @@ interpret packet s =
                 else setMemManage (MemManageError "write node denied") s
             MemManageWriteWaiting [] ->
                 if r == Done
-                then setMemManage (MemManageRead ([], null, null) []) s
+                then setMemManage (MemManageRead ([], nullAddress, nullAddress) []) s
                 else setMemManage (MemManageError "write node denied") s
             _ -> setMemManage (MemManageError (unexpected "write node")) s
         ReceivedSetStartingParent r -> case s.memoryManage of

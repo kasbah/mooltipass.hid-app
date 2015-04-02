@@ -69,5 +69,5 @@ type alias FlashAddress = (Byte, Byte)
 {-| Our error type is just a string that explains the error. -}
 type alias Error = String
 
-null : FlashAddress
-null = (0,0)
+nullAddress : FlashAddress
+nullAddress = (0,0)

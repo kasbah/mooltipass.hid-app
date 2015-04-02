@@ -52,7 +52,7 @@ type alias FlashFavorite =
     }
 
 emptyFav : FlashFavorite
-emptyFav = {parentNode = null, childNode = null}
+emptyFav = {parentNode = nullAddress, childNode = nullAddress}
 
 emptyFlashFavorites = repeat maxFavs emptyFavorites
 
@@ -69,8 +69,8 @@ fromCreds creds =
     let newParent (sName, logins)=
             { address  = sName.address
             , flags    = sName.flags
-            , next     = null
-            , prev     = null
+            , next     = nullAddress
+            , prev     = nullAddress
             , children = fromLogins logins
             , service  = sName.service
             }
@@ -81,13 +81,13 @@ toFavs ffs ps =
     let parent fav =
             maybeHead
             <| filter
-                (\p -> fav.parentNode /= null && p.address == fav.parentNode)
+                (\p -> fav.parentNode /= nullAddress && p.address == fav.parentNode)
                 ps
         child fav p =
             Maybe.map (\c -> (p.address, c.address))
                 <| maybeHead
                     <| filter
-                        (\c -> fav.childNode /= null && c.address == fav.childNode)
+                        (\c -> fav.childNode /= nullAddress && c.address == fav.childNode)
                         p.children
     in reverse <| map (\f -> parent f `andThen` child f) ffs
 
@@ -96,7 +96,7 @@ favsToPackets : List Favorite -> List OutgoingPacket
 favsToPackets fs =
     map OutgoingSetFavorite
         <| map2 (,) [0..maxFavs]
-            <| map (Maybe.withDefault (null, null)) fs
+            <| map (Maybe.withDefault (nullAddress, nullAddress)) fs
 
 credsToPackets : List Service -> List ParentNode -> List OutgoingPacket
 credsToPackets creds ps =
@@ -107,21 +107,21 @@ credsToPackets creds ps =
             <| map (\p -> parentToPackets p ++ newCs p.children) newPNodes
         newStartingP =
             [OutgoingSetStartingParent
-                <| Maybe.withDefault null
+                <| Maybe.withDefault nullAddress
                     <| Maybe.map (.address)
                         <| maybeHead newPNodes]
     in newStartingP ++ newPackets ++ delPackets
 
 headAddress : List (Node a) -> FlashAddress
-headAddress nodes = Maybe.withDefault null (Maybe.map (.address) (maybeHead nodes))
+headAddress nodes = Maybe.withDefault nullAddress (Maybe.map (.address) (maybeHead nodes))
 
 fromLogins : List Login -> List ChildNode
 fromLogins ls =
     let newChild l =
             { address      = l.address
             , flags        = l.flags
-            , next         = null
-            , prev         = null
+            , next         = nullAddress
+            , prev         = nullAddress
             , ctr          = l.ctr
             , description  = l.description
             , login        = l.login
@@ -179,7 +179,7 @@ parseParentNode addr bs =
                           , children = []
                           , service  = str
                           }
-                        , if (firstC1,firstC2) /= null
+                        , if (firstC1,firstC2) /= nullAddress
                           then (firstC1,firstC2)
                           else (nextP1,nextP2)
                         , (nextP1,nextP2))
@@ -220,7 +220,7 @@ parseChildNode d addr nParentAddr bs =
                 _ -> Err "Not enough data"
             pNodeAndNextAddr (cNode, nAddr) =
                 ({d | children <- d.children ++ [cNode]}
-                , if nAddr == null then nParentAddr else nAddr
+                , if nAddr == nullAddress then nParentAddr else nAddr
                 , nParentAddr)
         in Result.map pNodeAndNextAddr cNodeAndNextAddr
 

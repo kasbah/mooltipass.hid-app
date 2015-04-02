@@ -155,7 +155,7 @@ favorite w (n,maybeF) =
         iDownBg  c  = collage iw fh
             [rect iw' fh' |> filled c]
         rect' w h c = collage w h [rect (toFloat w) (toFloat h) |> filled c]
-        ((serviceString, saddr), (loginString, laddr)) = Maybe.withDefault (("",null),("",null)) maybeF
+        ((serviceString, saddr), (loginString, laddr)) = Maybe.withDefault (("",nullAddress),("",nullAddress)) maybeF
         icon f b = if b then f else rect' iw fh lightGrey'
         elem = if maybeF == Nothing then spacer w fh
                else flow right
