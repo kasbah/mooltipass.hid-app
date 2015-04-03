@@ -96,7 +96,7 @@ favorites w info =
                                 (stripNothing (addrToStrings info.favorites info.credentials)))))
                 |> Html.toElement (w - 32) ch
         ch = heights.manageLogin * 5 + (5*6)
-        l = Debug.log "addresses" info.addresses
+        l = Debug.log "info" info
     in box (w, ch + 20 + heights.manageTitle) "Favorites"
         <| flow down
             [ spacer 1 10

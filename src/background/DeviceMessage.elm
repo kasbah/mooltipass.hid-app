@@ -63,6 +63,8 @@ encode s =
             MemManageRequested       -> True
             MemManageEnd             -> True
             MemManageReadFreeSlots _ -> True
+            MemManageReadCtr       _ -> True
+            MemManageReadCards     _ -> True
             _                        -> False
         extNeedsToSend' = extNeedsToSend s.extRequest && not s.waitingForDevice
                         && s.common.deviceStatus == Unlocked
@@ -136,6 +138,14 @@ encode s =
                     sendCommand'
                         OutgoingGet30FreeSlots
                         [SetMemManage (MemManageReadFreeSlotsWaiting d)]
+              MemManageReadCtr d ->
+                    sendCommand'
+                        OutgoingGetCtrValue
+                        [SetMemManage (MemManageReadCtrWaiting d)]
+              MemManageReadCards (p,f,a,c) ->
+                    sendCommand'
+                        OutgoingGetCpzCtrValues
+                        [SetMemManage (MemManageReadCardsWaiting (p,f,a,c,[]))]
           | not (mediaImportActive s) && not (memoryManageBusy s.memoryManage) ->
               ({ e | sendCommand <- Just (toInts OutgoingGetStatus)}
               , [])

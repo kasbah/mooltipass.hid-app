@@ -12,6 +12,7 @@ import Bitwise (and)
 
 -- local source
 import Byte (..)
+import CommonState (..)
 
 cmd_EXPORT_FLASH_START  = 0x8A
 cmd_EXPORT_FLASH        = 0x8B
@@ -120,7 +121,7 @@ type OutgoingPacket =
    -- CPZ = code protected zone
    -- CTR = counter value for Eeprom
    | OutgoingSetCtrValue        (Byte, Byte, Byte)
-   | OutgoingAddCpzCtr          CpzCtrLutEntry
+   | OutgoingAddCpzCtr          Card
    | OutgoingGetCpzCtrValues
    | OutgoingSetParameter       Parameter Byte
    | OutgoingGetParameter       Parameter
@@ -184,8 +185,8 @@ type ReceivedPacket =
     | ReceivedSetStartingParent ReturnCode
     | ReceivedSetCtrValue       ReturnCode
     | ReceivedAddCpzCtr         ReturnCode
-    | ReceivedGetCpzCtrValues   (Maybe ByteString)
-    | ReceivedCpzCtrPacketExport CpzCtrLutEntry
+    | ReceivedGetCpzCtrValues   ReturnCode
+    | ReceivedCpzCtrPacketExport Card
     | ReceivedSetParameter      ReturnCode
     | ReceivedGetParameter      (Maybe ByteString)
     | ReceivedGetFavorite       (FlashAddress, FlashAddress)
@@ -203,11 +204,6 @@ type ReceivedPacket =
 type alias MpVersion = { flashMemSize : Byte
                        , version : ByteString
                        }
-
-{-| Code protected zone look-up-table entry -}
-type alias CpzCtrLutEntry = { cpz : ByteString
-                            , ctrNonce : ByteString
-                            }
 
 {-| Return for 'ReceivedCheckPassword' -}
 type CheckPasswordReturn = Incorrect | Correct | RequestBlocked
@@ -404,7 +400,7 @@ fromInts (size::m::payload) =
                 | m == cmd_SET_STARTING_PARENT -> doneOrNotDone ReceivedSetStartingParent "set starting parent"
                 | m == cmd_SET_CTRVALUE        -> doneOrNotDone ReceivedSetCtrValue       "set CTR value"
                 | m == cmd_ADD_CARD_CPZ_CTR    -> doneOrNotDone ReceivedAddCpzCtr         "set CPZ CTR value"
-                | m == cmd_GET_CARD_CPZ_CTR    -> maybeByteString ReceivedGetCpzCtrValues "get CPZ CTR value"
+                | m == cmd_GET_CARD_CPZ_CTR    -> doneOrNotDone ReceivedGetCpzCtrValues "get CPZ CTR value"
                 | m == cmd_CARD_CPZ_CTR_PACKET ->
                     let cpz  =
                             Result.map (\c -> {cpz = c})

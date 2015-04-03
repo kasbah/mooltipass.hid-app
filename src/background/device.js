@@ -67,9 +67,9 @@ function onDataReceived(reportId, data)
         deviceSendToElm({receiveCommand: ints});
     }
 
-    //special case for read node reply message as we need to read 3 messages in
-    //a row
-    if (ints[1] === 0xC5)
+    //special case for 'read node' and 'cpz ctr packet export' messages as we
+    //need to read multiple messages in a row a row
+    if (ints[1] === 0xC5 || ints[i] === 0xCF)
         chrome.hid.receive(device.connection, onDataReceived);
 }
 

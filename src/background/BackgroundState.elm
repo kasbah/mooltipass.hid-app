@@ -58,8 +58,12 @@ type MemManageState =
         (List ParentNode, List Favorite, List FlashAddress)
     | MemManageReadCtrWaiting
         (List ParentNode, List Favorite, List FlashAddress)
-    | MemManageReadSuccess
+    | MemManageReadCards
         (List ParentNode, List Favorite, List FlashAddress, (Byte,Byte,Byte))
+    | MemManageReadCardsWaiting
+        (List ParentNode, List Favorite, List FlashAddress, (Byte,Byte,Byte), List Card)
+    | MemManageReadSuccess
+        (List ParentNode, List Favorite, List FlashAddress, (Byte,Byte,Byte), List Card)
     | MemManageWrite
         (List OutgoingPacket)
     | MemManageWriteWaiting
@@ -85,27 +89,32 @@ memoryManaging mms = case mms of
 
 memManageToInfo : MemManageState -> MemInfo
 memManageToInfo mm = case mm of
-    NotManaging             -> NoMemInfo
-    MemManageRequested      -> MemInfoWaitingForUser
-    MemManageWaiting        -> MemInfoWaitingForUser
-    MemManageDenied         -> NoMemInfo
-    MemManageEnd            -> NoMemInfo
-    MemManageRead _ _       -> MemInfoWaitingForDevice
-    MemManageReadWaiting _ _ -> MemInfoWaitingForDevice
-    MemManageReadFav _                 -> MemInfoWaitingForDevice
-    MemManageReadFavWaiting _          -> MemInfoWaitingForDevice
-    MemManageReadFreeSlots _                 -> MemInfoWaitingForDevice
-    MemManageReadFreeSlotsWaiting _          -> MemInfoWaitingForDevice
-    MemManageReadSuccess (pnode, favs, addrs, ctr) ->
+    NotManaging                     -> NoMemInfo
+    MemManageRequested              -> MemInfoWaitingForUser
+    MemManageWaiting                -> MemInfoWaitingForUser
+    MemManageDenied                 -> NoMemInfo
+    MemManageEnd                    -> NoMemInfo
+    MemManageRead _ _               -> MemInfoWaitingForDevice
+    MemManageReadWaiting _ _        -> MemInfoWaitingForDevice
+    MemManageReadFav _              -> MemInfoWaitingForDevice
+    MemManageReadFavWaiting _       -> MemInfoWaitingForDevice
+    MemManageReadFreeSlots _        -> MemInfoWaitingForDevice
+    MemManageReadFreeSlotsWaiting _ -> MemInfoWaitingForDevice
+    MemManageReadCtr _              -> MemInfoWaitingForDevice
+    MemManageReadCtrWaiting _       -> MemInfoWaitingForDevice
+    MemManageReadCards _            -> MemInfoWaitingForDevice
+    MemManageReadCardsWaiting _     -> MemInfoWaitingForDevice
+    MemManageReadSuccess (pnode, favs, addrs, ctr, cards) ->
         MemInfo { credentials = toCreds pnode
-                , favorites  = favs
-                , addresses = addrs
-                , ctr = ctr
+                , favorites   = favs
+                , addresses   = addrs
+                , ctr         = ctr
+                , cards       = cards
                 }
     MemManageWrite        _ -> MemInfoWaitingForDevice
     MemManageWriteWaiting _ -> MemInfoWaitingForDevice
     MemManageWriteSuccess   -> MemInfoWaitingForDevice
-    MemManageError  _       -> NoMemInfo
+    MemManageError _        -> NoMemInfo
 
 type MediaImport =
       NoMediaImport
@@ -119,10 +128,10 @@ type MediaImport =
 
 mediaImportActive : BackgroundState -> Bool
 mediaImportActive s = case s.mediaImport of
-    NoMediaImport             -> False
-    MediaImportError _        -> False
-    MediaImportSuccess        -> False
-    _                         -> True
+    NoMediaImport      -> False
+    MediaImportError _ -> False
+    MediaImportSuccess -> False
+    _                  -> True
 
 type ExtensionRequest =
       ExtWantsCredentials     { context : ByteString }
@@ -216,7 +225,7 @@ update action s =
         CommonAction StartMemManage    -> setMemManage MemManageRequested s
         CommonAction EndMemManage      -> setMemManage MemManageEnd s
         CommonAction (SaveMemManage d) -> case s.memoryManage of
-            MemManageReadSuccess (pNode, _, _, _) ->
+            MemManageReadSuccess (pNode, _, _, _, _) ->
                 setMemManage (MemManageWrite (favsToPackets d.favorites ++ credsToPackets d.credentials pNode)) s
             _ -> s
         CommonAction (SetDeviceStatus c) ->
@@ -406,11 +415,20 @@ interpret packet s =
                 else setMemManage (MemManageError "set starting parent denied") s
             _ -> setMemManage (MemManageError (unexpected "set starting parent")) s
         ReceivedGet30FreeSlots addrs -> case s.memoryManage of
-            MemManageReadFreeSlotsWaiting (x,y) -> setMemManage (MemManageReadCtr (x,y,addrs)) s
+            MemManageReadFreeSlotsWaiting (p,f) -> setMemManage (MemManageReadCtr (p,f,addrs)) s
             _ -> setMemManage (MemManageError (unexpected "30 free slots")) s
         ReceivedGetCtrValue ctr -> case s.memoryManage of
-            MemManageReadCtrWaiting (x,y,z) -> setMemManage (MemManageReadSuccess (x,y,z,ctr)) s
+            MemManageReadCtrWaiting (p,f,a) -> setMemManage (MemManageReadCards (p,f,a,ctr)) s
             _ -> setMemManage (MemManageError (unexpected "get ctr value")) s
+        ReceivedCpzCtrPacketExport card -> case s.memoryManage of
+            MemManageReadCardsWaiting (p,f,a,c,cards) -> setMemManage (MemManageReadCardsWaiting (p,f,a,c, card::cards)) s
+            _ -> setMemManage (MemManageError (unexpected "cpz ctr packet export")) s
+        ReceivedGetCpzCtrValues r -> case s.memoryManage of
+            MemManageReadCardsWaiting d ->
+                if r == Done
+                then setMemManage (MemManageReadSuccess d) s
+                else setMemManage (MemManageError "reading user cards (cpz & ctr values) denied") s
+            _ -> setMemManage (MemManageError (unexpected "cpz ctr packet export")) s
         ReceivedGetCtrValue ctr -> case s.memoryManage of
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
@@ -482,4 +500,4 @@ fromResult r = case r of
 appendToLog' str = CommonAction (AppendToLog str)
 appendToLog str state = update (appendToLog' str) state
 
-unexpected str = "Received unexpected " ++ str ++  " from device"
+unexpected str = "Received unexpected " ++ str ++ " from device"

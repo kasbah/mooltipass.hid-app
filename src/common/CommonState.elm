@@ -64,7 +64,12 @@ type alias MemInfoData =
     , favorites   : List Favorite
     , addresses   : List FlashAddress
     , ctr         : (Byte,Byte,Byte)
+    , cards       : List Card
     }
+
+type alias Card = { cpz : ByteString
+                  , ctrNonce : ByteString
+                  }
 
 type DeviceStatus = NotConnected | Unlocked | NoCard | Locked | ManageMode
 
