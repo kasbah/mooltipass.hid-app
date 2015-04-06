@@ -8,8 +8,6 @@ import Text (..)
 import Bitwise (..)
 import String
 import Result
-import Debug
-import Debug (..)
 import List (length)
 import Maybe
 

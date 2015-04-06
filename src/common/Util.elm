@@ -1,7 +1,6 @@
 module Util where
 
 import List (..)
-import Debug
 
 pairToList : (a,a) -> List a
 pairToList (x,y) = [x,y]

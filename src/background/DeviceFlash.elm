@@ -7,7 +7,6 @@ import Result (fromMaybe, Result(..))
 import Result
 import Bitwise (..)
 import String
-import Debug
 
 -- local source
 import Byte (..)

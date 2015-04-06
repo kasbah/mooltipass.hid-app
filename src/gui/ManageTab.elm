@@ -26,8 +26,6 @@ import Actions (..)
 import Util (..)
 import Byte (..)
 
-import Debug
-
 manageTab : (Int, Int) -> MemInfo -> Element
 manageTab (w,h) i =
     let contentH = h - 32
@@ -39,6 +37,8 @@ manageTab (w,h) i =
 content : (Int, Int) -> MemInfo -> Element
 content (w,h) info =
     let exitButton       = button (send commonActions EndMemManage) "exit"
+        exportButton     = button (send guiActions (SetWriteMem Requested)) "export"
+        importButton     = button (send guiActions NoOp) "import"
         showMem infodata = container w h midTop <| flow down
             [ favorites w infodata
             , spacer 1 heights.manageSpacer
@@ -51,7 +51,7 @@ content (w,h) info =
                 infodata
             , spacer 1 heights.manageSpacer
             , container w (heights.button + 4) middle
-                <| flow right [exitButton, spacer 16 1, saveButton info]
+                <| flow right [importButton, spacer 16 1, exportButton, spacer 32 1, exitButton, spacer 16 1, saveButton info]
             ]
         reEnterButton = button (send commonActions StartMemManage) "re-enter"
         modeExited    = leftAligned <| whiteText "memory management mode exited"
@@ -96,7 +96,6 @@ favorites w info =
                                 (stripNothing (addrToStrings info.favorites info.credentials)))))
                 |> Html.toElement (w - 32) ch
         ch = heights.manageLogin * 5 + (5*6)
-        l = Debug.log "info" info
     in box (w, ch + 20 + heights.manageTitle) "Favorites"
         <| flow down
             [ spacer 1 10

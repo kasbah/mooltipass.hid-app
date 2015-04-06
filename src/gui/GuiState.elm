@@ -24,6 +24,7 @@ type alias GuiState =
     , iconClicked    : Int
     , devEnabled     : Bool
     , importMedia    : ImportRequest
+    , writeMem       : ImportRequest
     , unsavedMemInfo : MemInfo
     , common         : CommonState
     }
@@ -32,6 +33,7 @@ type alias GuiState =
 type Action = ChangeTab Tab
             | ClickIcon
             | SetImportMedia ImportRequest
+            | SetWriteMem ImportRequest
             | SetUnsavedMem MemInfo
             | CommonAction CommonAction
             | AddFav (FlashAddress, FlashAddress)
@@ -48,6 +50,7 @@ default =
     , iconClicked    = 0
     , devEnabled     = False
     , importMedia    = NotRequested
+    , writeMem       = NotRequested
     , unsavedMemInfo = NoMemInfo
     , common         = Common.default
     }
@@ -96,6 +99,11 @@ update action s =
                              then {s | importMedia <- r}
                              else s
             _ -> {s | importMedia <- r}
+        SetWriteMem r   -> case r of
+            RequestFile p -> if s.writeMem == Waiting
+                             then {s | writeMem <- r}
+                             else s
+            _ -> {s | writeMem <- r}
         AddFav f        ->
             case s.unsavedMemInfo of
                 MemInfo d -> {s | unsavedMemInfo <- addToFavs f d}

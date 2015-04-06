@@ -1,7 +1,11 @@
 /* This file loads the Elm application and sets up communication with the
    background through chrome.runtime. */
 
-var emptyFromChromeMessage = {pickedMediaFile: null};
+var emptyFromChromeMessage =
+    { pickedMediaFile: null
+    , writeMemFile: null
+    , readMemFile: null
+    };
 
 var gui = Elm.fullscreen(Elm.GUI,
     { fromBackground: emptyToGuiMessage
@@ -40,5 +44,25 @@ gui.ports.toChrome.subscribe(function(message) {
                 gui.ports.fromChrome.send({pickedMediaFile: id});
             }
         });
+    } else if (message.writeMemFile !== null) {
+        chrome.fileSystem.chooseEntry({type: 'saveFile'}, (function(data) {
+            return function(entry) {
+                if (entry != null) {
+                    entry.createWriter((function(message) {
+                        return function(fileWriter) {
+                            fileWriter.onwriteend = function(e) {
+                                console.log('Write completed.');
+                            };
+
+                            fileWriter.onerror = function(e) {
+                                console.log('Write failed: ' + e.toString());
+                            };
+                            var s = JSON.stringify(data);
+                            fileWriter.write(new Blob([s], {type: 'application/json'}));
+                        };
+                    })(data));
+                }
+            };
+        })(message.writeMemFile));
     }
 });
