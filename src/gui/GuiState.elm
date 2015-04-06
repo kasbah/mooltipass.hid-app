@@ -188,6 +188,39 @@ removeCred (addr1,addr2) info =
                     info.credentials
         }
 
+{-| Add logins and a new service or add them to an existing service, returns
+    'Nothing' when out of addresses -}
+addCreds : Service -> MemInfoData -> Maybe MemInfo
+addCreds (service,logins) data =
+    let addLogins ls = ls ++ filter (\l -> not (any (\l' -> l'.login == l.login) ls)) newLogins
+        add newS newAddrs =
+            { data | credentials <- if any (\(s,_) -> s.service == service.service) data.credentials
+                                    then replaceService newS
+                                    else addService newS
+                   , addresses <- newAddrs
+             }
+        oldService =
+            foldr
+                (\(s,ls) z -> if s.service == service.service then Just (s,ls) else z)
+                Nothing
+                data.credentials
+        addService newS = sortBy (\(s,_) -> s.service) <| newS::data.credentials
+        replaceService newS = foldr
+                            (\(s,ls) z -> if s.service == service.service then newS::z else (s,ls)::z)
+                            []
+                            data.credentials
+        newLogins  = map2 (\l addr -> {l | address <- addr}) logins data.addresses
+        newService = case oldService of
+            Just (s,ls) -> Just ((s, addLogins ls), drop (length (addLogins ls) - length ls) data.addresses)
+            Nothing     -> Maybe.map (\s -> ((s, newLogins), drop (1 + length newLogins) data.addresses)) newService'
+        newService' =
+            Maybe.map (\addr -> {service | address <- addr}) <| maybeHead (drop (length newLogins) data.addresses)
+   in case newService of
+         Just (newS,newAddrs) -> if length newLogins == length logins
+                                 then Just <| MemInfo <| add newS newAddrs
+                                 else Nothing
+         Nothing              -> Nothing
+
 switchFav f x zs = if | zs == []   -> [x]
                    | x == (Just f) -> head zs::x::(tail zs)
                    | otherwise     -> x::head zs::(tail zs)
