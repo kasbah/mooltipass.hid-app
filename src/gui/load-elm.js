@@ -1,9 +1,11 @@
 /* This file loads the Elm application and sets up communication with the
    background through chrome.runtime. */
 
+var readingFile = false;
+var writingFile = false;
+
 var emptyFromChromeMessage =
     { pickedMediaFile: null
-    , writeMemFile: null
     , readMemFile: null
     };
 
@@ -12,6 +14,21 @@ var gui = Elm.fullscreen(Elm.GUI,
     , fromChrome: emptyFromChromeMessage
     }
 );
+
+
+chromeSendToElm = function (message) {
+    var messageWithNulls = {};
+    //replace undefined with null so it becomes 'Nothing' in Elm
+    for (var prop in emptyFromChromeMessage) {
+        if (message.hasOwnProperty(prop)) {
+            messageWithNulls[prop] = message[prop];
+        } else {
+            messageWithNulls[prop] = emptyFromChromeMessage[prop];
+        }
+    }
+    gui.ports.fromChrome.send(messageWithNulls);
+}
+
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     if (message.toGUI !== undefined) {
@@ -41,21 +58,22 @@ gui.ports.toChrome.subscribe(function(message) {
         chrome.fileSystem.chooseEntry({type: 'openFile'}, function(entry) {
             if (entry != null) {
                 var id = chrome.fileSystem.retainEntry(entry);
-                gui.ports.fromChrome.send({pickedMediaFile: id});
+                chromeSendToElm({pickedMediaFile:id});
             }
         });
-    } else if (message.writeMemFile !== null) {
-        chrome.fileSystem.chooseEntry({type: 'saveFile'}, (function(data) {
+    } else if (message.writeMemFile !== null && ! writingFile) {
+        writingFile = true;
+        chrome.fileSystem.chooseEntry({type: 'saveFile', suggestedName:"mp-credentials.json"}, (function(data) {
             return function(entry) {
                 if (entry != null) {
                     entry.createWriter((function(message) {
                         return function(fileWriter) {
                             fileWriter.onwriteend = function(e) {
-                                console.log('Write completed.');
+                                writingFile = false;
                             };
 
                             fileWriter.onerror = function(e) {
-                                console.log('Write failed: ' + e.toString());
+                                writingFile = false;
                             };
                             var s = JSON.stringify(data);
                             fileWriter.write(new Blob([s], {type: 'application/json'}));
@@ -64,5 +82,24 @@ gui.ports.toChrome.subscribe(function(message) {
                 }
             };
         })(message.writeMemFile));
+    } else if (message.readMemFile !== null && ! readingFile) {
+        readingFile = true;
+        chrome.fileSystem.chooseEntry({type: 'openFile'}, function(entry) {
+            if (entry != null) {
+                entry.file(function(file) {
+                    var reader = new FileReader();
+                    reader.onerror = function(e) {
+                        console.log(e);
+                        readingFile = false;
+                    };
+                    reader.onloadend = function(e) {
+                        var data = JSON.parse(reader.result);
+                        chromeSendToElm({readMemFile:data});
+                        readingFile = false;
+                    }
+                    reader.readAsText(file);
+                });
+            }
+        });
     }
 });

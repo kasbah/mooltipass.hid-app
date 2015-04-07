@@ -1,19 +1,21 @@
 module ChromeMessage where
 
+import Maybe
+
 -- local source
 import GuiState (..)
-import CommonState  (..)
+import CommonState (..)
 
 type alias ToChromeMessage =
     { pickMediaFile : Maybe ()
     , writeMemFile  : Maybe MemInfoData
-    , readMemfile   : Maybe ()
+    , readMemFile   : Maybe ()
     }
 
 emptyToChromeMessage =
     { pickMediaFile = Nothing
     , writeMemFile  = Nothing
-    , readMemfile   = Nothing
+    , readMemFile   = Nothing
     }
 
 encode : GuiState -> (ToChromeMessage, Action)
@@ -21,18 +23,22 @@ encode s =
     let e = emptyToChromeMessage
     in if | s.importMedia == Requested ->
         ({e | pickMediaFile <- Just ()}, SetImportMedia Waiting)
-       | s.writeMem == Requested -> case s.unsavedMemInfo of
-            MemInfo d -> ({e | writeMemFile <- Just d}, SetWriteMem Waiting)
+       | s.writeMem -> case s.unsavedMemInfo of
+            MemInfo d -> ({e | writeMemFile <- Just d}, SetWriteMem False)
             _ -> (e,NoOp)
+       | s.readMem -> ({e | readMemFile <- Just ()}, SetReadMem False)
        | otherwise -> (e,NoOp)
 
 type alias FromChromeMessage =
     { pickedMediaFile : Maybe String
-    , writeMemFile    : Maybe ()
     , readMemFile     : Maybe MemInfoData
     }
 
 decode : FromChromeMessage -> Action
-decode m = case m.pickedMediaFile of
-    Just p -> SetImportMedia (RequestFile p)
-    Nothing -> NoOp
+decode msg =
+    let decode' =
+        Maybe.oneOf
+            [ Maybe.map (SetImportMedia << RequestFile) msg.pickedMediaFile
+            , Maybe.map AddToUnsavedMem msg.readMemFile
+            ]
+    in Maybe.withDefault NoOp decode'

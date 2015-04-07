@@ -8,6 +8,8 @@ import Result
 import Bitwise (..)
 import String
 
+import Debug
+
 -- local source
 import Byte (..)
 import DevicePacket (..)
@@ -96,6 +98,12 @@ favsToPackets fs =
     map OutgoingSetFavorite
         <| map2 (,) [0..maxFavs]
             <| map (Maybe.withDefault (nullAddress, nullAddress)) fs
+
+ctrToPackets : (Byte,Byte,Byte) -> (Byte,Byte,Byte) -> List OutgoingPacket
+ctrToPackets c1 c2 = if c1 == c2 then [] else [OutgoingSetCtrValue c1]
+
+cardsToPackets : List Card -> List Card -> List OutgoingPacket
+cardsToPackets cs1 cs2 = map OutgoingAddCpzCtr <| filter (\c -> not (any (\c' -> c == c') cs2)) cs1
 
 credsToPackets : List Service -> List ParentNode -> List OutgoingPacket
 credsToPackets creds ps =
@@ -244,9 +252,9 @@ childToPackets d = toPackets d.address (childToArray d)
 
 toPackets : FlashAddress -> ByteArray -> List OutgoingPacket
 toPackets addr ba =
-    [ OutgoingWriteFlashNode addr 0 (take 8 ba)
-    , OutgoingWriteFlashNode addr 1 [] --(take 59 (drop 59 ba))
-    , OutgoingWriteFlashNode addr 2 [] --(take 59 (drop 59 (drop 59 ba)))
+    [ OutgoingWriteFlashNode addr 0 (take 59 ba)
+    , OutgoingWriteFlashNode addr 1 (take 59 (drop 59 ba))
+    , OutgoingWriteFlashNode addr 2 (take 59 (drop 59 (drop 59 ba)))
     ]
 
 parentToArray : ParentNode -> ByteArray

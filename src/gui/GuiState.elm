@@ -4,6 +4,8 @@ module GuiState where
 import List (..)
 import Maybe
 
+import Debug
+
 -- local source
 import CommonState as Common
 import CommonState (..)
@@ -24,7 +26,8 @@ type alias GuiState =
     , iconClicked    : Int
     , devEnabled     : Bool
     , importMedia    : ImportRequest
-    , writeMem       : ImportRequest
+    , writeMem       : Bool
+    , readMem        : Bool
     , unsavedMemInfo : MemInfo
     , common         : CommonState
     }
@@ -33,8 +36,10 @@ type alias GuiState =
 type Action = ChangeTab Tab
             | ClickIcon
             | SetImportMedia ImportRequest
-            | SetWriteMem ImportRequest
+            | SetWriteMem Bool
+            | SetReadMem Bool
             | SetUnsavedMem MemInfo
+            | AddToUnsavedMem MemInfoData
             | CommonAction CommonAction
             | AddFav (FlashAddress, FlashAddress)
             | RemoveFav (FlashAddress, FlashAddress)
@@ -50,7 +55,8 @@ default =
     , iconClicked    = 0
     , devEnabled     = False
     , importMedia    = NotRequested
-    , writeMem       = NotRequested
+    , writeMem       = False
+    , readMem        = False
     , unsavedMemInfo = NoMemInfo
     , common         = Common.default
     }
@@ -99,11 +105,8 @@ update action s =
                              then {s | importMedia <- r}
                              else s
             _ -> {s | importMedia <- r}
-        SetWriteMem r   -> case r of
-            RequestFile p -> if s.writeMem == Waiting
-                             then {s | writeMem <- r}
-                             else s
-            _ -> {s | writeMem <- r}
+        SetWriteMem b -> {s | writeMem <- b}
+        SetReadMem  b -> {s | readMem <- b}
         AddFav f        ->
             case s.unsavedMemInfo of
                 MemInfo d -> {s | unsavedMemInfo <- addToFavs f d}
@@ -125,6 +128,11 @@ update action s =
                 MemInfo d -> {s | unsavedMemInfo <- removeCred c d}
                 _ -> errorTryingTo "remove credential"
         SetUnsavedMem i -> {s | unsavedMemInfo <- i}
+        AddToUnsavedMem d -> case s.unsavedMemInfo of
+            MemInfo d' -> case mergeMem d d' of
+                Just d'' ->  {s | unsavedMemInfo <- MemInfo d''}
+                Nothing  -> errorTryingTo "add to memory, not enough free addresses requested"
+            _        -> errorTryingTo "add to memory"
         -- An action on the common state can have a effect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
         -- device state for instance.
@@ -148,6 +156,21 @@ update action s =
                         _ -> updateMemInfo
                 _ -> s'
         NoOp -> s
+
+
+mergeMem : MemInfoData -> MemInfoData -> Maybe MemInfoData
+mergeMem d info =
+    let addServices : List Service -> MemInfoData -> Maybe MemInfoData
+        addServices creds i = case creds of
+            [] -> Just i
+            (c::cs) -> case addCreds c i of
+                Just i' -> addServices cs i'
+                Nothing -> Nothing
+    in Maybe.map
+        (\i -> {i | cards <- filter (\c -> not (any (\c' -> c == c') d.cards)) i.cards ++ d.cards
+                  , ctr <- if i.ctr > d.ctr then i.ctr else d.ctr
+               })
+        (addServices d.credentials info)
 
 removeFromFavs : (FlashAddress, FlashAddress) -> MemInfoData -> MemInfo
 removeFromFavs f info =
@@ -190,7 +213,7 @@ removeCred (addr1,addr2) info =
 
 {-| Add logins and a new service or add them to an existing service, returns
     'Nothing' when out of addresses -}
-addCreds : Service -> MemInfoData -> Maybe MemInfo
+addCreds : Service -> MemInfoData -> Maybe MemInfoData
 addCreds (service,logins) data =
     let addLogins ls = ls ++ filter (\l -> not (any (\l' -> l'.login == l.login) ls)) newLogins
         add newS newAddrs =
@@ -217,7 +240,7 @@ addCreds (service,logins) data =
             Maybe.map (\addr -> {service | address <- addr}) <| maybeHead (drop (length newLogins) data.addresses)
    in case newService of
          Just (newS,newAddrs) -> if length newLogins == length logins
-                                 then Just <| MemInfo <| add newS newAddrs
+                                 then Just <| add newS newAddrs
                                  else Nothing
          Nothing              -> Nothing
 

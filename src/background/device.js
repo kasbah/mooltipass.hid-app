@@ -69,7 +69,7 @@ function onDataReceived(reportId, data)
 
     //special case for 'read node' and 'cpz ctr packet export' messages as we
     //need to read multiple messages in a row a row
-    if (ints[1] === 0xC5 || ints[i] === 0xCF)
+    if (ints[1] === 0xC5 || ints[1] === 0xCF)
         chrome.hid.receive(device.connection, onDataReceived);
 }
 
@@ -95,8 +95,8 @@ function sendMsg(message)
         else
             device.waitingForStatus = true;
     }
-    //else
-    //    console.log("app", message);
+    else
+        console.log("app", message);
     //Buffer creation is a bit awkward because Windows doesn't like us using
     //the Uint8Array.buffer directly (or maybe it's something to do with the
     //ArrayBuffer size argument?). This is what works on all platforms equally.

@@ -225,8 +225,8 @@ update action s =
         CommonAction StartMemManage    -> setMemManage MemManageRequested s
         CommonAction EndMemManage      -> setMemManage MemManageEnd s
         CommonAction (SaveMemManage d) -> case s.memoryManage of
-            MemManageReadSuccess (pNode, _, _, _, _) ->
-                setMemManage (MemManageWrite (favsToPackets d.favorites ++ credsToPackets d.credentials pNode)) s
+            MemManageReadSuccess (pNode, favs, _, ctr, cards) ->
+                setMemManage (MemManageWrite (ctrToPackets d.ctr ctr ++ cardsToPackets d.cards cards ++ favsToPackets d.favorites ++ credsToPackets d.credentials pNode)) s
             _ -> s
         CommonAction (SetDeviceStatus c) ->
             let s' = {s | common <- updateCommon (SetDeviceStatus c)}
@@ -429,7 +429,18 @@ interpret packet s =
                 then setMemManage (MemManageReadSuccess d) s
                 else setMemManage (MemManageError "reading user cards (cpz & ctr values) denied") s
             _ -> setMemManage (MemManageError (unexpected "cpz ctr packet export")) s
-        ReceivedGetCtrValue ctr -> case s.memoryManage of
+        ReceivedAddCpzCtr r -> case s.memoryManage of
+            MemManageWriteWaiting ((OutgoingAddCpzCtr _)::ps) ->
+                if r == Done
+                then setMemManage (MemManageWrite ps) s
+                else setMemManage (MemManageError "add card (cpz & ctrNonce) denied") s
+            _ -> setMemManage (MemManageError (unexpected "add card (cpz & ctrNonce) response")) s
+        ReceivedSetCtrValue r -> case s.memoryManage of
+            MemManageWriteWaiting ((OutgoingSetCtrValue _)::ps) ->
+                if r == Done
+                then setMemManage (MemManageWrite ps) s
+                else setMemManage (MemManageError "set cryptographic counter denied") s
+            _ -> setMemManage (MemManageError (unexpected "set cryptographic counter response")) s
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s

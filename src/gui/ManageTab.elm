@@ -12,6 +12,8 @@ import Text
 import Signal (send)
 import Maybe
 
+import Debug
+
 -- extra libraries
 import Html
 import Html (Html)
@@ -37,8 +39,8 @@ manageTab (w,h) i =
 content : (Int, Int) -> MemInfo -> Element
 content (w,h) info =
     let exitButton       = button (send commonActions EndMemManage) "exit"
-        exportButton     = button (send guiActions (SetWriteMem Requested)) "export"
-        importButton     = button (send guiActions NoOp) "import"
+        exportButton     = button (send guiActions (SetWriteMem True)) "export"
+        importButton     = button (send guiActions (SetReadMem True)) "import"
         showMem infodata = container w h midTop <| flow down
             [ favorites w infodata
             , spacer 1 heights.manageSpacer
@@ -68,6 +70,7 @@ content (w,h) info =
             <| whiteText "please accept memory management mode on the device"
         working = leftAligned
             <| whiteText "working..."
+        iii = Debug.log "info" info
     in case info of
         NoMemInfo             -> reEnter
         MemInfo d             -> showMem d
