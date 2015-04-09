@@ -136,7 +136,7 @@ encode s =
                         [SetMemManage (MemManageReadWaiting ([],nullAddress,nullAddress) [])]
               MemManageReadFreeSlots d ->
                     sendCommand'
-                        OutgoingGet30FreeSlots
+                        (OutgoingGetFreeSlots nullAddress)
                         [SetMemManage (MemManageReadFreeSlotsWaiting d)]
               MemManageReadCtr d ->
                     sendCommand'

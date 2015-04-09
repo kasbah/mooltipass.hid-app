@@ -414,7 +414,7 @@ interpret packet s =
                 then setMemManage (MemManageWrite ps) s
                 else setMemManage (MemManageError "set starting parent denied") s
             _ -> setMemManage (MemManageError (unexpected "set starting parent")) s
-        ReceivedGet30FreeSlots addrs -> case s.memoryManage of
+        ReceivedGetFreeSlots addrs -> case s.memoryManage of
             MemManageReadFreeSlotsWaiting (p,f) -> setMemManage (MemManageReadCtr (p,f,addrs)) s
             _ -> setMemManage (MemManageError (unexpected "30 free slots")) s
         ReceivedGetCtrValue ctr -> case s.memoryManage of

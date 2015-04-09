@@ -79,7 +79,7 @@ cmd_SET_CTRVALUE        = 0xCC
 cmd_ADD_CARD_CPZ_CTR    = 0xCD
 cmd_GET_CARD_CPZ_CTR    = 0xCE
 cmd_CARD_CPZ_CTR_PACKET = 0xCF
-cmd_GET_30_FREE_SLOTS   = 0xD0
+cmd_GET_FREE_SLOTS      = 0xD0
 cmd_GET_DN_START_PARENT = 0xD1
 cmd_SET_DN_START_PARENT = 0xD2
 cmd_END_MEMORYMGMT      = 0xD3
@@ -135,7 +135,7 @@ type OutgoingPacket =
    | OutgoingGetCtrValue
    | OutgoingAddNewCard
    | OutgoingGetStatus
-   | OutgoingGet30FreeSlots
+   | OutgoingGetFreeSlots       FlashAddress
 -- disabled developer types:
     --OutgoingEraseEeprom      -> cmd_ERASE_EEPROM
     --OutgoingEraseFlash       -> cmd_ERASE_FLASH
@@ -198,7 +198,7 @@ type ReceivedPacket =
     | ReceivedGetStartingParent FlashAddress
     | ReceivedGetCtrValue       (Byte,Byte,Byte)
     | ReceivedAddNewCard        ReturnCode
-    | ReceivedGet30FreeSlots    (List FlashAddress)
+    | ReceivedGetFreeSlots    (List FlashAddress)
 
 {-| Carries firmware version and flash memory size -}
 type alias MpVersion = { flashMemSize : Byte
@@ -292,20 +292,20 @@ toInts msg =
         OutgoingSetStartingParent (a1,a2)    -> [2, cmd_SET_STARTING_PARENT, a1, a2]
         OutgoingSetCtrValue (ctr1,ctr2,ctr3) -> [3, cmd_SET_CTRVALUE, ctr1, ctr2, ctr3]
         OutgoingAddCpzCtr c -> 24::cmd_ADD_CARD_CPZ_CTR::stringToInts c.cpz ++ stringToInts c.ctrNonce
-        OutgoingGetCpzCtrValues    -> zeroSize cmd_GET_CARD_CPZ_CTR
-        OutgoingSetParameter p b   -> [2, cmd_SET_MOOLTIPASS_PARM, param p, b]
-        OutgoingGetParameter p     -> [1, cmd_GET_MOOLTIPASS_PARM, param p]
-        OutgoingGetFavorite  b     -> [1, cmd_GET_FAVORITE, b]
-        OutgoingResetCard (b1,b2)  -> [2, cmd_RESET_CARD, b1, b2]
-        OutgoingGetCardLogin       -> zeroSize cmd_READ_CARD_LOGIN
-        OutgoingGetCardPassword    -> zeroSize cmd_READ_CARD_PASS
-        OutgoingSetCardLogin s     -> byteStringNull cmd_SET_CARD_LOGIN s
-        OutgoingSetCardPassword s  -> byteStringNull cmd_SET_CARD_PASS s
-        OutgoingGetStartingParent  -> zeroSize cmd_GET_STARTING_PARENT
-        OutgoingGetCtrValue        -> zeroSize cmd_GET_CTRVALUE
-        OutgoingAddNewCard         -> zeroSize cmd_ADD_UNKNOWN_CARD
-        OutgoingGetStatus          -> zeroSize cmd_MOOLTIPASS_STATUS
-        OutgoingGet30FreeSlots     -> zeroSize cmd_GET_30_FREE_SLOTS
+        OutgoingGetCpzCtrValues      -> zeroSize cmd_GET_CARD_CPZ_CTR
+        OutgoingSetParameter p b     -> [2, cmd_SET_MOOLTIPASS_PARM, param p, b]
+        OutgoingGetParameter p       -> [1, cmd_GET_MOOLTIPASS_PARM, param p]
+        OutgoingGetFavorite  b       -> [1, cmd_GET_FAVORITE, b]
+        OutgoingResetCard (b1,b2)    -> [2, cmd_RESET_CARD, b1, b2]
+        OutgoingGetCardLogin         -> zeroSize cmd_READ_CARD_LOGIN
+        OutgoingGetCardPassword      -> zeroSize cmd_READ_CARD_PASS
+        OutgoingSetCardLogin s       -> byteStringNull cmd_SET_CARD_LOGIN s
+        OutgoingSetCardPassword s    -> byteStringNull cmd_SET_CARD_PASS s
+        OutgoingGetStartingParent    -> zeroSize cmd_GET_STARTING_PARENT
+        OutgoingGetCtrValue          -> zeroSize cmd_GET_CTRVALUE
+        OutgoingAddNewCard           -> zeroSize cmd_ADD_UNKNOWN_CARD
+        OutgoingGetStatus            -> zeroSize cmd_MOOLTIPASS_STATUS
+        OutgoingGetFreeSlots (a1,a2) -> [2, cmd_GET_FREE_SLOTS, a1, a2]
 
 {-| Convert a list of ints received through a port from chrome.hid.receive into
     a packet we can interpret -}
@@ -436,10 +436,10 @@ fromInts (size::m::payload) =
                 | m == cmd_ADD_UNKNOWN_CARD   -> doneOrNotDone ReceivedAddNewCard "add unknown smartcard"
                 | m == cmd_USB_KEYBOARD_PRESS -> Err "Received UsbKeyboardPress"
                 | m == cmd_MOOLTIPASS_STATUS  -> Err "Received GetStatus" -- this is hanndled separetely in JS
-                | m == cmd_GET_30_FREE_SLOTS  ->
-                    if (size `rem` 2) /= 0 then Err "Invalid data for Get30FreeSlot"
-                        else Ok <| ReceivedGet30FreeSlots
-                                <| take 30 <| reverse <| snd <| foldl
+                | m == cmd_GET_FREE_SLOTS  ->
+                    if (size `rem` 2) /= 0 then Err "Invalid data for GetFreeSlots"
+                        else Ok <| ReceivedGetFreeSlots
+                                <| reverse <| snd <| foldl
                                 (\x (x',z) -> case x' of
                                         Just x'' -> (Nothing, (x'',x)::z)
                                         Nothing  -> (Just x, z))
