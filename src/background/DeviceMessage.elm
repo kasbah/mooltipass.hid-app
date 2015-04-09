@@ -134,10 +134,10 @@ encode s =
                     sendCommand'
                         OutgoingGetStartingParent
                         [SetMemManage (MemManageReadWaiting ([],nullAddress,nullAddress) [])]
-              MemManageReadFreeSlots d ->
+              MemManageReadFreeSlots (p,f,addrs) ->
                     sendCommand'
-                        (OutgoingGetFreeSlots nullAddress)
-                        [SetMemManage (MemManageReadFreeSlotsWaiting d)]
+                        (OutgoingGetFreeSlots (Maybe.withDefault nullAddress (maybeHead (reverse addrs))))
+                        [SetMemManage (MemManageReadFreeSlotsWaiting (p,f,addrs))]
               MemManageReadCtr d ->
                     sendCommand'
                         OutgoingGetCtrValue

@@ -4,8 +4,6 @@ module GuiState where
 import List (..)
 import Maybe
 
-import Debug
-
 -- local source
 import CommonState as Common
 import CommonState (..)

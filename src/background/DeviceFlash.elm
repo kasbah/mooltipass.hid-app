@@ -8,8 +8,6 @@ import Result
 import Bitwise (..)
 import String
 
-import Debug
-
 -- local source
 import Byte (..)
 import DevicePacket (..)

@@ -12,8 +12,6 @@ import Text
 import Signal (send)
 import Maybe
 
-import Debug
-
 -- extra libraries
 import Html
 import Html (Html)
@@ -70,7 +68,6 @@ content (w,h) info =
             <| whiteText "please accept memory management mode on the device"
         working = leftAligned
             <| whiteText "working..."
-        iii = Debug.log "info" info
     in case info of
         NoMemInfo             -> reEnter
         MemInfo d             -> showMem d

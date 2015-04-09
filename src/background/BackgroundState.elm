@@ -51,9 +51,9 @@ type MemManageState =
     | MemManageReadFavWaiting
         (List ParentNode, List FlashFavorite)
     | MemManageReadFreeSlots
-        (List ParentNode, List Favorite)
+        (List ParentNode, List Favorite, List FlashAddress)
     | MemManageReadFreeSlotsWaiting
-        (List ParentNode, List Favorite)
+        (List ParentNode, List Favorite, List FlashAddress)
     | MemManageReadCtr
         (List ParentNode, List Favorite, List FlashAddress)
     | MemManageReadCtrWaiting
@@ -364,7 +364,7 @@ interpret packet s =
                 if a /= nullAddress then
                     setMemManage (MemManageRead ([], a, nullAddress) []) s
                 else
-                    setMemManage (MemManageReadFreeSlots ([], emptyFavorites)) s
+                    setMemManage (MemManageReadFreeSlots ([], emptyFavorites, [])) s
             _ -> setMemManage (MemManageError (unexpected "starting parent")) s
         ReceivedReadFlashNode ba ->
             case s.memoryManage of
@@ -380,7 +380,7 @@ interpret packet s =
                 MemManageReadFavWaiting (n,ffavs) ->
                     let ffavs' = ({parentNode = p, childNode = c})::ffavs
                     in if length ffavs' == maxFavs then
-                          setMemManage (MemManageReadFreeSlots (n, toFavs ffavs' n)) s
+                          setMemManage (MemManageReadFreeSlots (n, toFavs ffavs' n, [])) s
                        else
                           setMemManage (MemManageReadFav (n, ffavs')) s
                 _ -> setMemManage (MemManageError (unexpected "favorite")) s
@@ -415,8 +415,12 @@ interpret packet s =
                 else setMemManage (MemManageError "set starting parent denied") s
             _ -> setMemManage (MemManageError (unexpected "set starting parent")) s
         ReceivedGetFreeSlots addrs -> case s.memoryManage of
-            MemManageReadFreeSlotsWaiting (p,f) -> setMemManage (MemManageReadCtr (p,f,addrs)) s
-            _ -> setMemManage (MemManageError (unexpected "30 free slots")) s
+            MemManageReadFreeSlotsWaiting (p,f,slots) -> case slots of
+                        [] -> setMemManage (MemManageReadFreeSlots (p,f,addrs)) s
+                        _ -> if length slots > 1000 || isEmpty addrs
+                             then setMemManage (MemManageReadCtr (p,f,slots ++ (tail addrs))) s
+                             else setMemManage (MemManageReadFreeSlots (p,f,slots ++ (tail addrs))) s
+            _ -> setMemManage (MemManageError (unexpected "free slots")) s
         ReceivedGetCtrValue ctr -> case s.memoryManage of
             MemManageReadCtrWaiting (p,f,a) -> setMemManage (MemManageReadCards (p,f,a,ctr)) s
             _ -> setMemManage (MemManageError (unexpected "get ctr value")) s
