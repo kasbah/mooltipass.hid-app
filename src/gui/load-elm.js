@@ -93,13 +93,20 @@ gui.ports.toChrome.subscribe(function(message) {
                         readingFile = false;
                     };
                     reader.onloadend = function(e) {
-                        var data = JSON.parse(reader.result);
-                        chromeSendToElm({readMemFile:data});
+                        var data;
+                        try {
+                            data = JSON.parse(reader.result);
+                        }
+                        catch (e) {
+                            console.log("invalid file: ", e);
+                        }
+                        if (data != null)
+                            chromeSendToElm({readMemFile:data});
                         readingFile = false;
                     }
                     reader.readAsText(file);
                 });
-            }
+            } else { readingFile = false;}
         });
     }
 });
