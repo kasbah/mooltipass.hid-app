@@ -239,24 +239,24 @@ login w ((serviceString,saddr),(loginString,laddr)) fav =
         uUp      = layers [ubg lightGrey', utxt]
         --uHover   = layers [ubg lightGrey'', utxt]
         --uDown    = uUp
-        uw       = (w//2) - spw
+        uw       = w - (2*spw) - (2*iw)
         uw'      = toFloat uw
         ubg c    = collage uw lh
             [roundedRectShape Left uw' lh' 5 |> filled c]
         utxt'    = flow right
             [spacer 5 5 , leftAligned <| whiteText loginString]
         utxt     = container uw lh midLeft utxt'
-        password = pUp -- button disabled for beta release
+        --password = pUp -- button disabled for beta release
         --password = Input.customButton (send guiActions NoOp) pUp pHover pDown
-        pUp      = layers [pbg lightGrey', ptxt]
+        --pUp      = layers [pbg lightGrey', ptxt]
         --pHover   = layers [pbg lightGrey'', ptxt]
         --pDown    = pUp
-        pw       = (w//2) - (2*spw) - (2*iw)
-        pw'      = toFloat pw
-        pbg c    = collage pw lh [rect pw' lh' |> filled c]
-        ptxt'    = flow right
-            [spacer 5 1, leftAligned <| whiteText "********"]
-        ptxt     = container pw lh midLeft ptxt'
+        --pw       = (w//2) - (2*spw) - (2*iw)
+        --pw'      = toFloat pw
+        --pbg c    = collage pw lh [rect pw' lh' |> filled c]
+        --ptxt'    = flow right
+        --    [spacer 5 1, leftAligned <| whiteText "********"]
+        --ptxt     = container pw lh midLeft ptxt'
         lh       = heights.manageLogin
         lh'      = toFloat lh
         delIcon     = Input.customButton
@@ -273,7 +273,6 @@ login w ((serviceString,saddr),(loginString,laddr)) fav =
         iw       = 32
         iw'      = toFloat iw
     in flow right [username
-                  , sp, password
                   , sp, delIcon
                   , sp, favIcon fav (saddr,laddr)
                   ]
