@@ -13,6 +13,7 @@ import GuiState (..)
 import LogTab (..)
 import DeveloperTab (..)
 import ManageTab (..)
+import SettingsTab (..)
 import CommonState (..)
 
 {-| Renders the window the window dimensions and application state to the
@@ -27,4 +28,5 @@ content (w,h) state =
         Log       -> withBackground <| logTab (w, h') state.common.log
         Developer -> withBackground <| developerTab (w, h') state.common.importInfo
         Manage    -> withBackground <| manageTab (w, h') state.unsavedMemInfo
+        Settings  -> withBackground <| settingsTab (w, h')
         _         -> empty

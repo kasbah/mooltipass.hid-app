@@ -54,7 +54,7 @@ tabs state =
     in flow right <| [ tab Log      state.activeTab disabled
                      -- disabled for alpha release
                      --, navSpacer 5
-                     --, tab Settings state.activeTab disabled
+                     , tab Settings state.activeTab disabled
                      , navSpacer 5
                      , tab Manage   state.activeTab disabled
                      ] ++ ( if state.devEnabled
