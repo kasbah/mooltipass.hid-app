@@ -13,4 +13,5 @@ heights =
     , manageTitle   = 32
     , manageSpacer  = 12
     , manageLogin   = 32
+    , settingsTitle = 32
     }
