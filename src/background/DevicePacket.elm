@@ -341,12 +341,12 @@ fromInts (size::m::payload) =
                                     else Err "Invalid data size for 'ping request'"
                 | m == cmd_VERSION ->
                     let flashSize =
-                        Result.map (\b -> {flashMemSize = b})
-                        <| toByte (List.head payload)
+                            Result.map (\b -> {flashMemSize = b})
+                                <| toByte (List.head payload)
                         mpVersion mpv =
                             Result.map (\s -> {mpv | version = s})
-                            -- (size - 3) because of null-termination
-                                <| toByteString (size - 3) (List.tail payload)
+                            -- (size - 2) because of null-termination
+                                <| toByteString (size - 2) (List.tail payload)
                     in Result.map ReceivedGetVersion (flashSize `andThen` mpVersion)
                 | m == cmd_CONTEXT -> if size /= 1
                         then Err "Invalid data size for 'set context'"
