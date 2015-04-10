@@ -68,6 +68,76 @@ mpSettings (w,h) =
             , flow right [spacer 16 1, mpSettings']
             ]
 
+{-
+
+Commands
+========
+https://github.com/limpkin/mooltipass/tree/master/source_code/src/USB
+
+0xB1: Set Mooltipass parameter
+  From plugin/app: Set Mooltipass parameter, first byte is the param ID, second is the value
+  From Mooltipass: 1 byte data packet, 0x00 indicates that the request wasn't performed, 0x01 if so
+0xB2: Get Mooltipass parameter
+  From plugin/app: Get parameter from Mooltipass, first byte is the param ID
+  From Mooltipass: The param value
+
+ParamIDs
+========
+https://github.com/limpkin/mooltipass/blob/master/source_code/src/LOGIC/logic_eeprom.h#L44
+
+#define KEYBOARD_LAYOUT_PARAM               1
+#define USER_INTER_TIMEOUT_PARAM            2
+
+Keyboards
+=========
+
+https://github.com/limpkin/mooltipass/tree/master/bitmaps
+
+<limpkin> from 18 to 39
+<limpkin> parameter obviously is 0 to 20
+<limpkin> for example en us is 128 + 18
+<limpkin> fyi, tested on the python script
+<limpkin> switchting to french was 0x02 0xB1 0x01 0x93
+
+Elm
+===
+https://github.com/kasbah/mooltipass.hid-app/blob/master/src/background/DevicePacket.elm#L217
+
+Really want to:
+send toDevice (OutgoingSetParameter KeyboardLayout kb)
+send toDevice (OutgoingSetParameter UserInterTimeout t)
+
+<kfish> kasbah: if i have cmd=(OutgoingSetParameter KeyboardLayout 0x93), and I want to "send
+toDevice cmd", what's the procedure? ie. handling the response etc.
+<kfish> i'm looking at DeviceMessage.sendMessage', is that a good place to start?
+<kasbah> kfish: DeviceMessage.encode
+<kasbah> encodes the background state into a message to send to the device
+<kasbah> (and also any actions that change the state due to having sent a message)
+<kasbah> but from the GUI you need to go
+GUI->JS->chrome.runtime.message->JS->Background->JS->chrome.runtime.hid
+<kfish> ok, so i (send guiAction ...) passing it some new gui action?
+<kasbah> if it needs to go to the bg then you need to (send commonActions ...)
+<kasbah> which takes a CommonAction from common/CommonState.elm
+<kasbah> common as in common to background and gui
+<kfish> ok
+<kasbah> basically the GUI state is lost when the GUI closes
+<kasbah> but the background keeps running
+<kfish> ok
+<kfish> and what's the common action for sending a devicemessage?
+<kasbah> unfortunately it's not that direct
+<kfish> extNeedsToSend?
+<kasbah> so the way i have been doing this:
+<kasbah> add a CommonAction for what you want to do
+<kasbah> write the message encoding and decoding for that
+<kasbah> then write the state updates according to that action
+<kasbah> probably adding something to the states to hold that info
+<kasbah> then turn that state info into a message for the device
+<limpkin> that looks quite complex to send a message...
+<kasbah> yes
+<kasbah> if you can think of a way to cut through the fat...
+
+-}
+
 
 field : Int -> String -> String -> Element
 field w kString vString =
