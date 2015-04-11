@@ -132,8 +132,8 @@ update action s =
         AddToUnsavedMem d -> case s.unsavedMemInfo of
             MemInfo d' -> case mergeMem d d' of
                 Just d'' ->  {s | unsavedMemInfo <- MemInfo d''}
-                Nothing  -> errorTryingTo "add to memory, not enough free addresses requested"
-            _        -> errorTryingTo "add to memory"
+                Nothing  -> errorTryingTo "add to memory, not enough free addresses"
+            _        -> {s | unsavedMemInfo <- MemInfo d}
         -- An action on the common state can have a effect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
         -- device state for instance.

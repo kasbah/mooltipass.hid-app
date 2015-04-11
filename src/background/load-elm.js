@@ -25,7 +25,10 @@ var elm = Elm.worker(
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     if (message.toBackground !== undefined) {
         elm.ports.fromGUI.send(message.toBackground);
+    } else if (message.toDevice !== undefined) {
+        sendMsg(message.toDevice);
     }
+
 });
 
 elm.ports.toGUI.subscribe(function(message) {

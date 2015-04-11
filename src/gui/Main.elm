@@ -34,6 +34,9 @@ port toChrome = map (\(m,_,_) -> m) output
 
 port fromChrome : Signal FromChromeMessage
 
+port toDevice : Signal (List Int)
+port toDevice = constant []
+
 {-| The complete application state signal to map our main element to. It is
     the gui-state updated by any state updates from the background. -}
 state : Signal GuiState

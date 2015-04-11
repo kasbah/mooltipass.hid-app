@@ -110,3 +110,7 @@ gui.ports.toChrome.subscribe(function(message) {
         });
     }
 });
+
+gui.ports.toDevice.subscribe(function(message) {
+    chrome.runtime.sendMessage({toDevice: message});
+});
