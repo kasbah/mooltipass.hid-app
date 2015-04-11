@@ -407,10 +407,6 @@ interpret packet s =
                 if r == Done
                 then setMemManage (MemManageWrite ps) s
                 else setMemManage (MemManageError "write node denied") s
-            MemManageWriteWaiting [] ->
-                if r == Done
-                then setMemManage MemManageEnd s
-                else setMemManage (MemManageError "write node denied") s
             _ -> setMemManage (MemManageError (unexpected "write node")) s
         ReceivedSetStartingParent r -> case s.memoryManage of
             MemManageWriteWaiting (p::ps) ->

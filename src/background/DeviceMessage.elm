@@ -135,7 +135,7 @@ encode s =
               MemManageWrite [] ->
                     sendCommand'
                         OutgoingMemManageModeEnd
-                        [SetMemManage MemManageEnd]
+                        [SetMemManage NotManaging]
               MemManageReadFreeSlots (p,f,addrs) ->
                     sendCommand'
                         (OutgoingGetFreeSlots (Maybe.withDefault nullAddress (maybeHead (reverse addrs))))
