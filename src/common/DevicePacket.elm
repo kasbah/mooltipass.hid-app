@@ -291,7 +291,7 @@ toInts msg =
             [5, cmd_SET_FAVORITE, id, p1, p2, c1, c2]
         OutgoingSetStartingParent (a1,a2)    -> [2, cmd_SET_STARTING_PARENT, a1, a2]
         OutgoingSetCtrValue (ctr1,ctr2,ctr3) -> [3, cmd_SET_CTRVALUE, ctr1, ctr2, ctr3]
-        OutgoingAddCpzCtr c -> 24::cmd_ADD_CARD_CPZ_CTR::stringToInts c.cpz ++ stringToInts c.ctrNonce
+        OutgoingAddCpzCtr c -> 24::cmd_ADD_CARD_CPZ_CTR::c.cpz ++ c.ctrNonce
         OutgoingGetCpzCtrValues      -> zeroSize cmd_GET_CARD_CPZ_CTR
         OutgoingSetParameter p b     -> [2, cmd_SET_MOOLTIPASS_PARM, param p, b]
         OutgoingGetParameter p       -> [1, cmd_GET_MOOLTIPASS_PARM, param p]
@@ -404,10 +404,10 @@ fromInts (size::m::payload) =
                 | m == cmd_CARD_CPZ_CTR_PACKET ->
                     let cpz  =
                             Result.map (\c -> {cpz = c})
-                                <| toByteString 8 payload
+                                <| toByteArray 8 payload
                         ctrNonce d =
                             Result.map (\s -> {d | ctrNonce = s})
-                                <| toByteString 16 (List.drop 8 payload)
+                                <| toByteArray 16 (List.drop 8 payload)
                     in Result.map ReceivedCpzCtrPacketExport (cpz `andThen` ctrNonce)
                 | m == cmd_SET_MOOLTIPASS_PARM -> doneOrNotDone ReceivedSetParameter "set Mooltipass parameter"
                 | m == cmd_GET_MOOLTIPASS_PARM -> maybeByteString ReceivedGetParameter    "get parameter"
