@@ -149,7 +149,7 @@ credsToDelete creds ps =
             else z
         findDeleted pNode z =
             if not (any (\(sName,_) -> sName.address == pNode.address) creds)
-            then z ++ deleteNodePackets pNode.address
+            then z ++ deleteNodePackets pNode.address ++ concat (map (deleteNodePackets << .address) pNode.children)
             else z ++ foldl (findDeletedKids pNode) [] creds
     in foldl findDeleted [] ps
 
