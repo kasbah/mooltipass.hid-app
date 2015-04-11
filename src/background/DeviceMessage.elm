@@ -25,12 +25,13 @@ type alias ToDeviceMessage   = { connect     : Maybe ()
 
 
 decodeStatus : Int -> BackgroundAction
-decodeStatus i = case i `and` 0x7 of
+decodeStatus i = case i `and` 0xF of
     0x0 -> CommonAction (SetDeviceStatus NoCard)
     0x1 -> CommonAction (SetDeviceStatus Locked)
     0x3 -> CommonAction (SetDeviceStatus Locked)
     0x5 -> CommonAction (SetDeviceStatus Unlocked)
     0x7 -> NoOp -- used to get past dropRepeats
+    0x9 -> CommonAction (SetDeviceStatus UnknownCard)
     _   -> appendToLog' "Error: Received invalid status from device"
 
 sendCommand : OutgoingPacket -> ToDeviceMessage

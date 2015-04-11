@@ -246,7 +246,8 @@ login w ((serviceString,saddr),(loginString,laddr)) fav =
         utxt'    = flow right
             [spacer 5 5 , leftAligned <| whiteText loginString]
         utxt     = container uw lh midLeft utxt'
-        --password = pUp -- button disabled for beta release
+        -- disabled for beta release
+        --password = pUp
         --password = Input.customButton (send guiActions NoOp) pUp pHover pDown
         --pUp      = layers [pbg lightGrey', ptxt]
         --pHover   = layers [pbg lightGrey'', ptxt]

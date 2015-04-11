@@ -34,6 +34,7 @@ statusIcon c =
         icon            = case c of
             Unlocked     -> clickIcon "blue"
             ManageMode   -> clickIcon "manage"
+            UnknownCard  -> clickIcon "manage"
             NotConnected -> clickIcon "red"
             NoCard       -> clickIcon "orange"
             Locked       -> clickIcon "purple"

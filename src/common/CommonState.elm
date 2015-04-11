@@ -71,7 +71,7 @@ type alias Card = { cpz : ByteString
                   , ctrNonce : ByteString
                   }
 
-type DeviceStatus = NotConnected | Unlocked | NoCard | Locked | ManageMode
+type DeviceStatus = NotConnected | Unlocked | NoCard | Locked | ManageMode | UnknownCard
 
 type ImportInfo =
       ImportRequested FileId
@@ -94,6 +94,7 @@ connectToLog c = case c of
     NoCard       -> "device status: no card present"
     Locked       -> "device status: locked"
     ManageMode   -> "device status: memory management mode"
+    UnknownCard  -> "device status: unknown card present"
 
 {-| All actions that can be performed to change the common state -}
 type CommonAction = SetLog (List String)

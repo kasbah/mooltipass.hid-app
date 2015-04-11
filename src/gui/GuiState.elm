@@ -68,6 +68,7 @@ disabledTabs s =
         Common.NoCard       -> [Settings, Manage]
         Common.Locked       -> [Settings, Manage, Developer]
         Common.ManageMode   -> [Settings]
+        Common.UnknownCard ->  [Settings, Manage, Developer]
 
 {-| Transform the state to a new state according to an action -}
 update : Action -> GuiState -> GuiState
