@@ -133,7 +133,8 @@ update action s =
             MemInfo d' -> case mergeMem d d' of
                 Just d'' ->  {s | unsavedMemInfo <- MemInfo d''}
                 Nothing  -> errorTryingTo "add to memory, not enough free addresses"
-            _        -> {s | unsavedMemInfo <- MemInfo d}
+            MemInfoUnknownCard -> {s | unsavedMemInfo <- Maybe.withDefault NoMemInfo (Maybe.map (MemInfoUnknownCard' << .ctrNonce) (maybeHead d.cards))}
+            _        -> errorTryingTo "add to memory"
         -- An action on the common state can have a effect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
         -- device state for instance.
@@ -141,7 +142,9 @@ update action s =
             let s' = {s | common <- updateCommon a}
             in case a of
                 SetDeviceStatus UnknownCard ->
-                    { s' | activeTab <- Manage}
+                    { s' | activeTab <- Manage
+                         , unsavedMemInfo <- MemInfoUnknownCard
+                    }
                 SetDeviceStatus c ->
                     { s' | activeTab <-
                             if s.activeTab `member` (disabledTabs c)

@@ -71,8 +71,8 @@ content (w,h) s =
             <| whiteText "please accept memory management mode on the device"
         working = leftAligned
             <| whiteText "working..."
-        addCardButton = bigButton (send guiActions (SetReadMem True)) "import user from file"
-        cardText      = leftAligned <| whiteText "unknown card present, do you want to import a user?"
+        addCardButton = bigButton (send guiActions (SetReadMem True)) "select exported user"
+        cardText      = leftAligned <| whiteText "unknown card present, please select a user file to add it"
         addCard       =
             flow down [ cardText
                       , spacer 1 16
