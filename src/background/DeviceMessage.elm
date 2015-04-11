@@ -134,8 +134,8 @@ encode s =
                         [SetMemManage (MemManageWriteWaiting (p::ps))]
               MemManageWrite [] ->
                     sendCommand'
-                        OutgoingGetStartingParent
-                        [SetMemManage (MemManageReadWaiting ([],nullAddress,nullAddress) [])]
+                        OutgoingMemManageModeEnd
+                        [SetMemManage MemManageEnd]
               MemManageReadFreeSlots (p,f,addrs) ->
                     sendCommand'
                         (OutgoingGetFreeSlots (Maybe.withDefault nullAddress (maybeHead (reverse addrs))))

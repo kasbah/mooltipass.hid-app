@@ -409,7 +409,7 @@ interpret packet s =
                 else setMemManage (MemManageError "write node denied") s
             MemManageWriteWaiting [] ->
                 if r == Done
-                then setMemManage (MemManageRead ([], nullAddress, nullAddress) []) s
+                then setMemManage MemManageEnd s
                 else setMemManage (MemManageError "write node denied") s
             _ -> setMemManage (MemManageError (unexpected "write node")) s
         ReceivedSetStartingParent r -> case s.memoryManage of
