@@ -1,5 +1,4 @@
 module ManageTab where
-import Debug
 
 -- Elm standard library
 import Graphics.Element as Element
@@ -41,7 +40,6 @@ content (w,h) s =
         exportButton     = button (send guiActions (SetWriteMem True)) "export"
         importButton     = button (send guiActions (SetReadMem True)) "import"
         info = s.unsavedMemInfo
-        iii = Debug.log "info" info
         showMem infodata = container w h midTop <| flow down
             [ favorites w infodata
             , spacer 1 heights.manageSpacer
@@ -71,8 +69,8 @@ content (w,h) s =
             <| whiteText "please accept memory management mode on the device"
         working = leftAligned
             <| whiteText "working..."
-        addCardButton = bigButton (send guiActions (SetReadMem True)) "select exported user"
-        cardText      = leftAligned <| whiteText "unknown card present, please select a user file to add it"
+        addCardButton = bigButton (send guiActions (SetReadMem True)) "select file"
+        cardText      = width (w - 64) <| centered <| whiteText "unknown card present, please select a user data file to add this card to user"
         addCard       =
             flow down [ cardText
                       , spacer 1 16
