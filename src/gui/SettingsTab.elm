@@ -25,6 +25,7 @@ import Layout (..)
 import Actions (..)
 import Util (..)
 import Byte (..)
+import KeyboardLayout (..)
 
 import Debug
 
@@ -59,7 +60,7 @@ cardSettings (w,h) =
 mpSettings : (Int, Int) -> Element
 mpSettings (w,h) =
     let mpSettings' = container w h midTop <| flow down
-            [ field (w - 32) "Keyboard layout" "azerty"
+            [ sel (w - 32) "Keyboard layout" (sortBy fst allKeyboards)
             , field (w - 32) "User interaction timeout" "77"
             ]
     in box (w,h) "Mooltipass Settings"
@@ -163,6 +164,41 @@ field w kString vString =
         pbg c    = collage pw lh [rect pw' lh' |> filled c]
         ptxt'    = flow right
             [spacer 5 1, leftAligned <| whiteText vString]
+        ptxt     = container pw lh midLeft ptxt'
+        lh       = heights.settingsLogin
+        lh'      = toFloat lh
+        sp       = spacer spw 1
+        spw      = 2
+        iw       = 32
+        iw'      = toFloat iw
+    in flow right [username
+                  , sp, password
+                  ]
+
+sel : Int -> String -> List (String, a) -> Element
+sel w kString things =
+    let username = uUp -- button disabled for beta release
+        --username = Input.customButton (send guiActions NoOp) uUp uHover uDown
+        uUp      = layers [ubg lightGrey', utxt]
+        --uHover   = layers [ubg lightGrey'', utxt]
+        --uDown    = uUp
+        uw       = (w//2) - spw
+        uw'      = toFloat uw
+        ubg c    = collage uw lh
+            [roundedRectShape Left uw' lh' 5 |> filled c]
+        utxt'    = flow right
+            [spacer 5 5 , leftAligned <| whiteText kString]
+        utxt     = container uw lh midLeft utxt'
+        password = pUp -- button disabled for beta release
+        --password = Input.customButton (send guiActions NoOp) pUp pHover pDown
+        pUp      = layers [pbg lightGrey', ptxt]
+        --pHover   = layers [pbg lightGrey'', ptxt]
+        --pDown    = pUp
+        pw       = (w//2) - (2*spw) - (2*iw)
+        pw'      = toFloat pw
+        pbg c    = collage pw lh [rect pw' lh' |> filled c]
+        ptxt'    = flow right
+            [spacer 5 1, Input.dropDown (\x -> send guiActions NoOp) things]
         ptxt     = container pw lh midLeft ptxt'
         lh       = heights.settingsLogin
         lh'      = toFloat lh
