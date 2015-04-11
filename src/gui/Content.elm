@@ -26,5 +26,5 @@ content (w,h) state =
     in case state.activeTab of
         Log       -> withBackground <| logTab (w, h') state.common.log
         Developer -> withBackground <| developerTab (w, h') state.common.importInfo
-        Manage    -> withBackground <| manageTab (w, h') state.unsavedMemInfo
+        Manage    -> withBackground <| manageTab (w, h') state
         _         -> empty

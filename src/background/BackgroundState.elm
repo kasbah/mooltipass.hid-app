@@ -226,7 +226,11 @@ update action s =
         CommonAction EndMemManage      -> setMemManage MemManageEnd s
         CommonAction (SaveMemManage d) -> case s.memoryManage of
             MemManageReadSuccess (pNode, favs, _, ctr, cards) ->
-                setMemManage (MemManageWrite (ctrToPackets d.ctr ctr ++ cardsToPackets d.cards cards ++ favsToPackets d.favorites ++ credsToPackets d.credentials pNode)) s
+                setMemManage (MemManageWrite
+                    (ctrToPackets d.ctr ctr
+                        ++ cardsToPackets d.cards cards
+                        ++ favsToPackets d.favorites
+                        ++ credsToPackets d.credentials pNode)) s
             _ -> s
         CommonAction (SetDeviceStatus c) ->
             let s' = {s | common <- updateCommon (SetDeviceStatus c)}

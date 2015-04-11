@@ -68,7 +68,7 @@ disabledTabs s =
         Common.NoCard       -> [Settings, Manage]
         Common.Locked       -> [Settings, Manage, Developer]
         Common.ManageMode   -> [Settings]
-        Common.UnknownCard ->  [Settings, Manage, Developer]
+        Common.UnknownCard ->  [Settings]
 
 {-| Transform the state to a new state according to an action -}
 update : Action -> GuiState -> GuiState
@@ -81,7 +81,9 @@ update action s =
     in case action of
         ChangeTab t -> if t == Manage && s.unsavedMemInfo == NoMemInfo
                          then {s | activeTab <- Manage
-                                 , unsavedMemInfo <- MemInfoRequest
+                                 , unsavedMemInfo <- if s.common.deviceStatus /= UnknownCard
+                                                     then MemInfoRequest
+                                                     else s.unsavedMemInfo
                               }
                          else {s | activeTab <- t}
         -- clicking the icon 7 times toggles developer tab visibility
@@ -138,6 +140,8 @@ update action s =
         CommonAction a ->
             let s' = {s | common <- updateCommon a}
             in case a of
+                SetDeviceStatus UnknownCard ->
+                    { s' | activeTab <- Manage}
                 SetDeviceStatus c ->
                     { s' | activeTab <-
                             if s.activeTab `member` (disabledTabs c)
@@ -153,6 +157,7 @@ update action s =
                                 else s
                             _ -> updateMemInfo
                         _ -> updateMemInfo
+
                 _ -> s'
         NoOp -> s
 

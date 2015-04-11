@@ -26,19 +26,20 @@ import Actions (..)
 import Util (..)
 import Byte (..)
 
-manageTab : (Int, Int) -> MemInfo -> Element
-manageTab (w,h) i =
+manageTab : (Int, Int) -> GuiState -> Element
+manageTab (w,h) s =
     let contentH = h - 32
         contentW = w - 64
         content' = container w contentH middle
-            <| content (contentW, contentH) i
+            <| content (contentW, contentH) s
     in container w h middle content'
 
-content : (Int, Int) -> MemInfo -> Element
-content (w,h) info =
+content : (Int, Int) -> GuiState -> Element
+content (w,h) s =
     let exitButton       = button (send commonActions EndMemManage) "exit"
         exportButton     = button (send guiActions (SetWriteMem True)) "export"
         importButton     = button (send guiActions (SetReadMem True)) "import"
+        info = s.unsavedMemInfo
         showMem infodata = container w h midTop <| flow down
             [ favorites w infodata
             , spacer 1 heights.manageSpacer
@@ -68,12 +69,25 @@ content (w,h) info =
             <| whiteText "please accept memory management mode on the device"
         working = leftAligned
             <| whiteText "working..."
-    in case info of
+        addCardButton = button (send commonActions CommonNoOp) "add card"
+        cardText      = leftAligned <| whiteText "unknown card present, add unknown card to existing user?"
+        addCard       =
+            flow down [ cardText
+                      , spacer 1 16
+                      , container
+                            (widthOf cardText)
+                            (heights.button + 4)
+                            middle
+                            addCardButton
+                      ]
+
+    in if s.common.deviceStatus /= UnknownCard then case info of
         NoMemInfo             -> reEnter
         MemInfo d             -> showMem d
         MemInfoRequest        -> pleaseAccept
         MemInfoWaitingForUser -> pleaseAccept
         _                     -> working
+       else addCard
 
 saveButton : MemInfo -> Element
 saveButton info =
