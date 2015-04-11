@@ -66,13 +66,21 @@ gui.ports.toChrome.subscribe(function(message) {
         });
     } else if (message.writeMemFile !== null && ! writingFile) {
         writingFile = true;
-        chrome.fileSystem.chooseEntry({type: 'saveFile', suggestedName:"mp-credentials.json"}, (function(data) {
+        chrome.fileSystem.chooseEntry({type: 'saveFile', suggestedName:"mp-user-data.json"}, (function(data) {
             return function(entry) {
                 if (entry != null) {
                     entry.createWriter((function(message) {
                         return function(fileWriter) {
                             fileWriter.onwriteend = function(e) {
                                 writingFile = false;
+                                console.log("yo");
+                                chrome.notifications.create(
+                                    { type:"basic"
+                                    , title:"User data export done."
+                                    , message:""
+                                    , iconUrl:"/gui/images/logo_square128.png"
+                                    });
+                                console.log(chrome.runtime.lastError);
                             };
 
                             fileWriter.onerror = function(e) {
