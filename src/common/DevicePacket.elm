@@ -133,7 +133,7 @@ type OutgoingPacket =
    | OutgoingSetCardPassword    ByteString
    | OutgoingGetStartingParent
    | OutgoingGetCtrValue
-   | OutgoingAddNewCard
+   | OutgoingAddNewCard         ByteArray
    | OutgoingGetStatus
    | OutgoingGetFreeSlots       FlashAddress
 -- disabled developer types:
@@ -303,7 +303,7 @@ toInts msg =
         OutgoingSetCardPassword s    -> byteStringNull cmd_SET_CARD_PASS s
         OutgoingGetStartingParent    -> zeroSize cmd_GET_STARTING_PARENT
         OutgoingGetCtrValue          -> zeroSize cmd_GET_CTRVALUE
-        OutgoingAddNewCard           -> zeroSize cmd_ADD_UNKNOWN_CARD
+        OutgoingAddNewCard ctrNonce  -> [16, cmd_ADD_UNKNOWN_CARD] ++ ctrNonce
         OutgoingGetStatus            -> zeroSize cmd_MOOLTIPASS_STATUS
         OutgoingGetFreeSlots (a1,a2) -> [2, cmd_GET_FREE_SLOTS, a1, a2]
 

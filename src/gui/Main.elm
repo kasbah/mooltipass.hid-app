@@ -17,6 +17,8 @@ import GuiState (..)
 import ChromeMessage (..)
 import ChromeMessage
 import CommonState as Common
+import CommonState(MemInfo(..), CommonAction(..))
+import DevicePacket (..)
 
 {-| Any state updates from the background are received through this port -}
 port fromBackground : Signal ToGuiMessage
@@ -26,21 +28,30 @@ port fromBackground : Signal ToGuiMessage
 port toBackground : Signal FromGuiMessage
 port toBackground =
     merge
-        (map (\(_,m,_) -> m) output)
+        (map (\(_,m,_,_) -> m) output)
         (map FromGuiMessage.encode (subscribe commonActions))
 
 port toChrome : Signal ToChromeMessage
-port toChrome = map (\(m,_,_) -> m) output
+port toChrome = map (\(m,_,_,_) -> m) output
 
 port fromChrome : Signal FromChromeMessage
 
 port toDevice : Signal (List Int)
-port toDevice = constant []
+port toDevice = map (\(_,_,s,_) -> s) output
+
 
 {-| The complete application state signal to map our main element to. It is
     the gui-state updated by any state updates from the background. -}
 state : Signal GuiState
-state = map (\(_,_,s) -> s) output
+state = map (\(_,_,_,s) -> s) output
+
+forDevice : GuiState -> (List Int, Action)
+forDevice s =
+    case s.unsavedMemInfo of
+        MemInfoUnknownCard' ctrNonce ->
+            (toInts (OutgoingAddNewCard ctrNonce)
+            , CommonAction (SetMemInfo MemInfoUnknownCard))
+        _ -> ([],NoOp)
 
 forBg : GuiState -> (FromGuiMessage, Action)
 forBg s =
@@ -67,16 +78,18 @@ forBg s =
                         , SetUnsavedMem (Common.MemInfo d))
         | otherwise -> (e, NoOp)
 
-output : Signal (ToChromeMessage, FromGuiMessage, GuiState)
+output : Signal (ToChromeMessage, FromGuiMessage, List Int, GuiState)
 output =
-    let go ias (_,_,s) =
+    let go ias (_,_,_,s) =
         let s'        = apply ias s
             (tcm, a1) = ChromeMessage.encode s'
             s''       = update a1 s'
             (fgm, a2) = forBg s''
-        in (tcm, fgm, update a2 s'')
+            (is, a3)  = forDevice s''
+            s'''      = update a3 s''
+        in (tcm, fgm, is, update a2 s''')
     in foldp go
-        (emptyToChromeMessage, emptyFromGuiMessage, default)
+        (emptyToChromeMessage, emptyFromGuiMessage, [], default)
         inputActions
 
 {-| Our main function simply maps the scene to the window dimensions and state

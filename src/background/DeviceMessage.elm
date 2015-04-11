@@ -32,7 +32,8 @@ decodeStatus i = case i `and` 0xF of
     0x5 -> CommonAction (SetDeviceStatus Unlocked)
     0x7 -> NoOp -- used to get past dropRepeats
     0x9 -> CommonAction (SetDeviceStatus UnknownCard)
-    _   -> appendToLog' "Error: Received invalid status from device"
+    0xB -> NoOp -- happens just after adding new card
+    _   -> appendToLog' <| "Error: Received invalid status from device: " ++ (toString i)
 
 sendCommand : OutgoingPacket -> ToDeviceMessage
 sendCommand p = {emptyToDeviceMessage | sendCommand <- Just (toInts p)}

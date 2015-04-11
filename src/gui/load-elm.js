@@ -34,6 +34,9 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     if (message.toGUI !== undefined) {
         gui.ports.fromBackground.send(message.toGUI);
     }
+    else if (message.fromDevice !== undefined) {
+        //TODO: pass received messages to Elm
+    }
 });
 
 //get the current state
@@ -112,5 +115,8 @@ gui.ports.toChrome.subscribe(function(message) {
 });
 
 gui.ports.toDevice.subscribe(function(message) {
-    chrome.runtime.sendMessage({toDevice: message});
+    if (message.length > 0)
+        chrome.runtime.sendMessage({toDevice: message});
 });
+
+
