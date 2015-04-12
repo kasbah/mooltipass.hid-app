@@ -183,6 +183,17 @@ field w kString vString =
                   , sp, password
                   ]
 
+{-
+ A dropDown is a native <select> with <option>s:
+
+     var drop = NativeElement.createNode('select');
+        drop.style.border = '0 solid';
+        drop.style.pointerEvents = 'auto';
+        drop.style.display = 'block';
+
+     var option = NativeElement.createNode('option');
+
+-}
 sel : Int -> String -> List (String, a) -> Element
 sel w kString things =
     let username = uUp -- button disabled for beta release
