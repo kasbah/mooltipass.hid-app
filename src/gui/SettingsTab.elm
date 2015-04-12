@@ -137,6 +137,14 @@ GUI->JS->chrome.runtime.message->JS->Background->JS->chrome.runtime.hid
 <kasbah> yes
 <kasbah> if you can think of a way to cut through the fat...
 
+...
+
+<kasbah> kfish: this is what you'll have to modify to send messages to the device direct
+<kasbah>
+https://github.com/kasbah/mooltipass.hid-app/blob/39d80a0d593b93bcb7fe74ffd54197de127f2260/src/gui/Main.elm#L48
+<kasbah> to receive messages there is some routing in background/device.js
+<kasbah> and a TODO in gui/load-elm.js to add an Elm port
+
 -}
 
 
