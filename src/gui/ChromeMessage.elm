@@ -24,7 +24,8 @@ encode s =
     in if | s.importMedia == Requested ->
         ({e | pickMediaFile <- Just ()}, SetImportMedia Waiting)
        | s.writeMem -> case s.unsavedMemInfo of
-            MemInfo d -> ({e | writeMemFile <- Just d}, SetWriteMem False)
+            MemInfo d -> let d' = {d | addresses <- [], favorites <- []}
+                         in ({e | writeMemFile <- Just d'}, SetWriteMem False)
             _ -> (e,NoOp)
        | s.readMem -> ({e | readMemFile <- Just ()}, SetReadMem False)
        | otherwise -> (e,NoOp)

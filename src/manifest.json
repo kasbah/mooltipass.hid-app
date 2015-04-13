@@ -8,7 +8,7 @@
         }
     },
     "permissions": [
-        "hid",
+        "hid", "notifications",
         {
             "usbDevices": [
                 { "vendorId": 5840, "productId": 2464 }

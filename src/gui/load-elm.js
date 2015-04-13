@@ -34,6 +34,9 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     if (message.toGUI !== undefined) {
         gui.ports.fromBackground.send(message.toGUI);
     }
+    else if (message.fromDevice !== undefined) {
+        //TODO: pass received messages to Elm
+    }
 });
 
 //get the current state
@@ -63,13 +66,21 @@ gui.ports.toChrome.subscribe(function(message) {
         });
     } else if (message.writeMemFile !== null && ! writingFile) {
         writingFile = true;
-        chrome.fileSystem.chooseEntry({type: 'saveFile', suggestedName:"mp-credentials.json"}, (function(data) {
+        chrome.fileSystem.chooseEntry({type: 'saveFile', suggestedName:"mp-user-data.json"}, (function(data) {
             return function(entry) {
                 if (entry != null) {
                     entry.createWriter((function(message) {
                         return function(fileWriter) {
                             fileWriter.onwriteend = function(e) {
                                 writingFile = false;
+                                console.log("yo");
+                                chrome.notifications.create(
+                                    { type:"basic"
+                                    , title:"User data export done."
+                                    , message:""
+                                    , iconUrl:"/gui/images/logo_square128.png"
+                                    });
+                                console.log(chrome.runtime.lastError);
                             };
 
                             fileWriter.onerror = function(e) {
@@ -93,13 +104,27 @@ gui.ports.toChrome.subscribe(function(message) {
                         readingFile = false;
                     };
                     reader.onloadend = function(e) {
-                        var data = JSON.parse(reader.result);
-                        chromeSendToElm({readMemFile:data});
+                        var data;
+                        try {
+                            data = JSON.parse(reader.result);
+                        }
+                        catch (e) {
+                            console.log("invalid file: ", e);
+                        }
+                        if (data != null)
+                            chromeSendToElm({readMemFile:data});
                         readingFile = false;
                     }
                     reader.readAsText(file);
                 });
-            }
+            } else { readingFile = false;}
         });
     }
 });
+
+gui.ports.toDevice.subscribe(function(message) {
+    if (message.length > 0)
+        chrome.runtime.sendMessage({toDevice: message});
+});
+
+

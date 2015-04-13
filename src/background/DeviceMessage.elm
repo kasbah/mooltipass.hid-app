@@ -25,13 +25,15 @@ type alias ToDeviceMessage   = { connect     : Maybe ()
 
 
 decodeStatus : Int -> BackgroundAction
-decodeStatus i = case i `and` 0x7 of
+decodeStatus i = case i `and` 0xF of
     0x0 -> CommonAction (SetDeviceStatus NoCard)
     0x1 -> CommonAction (SetDeviceStatus Locked)
     0x3 -> CommonAction (SetDeviceStatus Locked)
     0x5 -> CommonAction (SetDeviceStatus Unlocked)
     0x7 -> NoOp -- used to get past dropRepeats
-    _   -> appendToLog' "Error: Received invalid status from device"
+    0x9 -> CommonAction (SetDeviceStatus UnknownCard)
+    0xB -> NoOp -- happens just after adding new card
+    _   -> appendToLog' <| "Error: Received invalid status from device: " ++ (toString i)
 
 sendCommand : OutgoingPacket -> ToDeviceMessage
 sendCommand p = {emptyToDeviceMessage | sendCommand <- Just (toInts p)}
@@ -132,12 +134,12 @@ encode s =
                         [SetMemManage (MemManageWriteWaiting (p::ps))]
               MemManageWrite [] ->
                     sendCommand'
-                        OutgoingGetStartingParent
-                        [SetMemManage (MemManageReadWaiting ([],nullAddress,nullAddress) [])]
-              MemManageReadFreeSlots d ->
+                        OutgoingMemManageModeEnd
+                        [SetMemManage NotManaging]
+              MemManageReadFreeSlots (p,f,addrs) ->
                     sendCommand'
-                        (OutgoingGetFreeSlots nullAddress)
-                        [SetMemManage (MemManageReadFreeSlotsWaiting d)]
+                        (OutgoingGetFreeSlots (Maybe.withDefault nullAddress (maybeHead (reverse addrs))))
+                        [SetMemManage (MemManageReadFreeSlotsWaiting (p,f,addrs))]
               MemManageReadCtr d ->
                     sendCommand'
                         OutgoingGetCtrValue

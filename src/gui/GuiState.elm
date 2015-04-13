@@ -4,8 +4,6 @@ module GuiState where
 import List (..)
 import Maybe
 
-import Debug
-
 -- local source
 import CommonState as Common
 import CommonState (..)
@@ -70,6 +68,7 @@ disabledTabs s =
         Common.NoCard       -> [Settings, Manage]
         Common.Locked       -> [Settings, Manage, Developer]
         Common.ManageMode   -> [Settings]
+        Common.UnknownCard ->  [Settings]
 
 {-| Transform the state to a new state according to an action -}
 update : Action -> GuiState -> GuiState
@@ -82,7 +81,9 @@ update action s =
     in case action of
         ChangeTab t -> if t == Manage && s.unsavedMemInfo == NoMemInfo
                          then {s | activeTab <- Manage
-                                 , unsavedMemInfo <- MemInfoRequest
+                                 , unsavedMemInfo <- if s.common.deviceStatus /= UnknownCard
+                                                     then MemInfoRequest
+                                                     else s.unsavedMemInfo
                               }
                          else {s | activeTab <- t}
         -- clicking the icon 7 times toggles developer tab visibility
@@ -131,7 +132,8 @@ update action s =
         AddToUnsavedMem d -> case s.unsavedMemInfo of
             MemInfo d' -> case mergeMem d d' of
                 Just d'' ->  {s | unsavedMemInfo <- MemInfo d''}
-                Nothing  -> errorTryingTo "add to memory, not enough free addresses requested"
+                Nothing  -> errorTryingTo "add to memory, not enough free addresses"
+            MemInfoUnknownCard -> {s | unsavedMemInfo <- Maybe.withDefault NoMemInfo (Maybe.map (MemInfoUnknownCard' << .ctrNonce) (maybeHead d.cards))}
             _        -> errorTryingTo "add to memory"
         -- An action on the common state can have a effect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
@@ -139,6 +141,10 @@ update action s =
         CommonAction a ->
             let s' = {s | common <- updateCommon a}
             in case a of
+                SetDeviceStatus UnknownCard ->
+                    { s' | activeTab <- Manage
+                         , unsavedMemInfo <- MemInfoUnknownCard
+                    }
                 SetDeviceStatus c ->
                     { s' | activeTab <-
                             if s.activeTab `member` (disabledTabs c)
@@ -154,6 +160,7 @@ update action s =
                                 else s
                             _ -> updateMemInfo
                         _ -> updateMemInfo
+
                 _ -> s'
         NoOp -> s
 

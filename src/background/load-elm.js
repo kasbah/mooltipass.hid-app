@@ -25,7 +25,10 @@ var elm = Elm.worker(
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     if (message.toBackground !== undefined) {
         elm.ports.fromGUI.send(message.toBackground);
+    } else if (message.toDevice !== undefined) {
+        sendMsg(message.toDevice);
     }
+
 });
 
 elm.ports.toGUI.subscribe(function(message) {
@@ -84,9 +87,9 @@ elm.ports.toExtension.subscribe(function(message) {
 
 deviceSendToElm = function (message) {
     var messageWithNulls = {};
-    if (message.receiveCommand !== undefined)
-        if (message.receiveCommand[1] !== 0xB9)
-            console.log("device",message.receiveCommand);
+    //if (message.receiveCommand !== undefined)
+    //    if (message.receiveCommand[1] !== 0xB9)
+    //        console.log("device",message.receiveCommand);
     //replace undefined with null so it becomes 'Nothing' in Elm
     for (var prop in emptyFromDeviceMessage) {
         if (message.hasOwnProperty(prop)) {

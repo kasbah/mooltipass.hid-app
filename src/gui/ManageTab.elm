@@ -12,8 +12,6 @@ import Text
 import Signal (send)
 import Maybe
 
-import Debug
-
 -- extra libraries
 import Html
 import Html (Html)
@@ -28,19 +26,20 @@ import Actions (..)
 import Util (..)
 import Byte (..)
 
-manageTab : (Int, Int) -> MemInfo -> Element
-manageTab (w,h) i =
+manageTab : (Int, Int) -> GuiState -> Element
+manageTab (w,h) s =
     let contentH = h - 32
         contentW = w - 64
         content' = container w contentH middle
-            <| content (contentW, contentH) i
+            <| content (contentW, contentH) s
     in container w h middle content'
 
-content : (Int, Int) -> MemInfo -> Element
-content (w,h) info =
+content : (Int, Int) -> GuiState -> Element
+content (w,h) s =
     let exitButton       = button (send commonActions EndMemManage) "exit"
         exportButton     = button (send guiActions (SetWriteMem True)) "export"
         importButton     = button (send guiActions (SetReadMem True)) "import"
+        info = s.unsavedMemInfo
         showMem infodata = container w h midTop <| flow down
             [ favorites w infodata
             , spacer 1 heights.manageSpacer
@@ -70,13 +69,25 @@ content (w,h) info =
             <| whiteText "please accept memory management mode on the device"
         working = leftAligned
             <| whiteText "working..."
-        iii = Debug.log "info" info
-    in case info of
+        addCardButton = bigButton (send guiActions (SetReadMem True)) "select file"
+        cardText      = width (w - 64) <| centered <| whiteText "unknown card present, please select a user data file to add this card to user"
+        addCard       =
+            flow down [ cardText
+                      , spacer 1 16
+                      , container
+                            (widthOf cardText)
+                            (heights.button + 4)
+                            middle
+                            addCardButton
+                      ]
+
+    in if s.common.deviceStatus /= UnknownCard then case info of
         NoMemInfo             -> reEnter
         MemInfo d             -> showMem d
         MemInfoRequest        -> pleaseAccept
         MemInfoWaitingForUser -> pleaseAccept
         _                     -> working
+       else addCard
 
 saveButton : MemInfo -> Element
 saveButton info =
@@ -242,24 +253,25 @@ login w ((serviceString,saddr),(loginString,laddr)) fav =
         uUp      = layers [ubg lightGrey', utxt]
         --uHover   = layers [ubg lightGrey'', utxt]
         --uDown    = uUp
-        uw       = (w//2) - spw
+        uw       = w - (2*spw) - (2*iw)
         uw'      = toFloat uw
         ubg c    = collage uw lh
             [roundedRectShape Left uw' lh' 5 |> filled c]
         utxt'    = flow right
             [spacer 5 5 , leftAligned <| whiteText loginString]
         utxt     = container uw lh midLeft utxt'
-        password = pUp -- button disabled for beta release
+        -- disabled for beta release
+        --password = pUp
         --password = Input.customButton (send guiActions NoOp) pUp pHover pDown
-        pUp      = layers [pbg lightGrey', ptxt]
+        --pUp      = layers [pbg lightGrey', ptxt]
         --pHover   = layers [pbg lightGrey'', ptxt]
         --pDown    = pUp
-        pw       = (w//2) - (2*spw) - (2*iw)
-        pw'      = toFloat pw
-        pbg c    = collage pw lh [rect pw' lh' |> filled c]
-        ptxt'    = flow right
-            [spacer 5 1, leftAligned <| whiteText "********"]
-        ptxt     = container pw lh midLeft ptxt'
+        --pw       = (w//2) - (2*spw) - (2*iw)
+        --pw'      = toFloat pw
+        --pbg c    = collage pw lh [rect pw' lh' |> filled c]
+        --ptxt'    = flow right
+        --    [spacer 5 1, leftAligned <| whiteText "********"]
+        --ptxt     = container pw lh midLeft ptxt'
         lh       = heights.manageLogin
         lh'      = toFloat lh
         delIcon     = Input.customButton
@@ -276,7 +288,6 @@ login w ((serviceString,saddr),(loginString,laddr)) fav =
         iw       = 32
         iw'      = toFloat iw
     in flow right [username
-                  , sp, password
                   , sp, delIcon
                   , sp, favIcon fav (saddr,laddr)
                   ]

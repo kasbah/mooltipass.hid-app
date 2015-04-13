@@ -51,9 +51,9 @@ type MemManageState =
     | MemManageReadFavWaiting
         (List ParentNode, List FlashFavorite)
     | MemManageReadFreeSlots
-        (List ParentNode, List Favorite)
+        (List ParentNode, List Favorite, List FlashAddress)
     | MemManageReadFreeSlotsWaiting
-        (List ParentNode, List Favorite)
+        (List ParentNode, List Favorite, List FlashAddress)
     | MemManageReadCtr
         (List ParentNode, List Favorite, List FlashAddress)
     | MemManageReadCtrWaiting
@@ -226,7 +226,11 @@ update action s =
         CommonAction EndMemManage      -> setMemManage MemManageEnd s
         CommonAction (SaveMemManage d) -> case s.memoryManage of
             MemManageReadSuccess (pNode, favs, _, ctr, cards) ->
-                setMemManage (MemManageWrite (ctrToPackets d.ctr ctr ++ cardsToPackets d.cards cards ++ favsToPackets d.favorites ++ credsToPackets d.credentials pNode)) s
+                setMemManage (MemManageWrite
+                    (ctrToPackets d.ctr ctr
+                        ++ cardsToPackets d.cards cards
+                        ++ favsToPackets d.favorites
+                        ++ credsToPackets d.credentials pNode)) s
             _ -> s
         CommonAction (SetDeviceStatus c) ->
             let s' = {s | common <- updateCommon (SetDeviceStatus c)}
@@ -364,7 +368,7 @@ interpret packet s =
                 if a /= nullAddress then
                     setMemManage (MemManageRead ([], a, nullAddress) []) s
                 else
-                    setMemManage (MemManageReadFreeSlots ([], emptyFavorites)) s
+                    setMemManage (MemManageReadFreeSlots ([], emptyFavorites, [])) s
             _ -> setMemManage (MemManageError (unexpected "starting parent")) s
         ReceivedReadFlashNode ba ->
             case s.memoryManage of
@@ -380,7 +384,7 @@ interpret packet s =
                 MemManageReadFavWaiting (n,ffavs) ->
                     let ffavs' = ({parentNode = p, childNode = c})::ffavs
                     in if length ffavs' == maxFavs then
-                          setMemManage (MemManageReadFreeSlots (n, toFavs ffavs' n)) s
+                          setMemManage (MemManageReadFreeSlots (n, toFavs ffavs' n, [])) s
                        else
                           setMemManage (MemManageReadFav (n, ffavs')) s
                 _ -> setMemManage (MemManageError (unexpected "favorite")) s
@@ -403,10 +407,6 @@ interpret packet s =
                 if r == Done
                 then setMemManage (MemManageWrite ps) s
                 else setMemManage (MemManageError "write node denied") s
-            MemManageWriteWaiting [] ->
-                if r == Done
-                then setMemManage (MemManageRead ([], nullAddress, nullAddress) []) s
-                else setMemManage (MemManageError "write node denied") s
             _ -> setMemManage (MemManageError (unexpected "write node")) s
         ReceivedSetStartingParent r -> case s.memoryManage of
             MemManageWriteWaiting (p::ps) ->
@@ -415,8 +415,12 @@ interpret packet s =
                 else setMemManage (MemManageError "set starting parent denied") s
             _ -> setMemManage (MemManageError (unexpected "set starting parent")) s
         ReceivedGetFreeSlots addrs -> case s.memoryManage of
-            MemManageReadFreeSlotsWaiting (p,f) -> setMemManage (MemManageReadCtr (p,f,addrs)) s
-            _ -> setMemManage (MemManageError (unexpected "30 free slots")) s
+            MemManageReadFreeSlotsWaiting (p,f,slots) -> case slots of
+                        [] -> setMemManage (MemManageReadFreeSlots (p,f,addrs)) s
+                        _ -> if length slots > 1000 || isEmpty addrs
+                             then setMemManage (MemManageReadCtr (p,f,slots ++ (tail addrs))) s
+                             else setMemManage (MemManageReadFreeSlots (p,f,slots ++ (tail addrs))) s
+            _ -> setMemManage (MemManageError (unexpected "free slots")) s
         ReceivedGetCtrValue ctr -> case s.memoryManage of
             MemManageReadCtrWaiting (p,f,a) -> setMemManage (MemManageReadCards (p,f,a,ctr)) s
             _ -> setMemManage (MemManageError (unexpected "get ctr value")) s
