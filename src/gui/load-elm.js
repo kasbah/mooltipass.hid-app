@@ -106,13 +106,14 @@ gui.ports.toChrome.subscribe(function(message) {
                         var data;
                         try {
                             data = JSON.parse(reader.result);
-                            data.curCardCpz = [];
                         }
                         catch (e) {
                             console.log("invalid file: ", e);
                         }
-                        if (data != null)
+                        if (data != null) {
+                            data.curCardCpz = [];
                             chromeSendToElm({readMemFile:data});
+                        }
                         readingFile = false;
                     }
                     reader.readAsText(file);

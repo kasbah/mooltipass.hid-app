@@ -11,7 +11,6 @@ import Text (..)
 import Text
 import Signal (send)
 import Maybe
-import Debug
 
 -- extra libraries
 import Html
@@ -41,7 +40,7 @@ content (w,h) s =
         exportButton     = button (send guiActions (SetWriteMem True)) "export"
         importButton     = button (send guiActions (SetReadMem True)) "import"
         info = s.unsavedMemInfo
-        iii = Debug.log "info" info
+        --iii = Debug.log "info" info
         showMem infodata = container w h midTop <| flow down
             [ favorites w infodata
             , spacer 1 heights.manageSpacer

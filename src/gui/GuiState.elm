@@ -3,7 +3,7 @@ module GuiState where
 -- Elm standard library
 import List (..)
 import Maybe
-import Debug
+import Result
 
 -- local source
 import CommonState as Common
@@ -134,8 +134,8 @@ update action s =
         SetUnsavedMem i -> {s | unsavedMemInfo <- i}
         AddToUnsavedMem d -> case s.unsavedMemInfo of
             MemInfo d' -> case mergeMem d d' of
-                Just d'' ->  {s | unsavedMemInfo <- MemInfo d''}
-                Nothing  -> errorTryingTo "add to memory, not enough free addresses"
+                Ok d'' ->  {s | unsavedMemInfo <- MemInfo d''}
+                Err err  -> appendToLog ("Import Error: "  ++ err) s
             MemInfoUnknownCardCpz cpz ->
                 {s | unsavedMemInfo <-
                         Maybe.withDefault
@@ -178,19 +178,21 @@ update action s =
         NoOp -> s
 
 
-mergeMem : MemInfoData -> MemInfoData -> Maybe MemInfoData
+mergeMem : MemInfoData -> MemInfoData -> Result String MemInfoData
 mergeMem d info =
-    let addServices : List Service -> MemInfoData -> Maybe MemInfoData
-        addServices creds i = case creds of
-            [] -> Just i
-            (c::cs) -> case addCreds c i of
-                Just i' -> addServices cs i'
-                Nothing -> Nothing
-    in Maybe.map
-        (\i -> {i | cards <- filter (\c -> not (any (\c' -> c == c') d.cards)) i.cards ++ d.cards
-                  , ctr <- if i.ctr > d.ctr then i.ctr else d.ctr
-               })
-        (addServices d.credentials info)
+    if any (\c -> c.cpz == info.curCardCpz) d.cards then
+        let addServices : List Service -> MemInfoData -> Result String MemInfoData
+            addServices creds i = case creds of
+                [] -> Ok i
+                (c::cs) -> case addCreds c i of
+                    Just i' -> addServices cs i'
+                    Nothing -> Err "out of memory"
+        in  Result.map
+            (\i -> {i | cards <- filter (\c -> not (any (\c' -> c == c') d.cards)) i.cards ++ d.cards
+                      , ctr <- if i.ctr > d.ctr then i.ctr else d.ctr
+                   })
+            (addServices d.credentials info)
+    else Err "current card is not in user data"
 
 removeFromFavs : (FlashAddress, FlashAddress) -> MemInfoData -> MemInfo
 removeFromFavs f info =
