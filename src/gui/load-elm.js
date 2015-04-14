@@ -75,11 +75,12 @@ gui.ports.toChrome.subscribe(function(message) {
                             fileWriter.onwriteend = function(e) {
                                 writingFile = false;
                                 chrome.notifications.create(
+                                    "",
                                     { type:"basic"
                                     , title:"User data export done."
                                     , message:""
                                     , iconUrl:"/gui/images/logo_square128.png"
-                                    });
+                                    }, function () {});
                             };
 
                             fileWriter.onerror = function(e) {
@@ -99,7 +100,13 @@ gui.ports.toChrome.subscribe(function(message) {
                 entry.file(function(file) {
                     var reader = new FileReader();
                     reader.onerror = function(e) {
-                        console.log(e);
+                        chrome.notifications.create(
+                            "",
+                            { type:"basic"
+                            , title:"Error reading file"
+                            , message:"" + e
+                            , iconUrl:"/gui/images/logo_square128.png"
+                            }, function () {});
                         readingFile = false;
                     };
                     reader.onloadend = function(e) {
@@ -108,7 +115,13 @@ gui.ports.toChrome.subscribe(function(message) {
                             data = JSON.parse(reader.result);
                         }
                         catch (e) {
-                            console.log("invalid file: ", e);
+                            chrome.notifications.create(
+                                "",
+                                { type:"basic"
+                                , title:"Error reading file"
+                                , message:"" + e
+                                , iconUrl:"/gui/images/logo_square128.png"
+                                }, function () {});
                         }
                         if (data != null) {
                             data.curCardCpz = [];
@@ -120,6 +133,14 @@ gui.ports.toChrome.subscribe(function(message) {
                 });
             } else { readingFile = false;}
         });
+    } else if (message.notify !== null) {
+        chrome.notifications.create(
+            "",
+            { type:"basic"
+            , title:message.notify[0]
+            , message:message.notify[1]
+            , iconUrl:"/gui/images/logo_square128.png"
+            }, function () {});
     }
 });
 

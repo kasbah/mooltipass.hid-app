@@ -29,6 +29,7 @@ type alias GuiState =
     , writeMem       : Bool
     , readMem        : Bool
     , unsavedMemInfo : MemInfo
+    , chromeNotify   : Maybe (String, String)
     , common         : CommonState
     }
 
@@ -47,6 +48,7 @@ type Action = ChangeTab Tab
             | MoveFavDown (FlashAddress, FlashAddress)
             | RemoveCred (FlashAddress, FlashAddress)
             | Interpret ReceivedPacket
+            | NotifyChrome (Maybe (String, String))
             | NoOp
 
 {-| The initial state -}
@@ -59,6 +61,7 @@ default =
     , writeMem       = False
     , readMem        = False
     , unsavedMemInfo = NoMemInfo
+    , chromeNotify   = Nothing
     , common         = Common.default
     }
 
@@ -135,7 +138,7 @@ update action s =
         AddToUnsavedMem d -> case s.unsavedMemInfo of
             MemInfo d' -> case mergeMem d d' of
                 Ok d'' ->  {s | unsavedMemInfo <- MemInfo d''}
-                Err err  -> appendToLog ("Import Error: "  ++ err) s
+                Err err  -> {s | chromeNotify <- Just ("Import failed",  err)}
             MemInfoUnknownCardCpz cpz ->
                 {s | unsavedMemInfo <-
                         Maybe.withDefault
@@ -175,6 +178,7 @@ update action s =
                 MemInfoUnknownCardWaitingForCpz -> {s | unsavedMemInfo <- MemInfoUnknownCardCpz cpz}
                 _ -> s
             _ -> s
+        NotifyChrome m -> {s | chromeNotify <- m}
         NoOp -> s
 
 

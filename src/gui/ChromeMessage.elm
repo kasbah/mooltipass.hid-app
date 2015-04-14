@@ -5,17 +5,20 @@ import Maybe
 -- local source
 import GuiState (..)
 import CommonState (..)
+import Util (..)
 
 type alias ToChromeMessage =
     { pickMediaFile : Maybe ()
     , writeMemFile  : Maybe MemInfoData
     , readMemFile   : Maybe ()
+    , notify        : Maybe (String, String)
     }
 
 emptyToChromeMessage =
     { pickMediaFile = Nothing
     , writeMemFile  = Nothing
     , readMemFile   = Nothing
+    , notify        = Nothing
     }
 
 encode : GuiState -> (ToChromeMessage, Action)
@@ -28,6 +31,7 @@ encode s =
                          in ({e | writeMemFile <- Just d'}, SetWriteMem False)
             _ -> (e,NoOp)
        | s.readMem -> ({e | readMemFile <- Just ()}, SetReadMem False)
+       | isJust s.chromeNotify -> ({e | notify <- s.chromeNotify}, NotifyChrome Nothing)
        | otherwise -> (e,NoOp)
 
 type alias FromChromeMessage =
