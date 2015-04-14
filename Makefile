@@ -1,6 +1,6 @@
 wildc_recursive=$(foreach d,$(wildcard $1*),$(call wildc_recursive,$d/,$2) $(filter $(subst *,%,$2),$d))
 
-VERSION = 0.12.0.2
+VERSION = 0.13.0
 PACKAGE_NAME = mooltipass.hid-app.$(VERSION)
 
 GUI_ELM_FILES    = $(wildcard src/gui/*.elm)

@@ -137,7 +137,9 @@ update action s =
         SetUnsavedMem i -> {s | unsavedMemInfo <- i}
         AddToUnsavedMem d -> case s.unsavedMemInfo of
             MemInfo d' -> case mergeMem d d' of
-                Ok d'' ->  {s | unsavedMemInfo <- MemInfo d''}
+                Ok d'' ->  {s | unsavedMemInfo <- MemInfo d''
+                              , chromeNotify <- Just ("Import succeeded", "")
+                           }
                 Err err  -> {s | chromeNotify <- Just ("Import failed",  err)}
             MemInfoUnknownCardCpz cpz ->
                 {s | unsavedMemInfo <-
@@ -177,7 +179,7 @@ update action s =
             ReceivedGetCardCpz cpz -> case s.unsavedMemInfo of
                 MemInfoUnknownCardWaitingForCpz -> {s | unsavedMemInfo <- MemInfoUnknownCardCpz cpz}
                 _ -> s
-            _ -> s
+            ReceivedAddNewCard r -> if r == Done then {s | unsavedMemInfo <- MemInfoRequest} else s
         NotifyChrome m -> {s | chromeNotify <- m}
         NoOp -> s
 
