@@ -72,7 +72,9 @@ content (w,h) s =
         working = leftAligned
             <| whiteText "working..."
         addCardButton = bigButton (send guiActions (SetReadMem True)) "select file"
-        cardText      = width (w - 64) <| centered <| whiteText "unknown card present, please select a user data file to add this card to user"
+        cardText      = width (w - 64) <| centered <| whiteText <| case s.unsavedMemInfo of
+            MemInfoUnknownCardError _ -> "the unknown card is not in the user data you selected, please select a different file or insert a different card"
+            _ -> "unknown card present, please select a user data file to add this card to user"
         addCard       =
             flow down [ cardText
                       , spacer 1 16

@@ -12,6 +12,7 @@ var emptyFromChromeMessage =
 var gui = Elm.fullscreen(Elm.GUI,
     { fromBackground: emptyToGuiMessage
     , fromChrome: emptyFromChromeMessage
+    , fromDevice: []
     }
 );
 
@@ -35,7 +36,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
         gui.ports.fromBackground.send(message.toGUI);
     }
     else if (message.fromDevice !== undefined) {
-        //TODO: pass received messages to Elm
+        gui.ports.fromDevice.send(message.fromDevice);
     }
 });
 
@@ -73,14 +74,12 @@ gui.ports.toChrome.subscribe(function(message) {
                         return function(fileWriter) {
                             fileWriter.onwriteend = function(e) {
                                 writingFile = false;
-                                console.log("yo");
                                 chrome.notifications.create(
                                     { type:"basic"
                                     , title:"User data export done."
                                     , message:""
                                     , iconUrl:"/gui/images/logo_square128.png"
                                     });
-                                console.log(chrome.runtime.lastError);
                             };
 
                             fileWriter.onerror = function(e) {
@@ -107,6 +106,7 @@ gui.ports.toChrome.subscribe(function(message) {
                         var data;
                         try {
                             data = JSON.parse(reader.result);
+                            data.curCardCpz = [];
                         }
                         catch (e) {
                             console.log("invalid file: ", e);

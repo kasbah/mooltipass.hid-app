@@ -39,6 +39,7 @@ port fromChrome : Signal FromChromeMessage
 port toDevice : Signal (List Int)
 port toDevice = map (\(_,_,s,_) -> s) output
 
+port fromDevice : Signal (List Int)
 
 {-| The complete application state signal to map our main element to. It is
     the gui-state updated by any state updates from the background. -}
@@ -48,9 +49,12 @@ state = map (\(_,_,_,s) -> s) output
 forDevice : GuiState -> (List Int, Action)
 forDevice s =
     case s.unsavedMemInfo of
-        MemInfoUnknownCard' ctrNonce ->
-            (toInts (OutgoingAddNewCard ctrNonce)
-            , CommonAction (SetMemInfo MemInfoUnknownCard))
+        MemInfoUnknownCardInserted ->
+            (toInts OutgoingGetCardCpz
+            , CommonAction (SetMemInfo MemInfoUnknownCardWaitingForCpz))
+        MemInfoUnknownCardAdd card ->
+            (toInts (OutgoingAddNewCard card)
+            , NoOp)
         _ -> ([],NoOp)
 
 forBg : GuiState -> (FromGuiMessage, Action)
@@ -103,4 +107,10 @@ inputActions = mergeMany
     [ map ((List.map CommonAction) << ToGuiMessage.decode) fromBackground
     , map (\m -> [m]) (subscribe guiActions)
     , map ((\m -> [m]) << ChromeMessage.decode) fromChrome
+    , map ((\m -> [m]) << fromResult << fromInts) fromDevice
     ]
+
+fromResult :  Result String ReceivedPacket -> Action
+fromResult r = case r of
+    Err err -> CommonAction (AppendToLog ("HID Error: " ++ err))
+    Ok p    -> Interpret p

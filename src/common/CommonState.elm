@@ -38,8 +38,11 @@ type MemInfo =
     | MemInfoSave MemInfoData
     | MemInfoWaitingForUser
     | MemInfoWaitingForDevice
-    | MemInfoUnknownCard
-    | MemInfoUnknownCard' ByteArray
+    | MemInfoUnknownCardInserted
+    | MemInfoUnknownCardWaitingForCpz
+    | MemInfoUnknownCardCpz   ByteArray
+    | MemInfoUnknownCardAdd   Card
+    | MemInfoUnknownCardError ByteArray
     | NoMemInfo
 
 type alias ServiceName =

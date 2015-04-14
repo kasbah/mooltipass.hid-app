@@ -134,7 +134,7 @@ type OutgoingPacket =
    | OutgoingSetCardPassword    ByteString
    | OutgoingGetStartingParent
    | OutgoingGetCtrValue
-   | OutgoingAddNewCard         ByteArray
+   | OutgoingAddNewCard         Card
    | OutgoingGetStatus
    | OutgoingGetFreeSlots       FlashAddress
    | OutgoingGetCardCpz
@@ -251,6 +251,7 @@ toInts msg =
             TouchWheelOs       -> 0x06
             TouchProxOs        -> 0x07
             OfflineMode        -> 0x08
+            _                  -> 0xFF
     in case msg of
         OutgoingDebug       s  -> byteString cmd_DEBUG s
         OutgoingPing           -> zeroSize cmd_PING
@@ -306,7 +307,7 @@ toInts msg =
         OutgoingSetCardPassword s    -> byteStringNull cmd_SET_CARD_PASS s
         OutgoingGetStartingParent    -> zeroSize cmd_GET_STARTING_PARENT
         OutgoingGetCtrValue          -> zeroSize cmd_GET_CTRVALUE
-        OutgoingAddNewCard ctrNonce  -> [16, cmd_ADD_UNKNOWN_CARD] ++ ctrNonce
+        OutgoingAddNewCard {cpz, ctrNonce}  -> [24, cmd_ADD_UNKNOWN_CARD] ++ cpz ++ ctrNonce
         OutgoingGetStatus            -> zeroSize cmd_MOOLTIPASS_STATUS
         OutgoingGetFreeSlots (a1,a2) -> [2, cmd_GET_FREE_SLOTS, a1, a2]
         OutgoingGetCardCpz           -> zeroSize cmd_GET_CUR_CARD_CPZ
@@ -314,142 +315,146 @@ toInts msg =
 {-| Convert a list of ints received through a port from chrome.hid.receive into
     a packet we can interpret -}
 fromInts : List Int -> Result Error ReceivedPacket
-fromInts (size::m::payload) =
-    let doneOrNotDone constructor name =
-            if size /= 1
-            then Err <| "Invalid data size for '" ++ name ++ "'"
-            else case List.head payload of
-                    0x00 -> Ok <| constructor NotDone
-                    0x01 -> Ok <| constructor Done
-                    _    -> Err <| "Invalid data for '" ++ name ++ "'"
-        maybeByteString constructor name =
-            if size <= 0
-            then Err <| "Zero data returned for '" ++ name ++ "'"
-            else if size == 1 && List.head payload == 0x00
-                 then Ok <| constructor Maybe.Nothing
-                 else Result.map (constructor << Maybe.Just)
-                        (toByteString size payload)
-        maybeByteStringNull constructor name =
-            if size <= 0
-            then Err <| "Zero data returned for '" ++ name ++ "'"
-            else if size == 1 && List.head payload == 0x00
-                 then Ok <| constructor Maybe.Nothing
-                 else Result.map (constructor << Maybe.Just)
-                        (toByteString (size - 1) payload)
-    in
-        if size > List.length payload
-        then Err "Invalid size"
-        else if | m == cmd_DEBUG -> Result.map ReceivedDebug (toByteString size payload)
-                | m == cmd_PING  -> if size == 4
-                                    then Result.map ReceivedPing (toByteString 4 payload)
-                                    else Err "Invalid data size for 'ping request'"
-                | m == cmd_VERSION ->
-                    let flashSize =
-                            Result.map (\b -> {flashMemSize = b})
-                                <| toByte (List.head payload)
-                        mpVersion mpv =
-                            Result.map (\s -> {mpv | version = s})
-                            -- (size - 2) because of null-termination
-                                <| toByteString (size - 2) (List.tail payload)
-                    in Result.map ReceivedGetVersion (flashSize `andThen` mpVersion)
-                | m == cmd_CONTEXT -> if size /= 1
-                        then Err "Invalid data size for 'set context'"
-                        else case List.head payload of
-                                0x00 -> Ok <| ReceivedSetContext UnknownContext
-                                0x01 -> Ok <| ReceivedSetContext ContextSet
-                                0x03 -> Ok <| ReceivedSetContext NoCardForContext
-                                _    -> Err "Invalid data for 'set context'"
-                | m == cmd_GET_LOGIN    -> maybeByteStringNull ReceivedGetLogin    "get login"
-                | m == cmd_GET_PASSWORD -> maybeByteStringNull ReceivedGetPassword "get password"
-                | m == cmd_SET_LOGIN    -> doneOrNotDone ReceivedSetLogin      "set login"
-                | m == cmd_SET_PASSWORD -> doneOrNotDone ReceivedSetPassword   "set password"
-                | m == cmd_CHECK_PASSWORD -> if size /= 1
-                        then Err "Invalid data size for 'check password'"
-                        else case List.head payload of
-                            0x00 -> Ok <| ReceivedCheckPassword Incorrect
-                            0x01 -> Ok <| ReceivedCheckPassword Correct
-                            0x02 -> Ok <| ReceivedCheckPassword RequestBlocked
-                            _    -> Err "Invalid data for 'check password'"
-                | m == cmd_ADD_CONTEXT         -> doneOrNotDone ReceivedAddContext "add context"
-                | m == cmd_EXPORT_FLASH        -> Result.map ReceivedExportFlash (toByteString size payload)
-                | m == cmd_EXPORT_FLASH_END    -> Ok ReceivedExportFlashEnd
-                | m == cmd_IMPORT_FLASH_BEGIN  -> doneOrNotDone ReceivedImportFlashStart "import flash start"
-                | m == cmd_IMPORT_FLASH        -> doneOrNotDone ReceivedImportFlash      "import flash"
-                | m == cmd_IMPORT_FLASH_END    -> doneOrNotDone ReceivedImportFlashEnd   "import flash end"
-                | m == cmd_EXPORT_EEPROM       -> Result.map ReceivedExportEeprom (toByteString size payload)
-                | m == cmd_EXPORT_EEPROM_END   -> Ok ReceivedExportEepromEnd
-                | m == cmd_IMPORT_EEPROM_BEGIN -> doneOrNotDone ReceivedImportEepromStart "import eeprom start"
-                | m == cmd_IMPORT_EEPROM       -> doneOrNotDone ReceivedImportEeprom      "import eeprom"
-                | m == cmd_IMPORT_EEPROM_END   -> doneOrNotDone ReceivedImportEepromEnd   "import eeprom end"
-                | m == cmd_ERASE_EEPROM        -> Err "Got ReceivedEraseEeprom"
-                | m == cmd_ERASE_FLASH         -> Err "Got ReceivedEraseFlash"
-                | m == cmd_ERASE_SMC           -> Err "Got ReceivedEraseSmc"
-                | m == cmd_DRAW_BITMAP         -> Err "Got ReceivedDrawBitmap"
-                | m == cmd_SET_FONT            -> Err "Got ReceivedSetFont"
-                | m == cmd_EXPORT_FLASH_START  -> doneOrNotDone ReceivedExportFlashStart  "export flash start"
-                | m == cmd_EXPORT_EEPROM_START -> doneOrNotDone ReceivedExportEepromStart "export eeprom start"
-                | m == cmd_SET_BOOTLOADER_PWD  -> Err "Got ReceivedSetBootloaderPwd"
-                | m == cmd_JUMP_TO_BOOTLOADER  -> Err "Got ReceivedJumpToBootloader"
-                | m == cmd_CLONE_SMARTCARD     -> Err "Got ReceivedCloneSmartcard"
-                | m == cmd_STACK_FREE          -> Err "Got ReceivedStackFree"
-                | m == cmd_GET_RANDOM_NUMBER   -> Result.map ReceivedGetRandomNumber (toByteString size payload)
-                | m == cmd_START_MEMORYMGMT    -> doneOrNotDone ReceivedManageModeStart  "start memory management mode"
-                | m == cmd_END_MEMORYMGMT      -> doneOrNotDone ReceivedManageModeEnd    "end memory management mode"
-                | m == cmd_IMPORT_MEDIA_START  -> doneOrNotDone ReceivedImportMediaStart "media import start"
-                | m == cmd_IMPORT_MEDIA        -> doneOrNotDone ReceivedImportMedia      "media import"
-                | m == cmd_IMPORT_MEDIA_END    -> doneOrNotDone ReceivedImportMediaEnd   "media import end"
-                | m == cmd_READ_FLASH_NODE     -> Result.map ReceivedReadFlashNode (toByteArray size payload)
-                | m == cmd_WRITE_FLASH_NODE    -> doneOrNotDone ReceivedWriteFlashNode    "write node in flash"
-                | m == cmd_SET_FAVORITE        -> doneOrNotDone ReceivedSetFavorite       "set favorite"
-                | m == cmd_SET_STARTING_PARENT -> doneOrNotDone ReceivedSetStartingParent "set starting parent"
-                | m == cmd_SET_CTRVALUE        -> doneOrNotDone ReceivedSetCtrValue       "set CTR value"
-                | m == cmd_ADD_CARD_CPZ_CTR    -> doneOrNotDone ReceivedAddCpzCtr         "set CPZ CTR value"
-                | m == cmd_GET_CARD_CPZ_CTR    -> doneOrNotDone ReceivedGetCpzCtrValues "get CPZ CTR value"
-                | m == cmd_CARD_CPZ_CTR_PACKET ->
-                    let cpz  =
-                            Result.map (\c -> {cpz = c})
-                                <| toByteArray 8 payload
-                        ctrNonce d =
-                            Result.map (\s -> {d | ctrNonce = s})
-                                <| toByteArray 16 (List.drop 8 payload)
-                    in Result.map ReceivedCpzCtrPacketExport (cpz `andThen` ctrNonce)
-                | m == cmd_SET_MOOLTIPASS_PARM -> doneOrNotDone ReceivedSetParameter "set Mooltipass parameter"
-                | m == cmd_GET_MOOLTIPASS_PARM -> maybeByteString ReceivedGetParameter    "get parameter"
-                | m == cmd_GET_FAVORITE -> if size == 4 then case payload of
-                            (addrP1::addrP2::addrC1::addrC2::_) ->
-                                let p = (addrP1,addrP2)
-                                    c = (addrC1,addrC2)
-                                in Ok <| ReceivedGetFavorite (p,c)
-                            _ -> Err "Invalid data for get favorite"
-                        else Err "Invalid data for get favorite"
-                | m == cmd_RESET_CARD      -> doneOrNotDone ReceivedResetCard         "reset card"
-                | m == cmd_READ_CARD_LOGIN -> maybeByteStringNull ReceivedGetCardLogin    "get card login"
-                | m == cmd_READ_CARD_PASS  -> maybeByteStringNull ReceivedGetCardPassword "get card password"
-                | m == cmd_SET_CARD_LOGIN  -> doneOrNotDone ReceivedSetCardLogin      "set card password"
-                | m == cmd_SET_CARD_PASS   -> doneOrNotDone ReceivedSetCardPassword   "set card password"
-                | m == cmd_GET_STARTING_PARENT ->
-                    if size /= 2 then Err "Invalid size for starting parent"
-                    else case payload of
-                        (addr1::addr2::_) -> Ok <| ReceivedGetStartingParent (addr1,addr2)
-                        _ -> Err "Invalid data for starting parent"
-                | m == cmd_GET_CTRVALUE ->
-                    if size == 3
-                    then case payload of
-                        (ctr1::ctr2::ctr3::_) -> Ok <| ReceivedGetCtrValue (ctr1,ctr2,ctr3)
-                    else Err "Invalid data for GetCtrValue"
-                | m == cmd_ADD_UNKNOWN_CARD   -> doneOrNotDone ReceivedAddNewCard "add unknown smartcard"
-                | m == cmd_USB_KEYBOARD_PRESS -> Err "Received UsbKeyboardPress"
-                | m == cmd_MOOLTIPASS_STATUS  -> Err "Received GetStatus" -- this is hanndled separetely in JS
-                | m == cmd_GET_FREE_SLOTS ->
-                    if (size `rem` 2) /= 0 then Err "Invalid data for GetFreeSlots"
-                        else Ok <| ReceivedGetFreeSlots
-                                <| reverse <| snd <| foldl
-                                (\x (x',z) -> case x' of
-                                        Just x'' -> (Nothing, (x'',x)::z)
-                                        Nothing  -> (Just x, z))
-                                (Nothing,[])
-                                payload
-                | m == cmd_GET_CUR_CARD_CPZ ->
-                    if size /= 8 then Err "Invalid data for GetCardCpz"
-                    else Ok <| ReceivedGetCardCpz (take 8 payload)
-                | otherwise -> Err <| "Got unknown message: " ++ toString m
+fromInts ls = case ls of
+    (size::m::payload) ->
+        let doneOrNotDone constructor name =
+                if size /= 1
+                then Err <| "Invalid data size for '" ++ name ++ "'"
+                else case List.head payload of
+                        0x00 -> Ok <| constructor NotDone
+                        0x01 -> Ok <| constructor Done
+                        _    -> Err <| "Invalid data for '" ++ name ++ "'"
+            maybeByteString constructor name =
+                if size <= 0
+                then Err <| "Zero data returned for '" ++ name ++ "'"
+                else if size == 1 && List.head payload == 0x00
+                     then Ok <| constructor Maybe.Nothing
+                     else Result.map (constructor << Maybe.Just)
+                            (toByteString size payload)
+            maybeByteStringNull constructor name =
+                if size <= 0
+                then Err <| "Zero data returned for '" ++ name ++ "'"
+                else if size == 1 && List.head payload == 0x00
+                     then Ok <| constructor Maybe.Nothing
+                     else Result.map (constructor << Maybe.Just)
+                            (toByteString (size - 1) payload)
+        in
+            if size > List.length payload
+            then Err "Invalid size"
+            else if | m == cmd_DEBUG -> Result.map ReceivedDebug (toByteString size payload)
+                    | m == cmd_PING  -> if size == 4
+                                        then Result.map ReceivedPing (toByteString 4 payload)
+                                        else Err "Invalid data size for 'ping request'"
+                    | m == cmd_VERSION ->
+                        let flashSize =
+                                Result.map (\b -> {flashMemSize = b})
+                                    <| toByte (List.head payload)
+                            mpVersion mpv =
+                                Result.map (\s -> {mpv | version = s})
+                                -- (size - 2) because of null-termination
+                                    <| toByteString (size - 2) (List.tail payload)
+                        in Result.map ReceivedGetVersion (flashSize `andThen` mpVersion)
+                    | m == cmd_CONTEXT -> if size /= 1
+                            then Err "Invalid data size for 'set context'"
+                            else case List.head payload of
+                                    0x00 -> Ok <| ReceivedSetContext UnknownContext
+                                    0x01 -> Ok <| ReceivedSetContext ContextSet
+                                    0x03 -> Ok <| ReceivedSetContext NoCardForContext
+                                    _    -> Err "Invalid data for 'set context'"
+                    | m == cmd_GET_LOGIN    -> maybeByteStringNull ReceivedGetLogin    "get login"
+                    | m == cmd_GET_PASSWORD -> maybeByteStringNull ReceivedGetPassword "get password"
+                    | m == cmd_SET_LOGIN    -> doneOrNotDone ReceivedSetLogin      "set login"
+                    | m == cmd_SET_PASSWORD -> doneOrNotDone ReceivedSetPassword   "set password"
+                    | m == cmd_CHECK_PASSWORD -> if size /= 1
+                            then Err "Invalid data size for 'check password'"
+                            else case List.head payload of
+                                0x00 -> Ok <| ReceivedCheckPassword Incorrect
+                                0x01 -> Ok <| ReceivedCheckPassword Correct
+                                0x02 -> Ok <| ReceivedCheckPassword RequestBlocked
+                                _    -> Err "Invalid data for 'check password'"
+                    | m == cmd_ADD_CONTEXT         -> doneOrNotDone ReceivedAddContext "add context"
+                    | m == cmd_EXPORT_FLASH        -> Result.map ReceivedExportFlash (toByteString size payload)
+                    | m == cmd_EXPORT_FLASH_END    -> Ok ReceivedExportFlashEnd
+                    | m == cmd_IMPORT_FLASH_BEGIN  -> doneOrNotDone ReceivedImportFlashStart "import flash start"
+                    | m == cmd_IMPORT_FLASH        -> doneOrNotDone ReceivedImportFlash      "import flash"
+                    | m == cmd_IMPORT_FLASH_END    -> doneOrNotDone ReceivedImportFlashEnd   "import flash end"
+                    | m == cmd_EXPORT_EEPROM       -> Result.map ReceivedExportEeprom (toByteString size payload)
+                    | m == cmd_EXPORT_EEPROM_END   -> Ok ReceivedExportEepromEnd
+                    | m == cmd_IMPORT_EEPROM_BEGIN -> doneOrNotDone ReceivedImportEepromStart "import eeprom start"
+                    | m == cmd_IMPORT_EEPROM       -> doneOrNotDone ReceivedImportEeprom      "import eeprom"
+                    | m == cmd_IMPORT_EEPROM_END   -> doneOrNotDone ReceivedImportEepromEnd   "import eeprom end"
+                    | m == cmd_ERASE_EEPROM        -> Err "Got ReceivedEraseEeprom"
+                    | m == cmd_ERASE_FLASH         -> Err "Got ReceivedEraseFlash"
+                    | m == cmd_ERASE_SMC           -> Err "Got ReceivedEraseSmc"
+                    | m == cmd_DRAW_BITMAP         -> Err "Got ReceivedDrawBitmap"
+                    | m == cmd_SET_FONT            -> Err "Got ReceivedSetFont"
+                    | m == cmd_EXPORT_FLASH_START  -> doneOrNotDone ReceivedExportFlashStart  "export flash start"
+                    | m == cmd_EXPORT_EEPROM_START -> doneOrNotDone ReceivedExportEepromStart "export eeprom start"
+                    | m == cmd_SET_BOOTLOADER_PWD  -> Err "Got ReceivedSetBootloaderPwd"
+                    | m == cmd_JUMP_TO_BOOTLOADER  -> Err "Got ReceivedJumpToBootloader"
+                    | m == cmd_CLONE_SMARTCARD     -> Err "Got ReceivedCloneSmartcard"
+                    | m == cmd_STACK_FREE          -> Err "Got ReceivedStackFree"
+                    | m == cmd_GET_RANDOM_NUMBER   -> Result.map ReceivedGetRandomNumber (toByteString size payload)
+                    | m == cmd_START_MEMORYMGMT    -> doneOrNotDone ReceivedManageModeStart  "start memory management mode"
+                    | m == cmd_END_MEMORYMGMT      -> doneOrNotDone ReceivedManageModeEnd    "end memory management mode"
+                    | m == cmd_IMPORT_MEDIA_START  -> doneOrNotDone ReceivedImportMediaStart "media import start"
+                    | m == cmd_IMPORT_MEDIA        -> doneOrNotDone ReceivedImportMedia      "media import"
+                    | m == cmd_IMPORT_MEDIA_END    -> doneOrNotDone ReceivedImportMediaEnd   "media import end"
+                    | m == cmd_READ_FLASH_NODE     -> Result.map ReceivedReadFlashNode (toByteArray size payload)
+                    | m == cmd_WRITE_FLASH_NODE    -> doneOrNotDone ReceivedWriteFlashNode    "write node in flash"
+                    | m == cmd_SET_FAVORITE        -> doneOrNotDone ReceivedSetFavorite       "set favorite"
+                    | m == cmd_SET_STARTING_PARENT -> doneOrNotDone ReceivedSetStartingParent "set starting parent"
+                    | m == cmd_SET_CTRVALUE        -> doneOrNotDone ReceivedSetCtrValue       "set CTR value"
+                    | m == cmd_ADD_CARD_CPZ_CTR    -> doneOrNotDone ReceivedAddCpzCtr         "set CPZ CTR value"
+                    | m == cmd_GET_CARD_CPZ_CTR    -> doneOrNotDone ReceivedGetCpzCtrValues "get CPZ CTR value"
+                    | m == cmd_CARD_CPZ_CTR_PACKET ->
+                        let cpz  =
+                                Result.map (\c -> {cpz = c})
+                                    <| toByteArray 8 payload
+                            ctrNonce d =
+                                Result.map (\s -> {d | ctrNonce = s})
+                                    <| toByteArray 16 (List.drop 8 payload)
+                        in Result.map ReceivedCpzCtrPacketExport (cpz `andThen` ctrNonce)
+                    | m == cmd_SET_MOOLTIPASS_PARM -> doneOrNotDone ReceivedSetParameter "set Mooltipass parameter"
+                    | m == cmd_GET_MOOLTIPASS_PARM -> maybeByteString ReceivedGetParameter    "get parameter"
+                    | m == cmd_GET_FAVORITE -> if size == 4 then case payload of
+                                (addrP1::addrP2::addrC1::addrC2::_) ->
+                                    let p = (addrP1,addrP2)
+                                        c = (addrC1,addrC2)
+                                    in Ok <| ReceivedGetFavorite (p,c)
+                                _ -> Err "Invalid data for get favorite"
+                            else Err "Invalid data for get favorite"
+                    | m == cmd_RESET_CARD      -> doneOrNotDone ReceivedResetCard         "reset card"
+                    | m == cmd_READ_CARD_LOGIN -> maybeByteStringNull ReceivedGetCardLogin    "get card login"
+                    | m == cmd_READ_CARD_PASS  -> maybeByteStringNull ReceivedGetCardPassword "get card password"
+                    | m == cmd_SET_CARD_LOGIN  -> doneOrNotDone ReceivedSetCardLogin      "set card password"
+                    | m == cmd_SET_CARD_PASS   -> doneOrNotDone ReceivedSetCardPassword   "set card password"
+                    | m == cmd_GET_STARTING_PARENT ->
+                        if size /= 2 then Err "Invalid size for starting parent"
+                        else case payload of
+                            (addr1::addr2::_) -> Ok <| ReceivedGetStartingParent (addr1,addr2)
+                            _ -> Err "Invalid data for starting parent"
+                    | m == cmd_GET_CTRVALUE ->
+                        if size == 3
+                        then case payload of
+                            (ctr1::ctr2::ctr3::_) -> Ok <| ReceivedGetCtrValue (ctr1,ctr2,ctr3)
+                            _ -> Err "Invalid data for GetCtrValue"
+
+                        else Err "Invalid data for GetCtrValue"
+                    | m == cmd_ADD_UNKNOWN_CARD   -> doneOrNotDone ReceivedAddNewCard "add unknown smartcard"
+                    | m == cmd_USB_KEYBOARD_PRESS -> Err "Received UsbKeyboardPress"
+                    | m == cmd_MOOLTIPASS_STATUS  -> Err "Received GetStatus" -- this is hanndled separetely in JS
+                    | m == cmd_GET_FREE_SLOTS ->
+                        if (size `rem` 2) /= 0 then Err "Invalid data for GetFreeSlots"
+                            else Ok <| ReceivedGetFreeSlots
+                                    <| reverse <| snd <| foldl
+                                    (\x (x',z) -> case x' of
+                                            Just x'' -> (Nothing, (x'',x)::z)
+                                            Nothing  -> (Just x, z))
+                                    (Nothing,[])
+                                    payload
+                    | m == cmd_GET_CUR_CARD_CPZ ->
+                        if size /= 8 then Err "Invalid data for GetCardCpz"
+                        else Ok <| ReceivedGetCardCpz (take 8 payload)
+                    | otherwise -> Err <| "Got unknown message: " ++ toString m
+    _ -> Err "invalid data"

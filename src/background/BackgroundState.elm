@@ -454,7 +454,7 @@ interpret packet s =
             _ -> setMemManage (MemManageError (unexpected "set cryptographic counter response")) s
         ReceivedGetCardCpz cpz -> case s.memoryManage of
             MemManageReadCpzWaiting (p,f,a,c,cs) -> setMemManage (MemManageReadSuccess (p,f,a,c,cs,cpz)) s
-            _ -> setMemManage (MemManageError (unexpected "get cpz")) s
+            _ -> s -- can be meant for gui, we just ignore it
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s

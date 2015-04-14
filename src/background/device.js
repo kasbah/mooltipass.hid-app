@@ -56,6 +56,7 @@ var cmd_SET_DATA_SERVICE    = 0xBE;
 var cmd_ADD_DATA_SERVICE    = 0xBF;
 var cmd_WRITE_32B_IN_DN     = 0xC0;
 var cmd_READ_32B_IN_DN      = 0xC1;
+var cmd_GET_CUR_CARD_CPZ    = 0xC2
 var cmd_READ_FLASH_NODE     = 0xC5;
 var cmd_WRITE_FLASH_NODE    = 0xC6;
 var cmd_GET_FAVORITE        = 0xC7;
@@ -134,10 +135,12 @@ function onDataReceived(reportId, data)
         elm.ports.deviceStatus.send(ints[2]);
         device.waitingForStatus = false;
     }
-    //route some messages to GUI
+    //route some messages to GUI only
     else if (ints[1] === cmd_ADD_UNKNOWN_CARD) {
         chrome.runtime.sendMessage({fromDevice:ints});
     } else  {
+        if (ints[1] == cmd_GET_CUR_CARD_CPZ) // route to both
+            chrome.runtime.sendMessage({fromDevice:ints});
         deviceSendToElm({receiveCommand: ints});
     }
 

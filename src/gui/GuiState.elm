@@ -3,12 +3,14 @@ module GuiState where
 -- Elm standard library
 import List (..)
 import Maybe
+import Debug
 
 -- local source
 import CommonState as Common
 import CommonState (..)
 import Util (..)
 import Byte (..)
+import DevicePacket (..)
 
 type Tab = Log | Settings | Manage | Developer
 
@@ -44,6 +46,7 @@ type Action = ChangeTab Tab
             | MoveFavUp (FlashAddress, FlashAddress)
             | MoveFavDown (FlashAddress, FlashAddress)
             | RemoveCred (FlashAddress, FlashAddress)
+            | Interpret ReceivedPacket
             | NoOp
 
 {-| The initial state -}
@@ -133,7 +136,12 @@ update action s =
             MemInfo d' -> case mergeMem d d' of
                 Just d'' ->  {s | unsavedMemInfo <- MemInfo d''}
                 Nothing  -> errorTryingTo "add to memory, not enough free addresses"
-            MemInfoUnknownCard -> {s | unsavedMemInfo <- Maybe.withDefault NoMemInfo (Maybe.map (MemInfoUnknownCard' << .ctrNonce) (maybeHead d.cards))}
+            MemInfoUnknownCardCpz cpz ->
+                {s | unsavedMemInfo <-
+                        Maybe.withDefault
+                            (MemInfoUnknownCardError cpz)
+                            (Maybe.map MemInfoUnknownCardAdd (maybeHead (filter (\c -> c.cpz == cpz) d.cards)))
+                }
             _        -> errorTryingTo "add to memory"
         -- An action on the common state can have a effect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
@@ -143,7 +151,7 @@ update action s =
             in case a of
                 SetDeviceStatus UnknownCard ->
                     { s' | activeTab <- Manage
-                         , unsavedMemInfo <- MemInfoUnknownCard
+                         , unsavedMemInfo <- MemInfoUnknownCardInserted
                     }
                 SetDeviceStatus c ->
                     { s' | activeTab <-
@@ -162,6 +170,11 @@ update action s =
                         _ -> updateMemInfo
 
                 _ -> s'
+        Interpret packet -> case packet of
+            ReceivedGetCardCpz cpz -> case s.unsavedMemInfo of
+                MemInfoUnknownCardWaitingForCpz -> {s | unsavedMemInfo <- MemInfoUnknownCardCpz cpz}
+                _ -> s
+            _ -> s
         NoOp -> s
 
 
