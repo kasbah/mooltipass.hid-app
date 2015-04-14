@@ -68,6 +68,7 @@ cmd_SET_DATA_SERVICE    = 0xBE
 cmd_ADD_DATA_SERVICE    = 0xBF
 cmd_WRITE_32B_IN_DN     = 0xC0
 cmd_READ_32B_IN_DN      = 0xC1
+cmd_GET_CUR_CARD_CPZ    = 0xC2
 cmd_READ_FLASH_NODE     = 0xC5
 cmd_WRITE_FLASH_NODE    = 0xC6
 cmd_GET_FAVORITE        = 0xC7
@@ -136,6 +137,7 @@ type OutgoingPacket =
    | OutgoingAddNewCard         ByteArray
    | OutgoingGetStatus
    | OutgoingGetFreeSlots       FlashAddress
+   | OutgoingGetCardCpz
 -- disabled developer types:
     --OutgoingEraseEeprom      -> cmd_ERASE_EEPROM
     --OutgoingEraseFlash       -> cmd_ERASE_FLASH
@@ -198,7 +200,8 @@ type ReceivedPacket =
     | ReceivedGetStartingParent FlashAddress
     | ReceivedGetCtrValue       (Byte,Byte,Byte)
     | ReceivedAddNewCard        ReturnCode
-    | ReceivedGetFreeSlots    (List FlashAddress)
+    | ReceivedGetFreeSlots      (List FlashAddress)
+    | ReceivedGetCardCpz        ByteArray
 
 {-| Carries firmware version and flash memory size -}
 type alias MpVersion = { flashMemSize : Byte
@@ -306,6 +309,7 @@ toInts msg =
         OutgoingAddNewCard ctrNonce  -> [16, cmd_ADD_UNKNOWN_CARD] ++ ctrNonce
         OutgoingGetStatus            -> zeroSize cmd_MOOLTIPASS_STATUS
         OutgoingGetFreeSlots (a1,a2) -> [2, cmd_GET_FREE_SLOTS, a1, a2]
+        OutgoingGetCardCpz           -> zeroSize cmd_GET_CUR_CARD_CPZ
 
 {-| Convert a list of ints received through a port from chrome.hid.receive into
     a packet we can interpret -}
@@ -436,7 +440,7 @@ fromInts (size::m::payload) =
                 | m == cmd_ADD_UNKNOWN_CARD   -> doneOrNotDone ReceivedAddNewCard "add unknown smartcard"
                 | m == cmd_USB_KEYBOARD_PRESS -> Err "Received UsbKeyboardPress"
                 | m == cmd_MOOLTIPASS_STATUS  -> Err "Received GetStatus" -- this is hanndled separetely in JS
-                | m == cmd_GET_FREE_SLOTS  ->
+                | m == cmd_GET_FREE_SLOTS ->
                     if (size `rem` 2) /= 0 then Err "Invalid data for GetFreeSlots"
                         else Ok <| ReceivedGetFreeSlots
                                 <| reverse <| snd <| foldl
@@ -445,4 +449,7 @@ fromInts (size::m::payload) =
                                         Nothing  -> (Just x, z))
                                 (Nothing,[])
                                 payload
+                | m == cmd_GET_CUR_CARD_CPZ ->
+                    if size /= 8 then Err "Invalid data for GetCardCpz"
+                    else Ok <| ReceivedGetCardCpz (take 8 payload)
                 | otherwise -> Err <| "Got unknown message: " ++ toString m

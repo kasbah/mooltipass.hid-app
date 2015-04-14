@@ -67,6 +67,7 @@ type alias MemInfoData =
     , addresses   : List FlashAddress
     , ctr         : (Byte,Byte,Byte)
     , cards       : List Card
+    , curCardCpz  : ByteArray
     }
 
 type alias Card = { cpz : ByteArray
