@@ -62,8 +62,12 @@ type MemManageState =
         (List ParentNode, List Favorite, List FlashAddress, (Byte,Byte,Byte))
     | MemManageReadCardsWaiting
         (List ParentNode, List Favorite, List FlashAddress, (Byte,Byte,Byte), List Card)
-    | MemManageReadSuccess
+    | MemManageReadCpz
         (List ParentNode, List Favorite, List FlashAddress, (Byte,Byte,Byte), List Card)
+    | MemManageReadCpzWaiting
+        (List ParentNode, List Favorite, List FlashAddress, (Byte,Byte,Byte), List Card)
+    | MemManageReadSuccess
+        (List ParentNode, List Favorite, List FlashAddress, (Byte,Byte,Byte), List Card, ByteArray)
     | MemManageWrite
         (List OutgoingPacket)
     | MemManageWriteWaiting
@@ -104,16 +108,19 @@ memManageToInfo mm = case mm of
     MemManageReadCtrWaiting _       -> MemInfoWaitingForDevice
     MemManageReadCards _            -> MemInfoWaitingForDevice
     MemManageReadCardsWaiting _     -> MemInfoWaitingForDevice
-    MemManageReadSuccess (pnode, favs, addrs, ctr, cards) ->
+    MemManageReadSuccess (pnode, favs, addrs, ctr, cards, cpz) ->
         MemInfo { credentials = toCreds pnode
                 , favorites   = favs
                 , addresses   = addrs
                 , ctr         = ctr
                 , cards       = cards
+                , curCardCpz  = cpz
                 }
     MemManageWrite        _ -> MemInfoWaitingForDevice
     MemManageWriteWaiting _ -> MemInfoWaitingForDevice
     MemManageWriteSuccess   -> MemInfoWaitingForDevice
+    MemManageReadCpz _      -> MemInfoWaitingForDevice
+    MemManageReadCpzWaiting _ -> MemInfoWaitingForDevice
     MemManageError _        -> NoMemInfo
 
 type MediaImport =
@@ -225,7 +232,7 @@ update action s =
         CommonAction StartMemManage    -> setMemManage MemManageRequested s
         CommonAction EndMemManage      -> setMemManage MemManageEnd s
         CommonAction (SaveMemManage d) -> case s.memoryManage of
-            MemManageReadSuccess (pNode, favs, _, ctr, cards) ->
+            MemManageReadSuccess (pNode, favs, _, ctr, cards,_) ->
                 setMemManage (MemManageWrite
                     (ctrToPackets d.ctr ctr
                         ++ cardsToPackets d.cards cards
@@ -430,7 +437,7 @@ interpret packet s =
         ReceivedGetCpzCtrValues r -> case s.memoryManage of
             MemManageReadCardsWaiting d ->
                 if r == Done
-                then setMemManage (MemManageReadSuccess d) s
+                then setMemManage (MemManageReadCpz d) s
                 else setMemManage (MemManageError "reading user cards (cpz & ctr values) denied") s
             _ -> setMemManage (MemManageError (unexpected "cpz ctr packet export")) s
         ReceivedAddCpzCtr r -> case s.memoryManage of
@@ -445,6 +452,9 @@ interpret packet s =
                 then setMemManage (MemManageWrite ps) s
                 else setMemManage (MemManageError "set cryptographic counter denied") s
             _ -> setMemManage (MemManageError (unexpected "set cryptographic counter response")) s
+        ReceivedGetCardCpz cpz -> case s.memoryManage of
+            MemManageReadCpzWaiting (p,f,a,c,cs) -> setMemManage (MemManageReadSuccess (p,f,a,c,cs,cpz)) s
+            _ -> s -- can be meant for gui, we just ignore it
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s

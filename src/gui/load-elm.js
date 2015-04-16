@@ -12,6 +12,7 @@ var emptyFromChromeMessage =
 var gui = Elm.fullscreen(Elm.GUI,
     { fromBackground: emptyToGuiMessage
     , fromChrome: emptyFromChromeMessage
+    , fromDevice: []
     }
 );
 
@@ -35,7 +36,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
         gui.ports.fromBackground.send(message.toGUI);
     }
     else if (message.fromDevice !== undefined) {
-        //TODO: pass received messages to Elm
+        gui.ports.fromDevice.send(message.fromDevice);
     }
 });
 
@@ -73,14 +74,13 @@ gui.ports.toChrome.subscribe(function(message) {
                         return function(fileWriter) {
                             fileWriter.onwriteend = function(e) {
                                 writingFile = false;
-                                console.log("yo");
                                 chrome.notifications.create(
+                                    "",
                                     { type:"basic"
                                     , title:"User data export done."
                                     , message:""
                                     , iconUrl:"/gui/images/logo_square128.png"
-                                    });
-                                console.log(chrome.runtime.lastError);
+                                    }, function () {});
                             };
 
                             fileWriter.onerror = function(e) {
@@ -100,7 +100,13 @@ gui.ports.toChrome.subscribe(function(message) {
                 entry.file(function(file) {
                     var reader = new FileReader();
                     reader.onerror = function(e) {
-                        console.log(e);
+                        chrome.notifications.create(
+                            "",
+                            { type:"basic"
+                            , title:"Error reading file"
+                            , message:"" + e
+                            , iconUrl:"/gui/images/logo_square128.png"
+                            }, function () {});
                         readingFile = false;
                     };
                     reader.onloadend = function(e) {
@@ -109,16 +115,32 @@ gui.ports.toChrome.subscribe(function(message) {
                             data = JSON.parse(reader.result);
                         }
                         catch (e) {
-                            console.log("invalid file: ", e);
+                            chrome.notifications.create(
+                                "",
+                                { type:"basic"
+                                , title:"Error reading file"
+                                , message:"" + e
+                                , iconUrl:"/gui/images/logo_square128.png"
+                                }, function () {});
                         }
-                        if (data != null)
+                        if (data != null) {
+                            data.curCardCpz = [];
                             chromeSendToElm({readMemFile:data});
+                        }
                         readingFile = false;
                     }
                     reader.readAsText(file);
                 });
             } else { readingFile = false;}
         });
+    } else if (message.notify !== null) {
+        chrome.notifications.create(
+            "",
+            { type:"basic"
+            , title:message.notify[0]
+            , message:message.notify[1]
+            , iconUrl:"/gui/images/logo_square128.png"
+            }, function () {});
     }
 });
 

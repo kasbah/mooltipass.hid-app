@@ -38,8 +38,11 @@ type MemInfo =
     | MemInfoSave MemInfoData
     | MemInfoWaitingForUser
     | MemInfoWaitingForDevice
-    | MemInfoUnknownCard
-    | MemInfoUnknownCard' ByteArray
+    | MemInfoUnknownCardInserted
+    | MemInfoUnknownCardWaitingForCpz
+    | MemInfoUnknownCardCpz   ByteArray
+    | MemInfoUnknownCardAdd   Card
+    | MemInfoUnknownCardError ByteArray
     | NoMemInfo
 
 type alias ServiceName =
@@ -67,6 +70,7 @@ type alias MemInfoData =
     , addresses   : List FlashAddress
     , ctr         : (Byte,Byte,Byte)
     , cards       : List Card
+    , curCardCpz  : ByteArray
     }
 
 type alias Card = { cpz : ByteArray

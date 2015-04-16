@@ -56,6 +56,7 @@ var cmd_SET_DATA_SERVICE    = 0xBE;
 var cmd_ADD_DATA_SERVICE    = 0xBF;
 var cmd_WRITE_32B_IN_DN     = 0xC0;
 var cmd_READ_32B_IN_DN      = 0xC1;
+var cmd_GET_CUR_CARD_CPZ    = 0xC2;
 var cmd_READ_FLASH_NODE     = 0xC5;
 var cmd_WRITE_FLASH_NODE    = 0xC6;
 var cmd_GET_FAVORITE        = 0xC7;
@@ -134,27 +135,29 @@ function onDataReceived(reportId, data)
         elm.ports.deviceStatus.send(ints[2]);
         device.waitingForStatus = false;
     }
-    //route some messages to GUI
+    //route some messages to GUI only
     else if (ints[1] === cmd_ADD_UNKNOWN_CARD) {
         chrome.runtime.sendMessage({fromDevice:ints});
     } else  {
+        if (ints[1] == cmd_GET_CUR_CARD_CPZ) // route to both
+            chrome.runtime.sendMessage({fromDevice:ints});
         deviceSendToElm({receiveCommand: ints});
     }
 
     //special case for 'read node' and 'cpz ctr packet export' messages as we
-    //need to read multiple messages in a row a row
+    //need to read multiple messages in a row
     if (ints[1] === cmd_READ_FLASH_NODE || ints[1] === cmd_CARD_CPZ_CTR_PACKET)
         chrome.hid.receive(device.connection, onDataReceived);
 }
 
 function hidErrorDisconnect(message) {
-        console.log("hid error: ", message);
-        device.connecting = 0;
-        device.connection = null;
-        device.waitingForStatus = false;
-        deviceSendToElm({setHidConnected:false});
-        //make sure then next status won't be dropped because of dropRepeats
-        elm.ports.deviceStatus.send(7);
+    console.log("hid error: ", message);
+    device.connecting = 0;
+    device.connection = null;
+    device.waitingForStatus = false;
+    deviceSendToElm({setHidConnected:false});
+    //make sure then next status won't be dropped because of dropRepeats
+    elm.ports.deviceStatus.send(7);
 }
 
 function sendMsg(message)
@@ -163,7 +166,7 @@ function sendMsg(message)
         hidErrorDisconnect("no connection when trying to send message")
         return;
     }
-    if (message[1] === 0xB9) { //status update
+    if (message[1] === cmd_MOOLTIPASS_STATUS) {
         if (device.waitingForStatus)
             return;
         else

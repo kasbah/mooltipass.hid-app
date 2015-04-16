@@ -3,12 +3,14 @@ module GuiState where
 -- Elm standard library
 import List (..)
 import Maybe
+import Result
 
 -- local source
 import CommonState as Common
 import CommonState (..)
 import Util (..)
 import Byte (..)
+import DevicePacket (..)
 
 type Tab = Log | Settings | Manage | Developer
 
@@ -27,6 +29,7 @@ type alias GuiState =
     , writeMem       : Bool
     , readMem        : Bool
     , unsavedMemInfo : MemInfo
+    , chromeNotify   : Maybe (String, String)
     , common         : CommonState
     }
 
@@ -44,6 +47,8 @@ type Action = ChangeTab Tab
             | MoveFavUp (FlashAddress, FlashAddress)
             | MoveFavDown (FlashAddress, FlashAddress)
             | RemoveCred (FlashAddress, FlashAddress)
+            | Interpret ReceivedPacket
+            | NotifyChrome (Maybe (String, String))
             | NoOp
 
 {-| The initial state -}
@@ -56,6 +61,7 @@ default =
     , writeMem       = False
     , readMem        = False
     , unsavedMemInfo = NoMemInfo
+    , chromeNotify   = Nothing
     , common         = Common.default
     }
 
@@ -131,9 +137,16 @@ update action s =
         SetUnsavedMem i -> {s | unsavedMemInfo <- i}
         AddToUnsavedMem d -> case s.unsavedMemInfo of
             MemInfo d' -> case mergeMem d d' of
-                Just d'' ->  {s | unsavedMemInfo <- MemInfo d''}
-                Nothing  -> errorTryingTo "add to memory, not enough free addresses"
-            MemInfoUnknownCard -> {s | unsavedMemInfo <- Maybe.withDefault NoMemInfo (Maybe.map (MemInfoUnknownCard' << .ctrNonce) (maybeHead d.cards))}
+                Ok d'' ->  {s | unsavedMemInfo <- MemInfo d''
+                              , chromeNotify <- Just ("Import succeeded", "")
+                           }
+                Err err  -> {s | chromeNotify <- Just ("Import failed",  err)}
+            MemInfoUnknownCardCpz cpz ->
+                {s | unsavedMemInfo <-
+                        Maybe.withDefault
+                            (MemInfoUnknownCardError cpz)
+                            (Maybe.map MemInfoUnknownCardAdd (maybeHead (filter (\c -> c.cpz == cpz) d.cards)))
+                }
             _        -> errorTryingTo "add to memory"
         -- An action on the common state can have a effect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
@@ -143,7 +156,7 @@ update action s =
             in case a of
                 SetDeviceStatus UnknownCard ->
                     { s' | activeTab <- Manage
-                         , unsavedMemInfo <- MemInfoUnknownCard
+                         , unsavedMemInfo <- MemInfoUnknownCardInserted
                     }
                 SetDeviceStatus c ->
                     { s' | activeTab <-
@@ -162,22 +175,30 @@ update action s =
                         _ -> updateMemInfo
 
                 _ -> s'
+        Interpret packet -> case packet of
+            ReceivedGetCardCpz cpz -> case s.unsavedMemInfo of
+                MemInfoUnknownCardWaitingForCpz -> {s | unsavedMemInfo <- MemInfoUnknownCardCpz cpz}
+                _ -> s
+            ReceivedAddNewCard r -> if r == Done then {s | unsavedMemInfo <- MemInfoRequest} else s
+        NotifyChrome m -> {s | chromeNotify <- m}
         NoOp -> s
 
 
-mergeMem : MemInfoData -> MemInfoData -> Maybe MemInfoData
+mergeMem : MemInfoData -> MemInfoData -> Result String MemInfoData
 mergeMem d info =
-    let addServices : List Service -> MemInfoData -> Maybe MemInfoData
-        addServices creds i = case creds of
-            [] -> Just i
-            (c::cs) -> case addCreds c i of
-                Just i' -> addServices cs i'
-                Nothing -> Nothing
-    in Maybe.map
-        (\i -> {i | cards <- filter (\c -> not (any (\c' -> c == c') d.cards)) i.cards ++ d.cards
-                  , ctr <- if i.ctr > d.ctr then i.ctr else d.ctr
-               })
-        (addServices d.credentials info)
+    if any (\c -> c.cpz == info.curCardCpz) d.cards then
+        let addServices : List Service -> MemInfoData -> Result String MemInfoData
+            addServices creds i = case creds of
+                [] -> Ok i
+                (c::cs) -> case addCreds c i of
+                    Just i' -> addServices cs i'
+                    Nothing -> Err "out of memory"
+        in  Result.map
+            (\i -> {i | cards <- filter (\c -> not (any (\c' -> c == c') d.cards)) i.cards ++ d.cards
+                      , ctr <- if i.ctr > d.ctr then i.ctr else d.ctr
+                   })
+            (addServices d.credentials info)
+    else Err "current card is not in user data"
 
 removeFromFavs : (FlashAddress, FlashAddress) -> MemInfoData -> MemInfo
 removeFromFavs f info =
