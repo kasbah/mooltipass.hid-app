@@ -196,11 +196,13 @@ field w kString vString =
 -}
 sel : Int -> String -> List (String, a) -> Element
 sel w kString things =
-    let username = uUp -- button disabled for beta release
-        --username = Input.customButton (send guiActions NoOp) uUp uHover uDown
+    let -- username = uUp -- button disabled for beta release
+        -- username = Input.customButton (send guiActions NoOp) uUp uHover uDown
+        -- username = Input.customButton (send commonActions (OutgoingSetParameter KeyboardLayout 0x93)) uUp uHover uDown
+        username = Input.customButton (send guiActions (CommonAction (SetKeyboard 0x93))) uUp uHover uDown
         uUp      = layers [ubg lightGrey', utxt]
-        --uHover   = layers [ubg lightGrey'', utxt]
-        --uDown    = uUp
+        uHover   = layers [ubg lightGrey'', utxt]
+        uDown    = uUp
         uw       = (w//2) - spw
         uw'      = toFloat uw
         ubg c    = collage uw lh

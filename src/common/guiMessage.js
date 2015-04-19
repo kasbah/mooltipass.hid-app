@@ -3,6 +3,7 @@ var emptyToGuiMessage =
     , setDeviceStatus : 0
     , setImportInfo   : [0,"",0,0]
     , setMemInfo      : [0,null]
+    , setKbInfo       : null
     };
 
 var emptyFromGuiMessage =
@@ -12,6 +13,7 @@ var emptyFromGuiMessage =
     , startMemManage   : null
     , endMemManage     : null
     , saveMemManage    : null
+    , setKeyboard      : null
     };
 
 messageHasValue = function (message) {

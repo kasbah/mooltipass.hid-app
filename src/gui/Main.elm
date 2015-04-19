@@ -5,6 +5,7 @@ import Signal (..)
 import Time (..)
 import Window
 import List
+import Maybe
 
 -- local source
 import Scene
@@ -19,6 +20,8 @@ import ChromeMessage
 import CommonState as Common
 import CommonState(MemInfo(..), CommonAction(..))
 import DevicePacket (..)
+
+import Debug (log)
 
 {-| Any state updates from the background are received through this port -}
 port fromBackground : Signal ToGuiMessage
@@ -67,6 +70,11 @@ forBg s =
             Common.MemInfoRequest -> True
             Common.MemInfoSave  _ -> True
             _                     -> False
+        setKb = case s.wantSetKeyboard of
+            Just _  -> True
+            Nothing -> False
+        kb' = Maybe.withDefault 0 s.wantSetKeyboard
+            
     in if
         | mImportRequested -> case s.importMedia of
             RequestFile p ->
@@ -80,6 +88,7 @@ forBg s =
                 Common.MemInfoSave d ->
                         (FromGuiMessage.encode (Common.SaveMemManage d)
                         , SetUnsavedMem (Common.MemInfo d))
+        | setKb -> log ("gui: WANT SET KB") <| (FromGuiMessage.encode (Common.SetKeyboard kb'), NoOp)
         | otherwise -> (e, NoOp)
 
 output : Signal (ToChromeMessage, FromGuiMessage, List Int, GuiState)

@@ -12,6 +12,8 @@ import Util (..)
 import Byte (..)
 import DevicePacket (..)
 
+import Debug (log)
+
 type Tab = Log | Settings | Manage | Developer
 
 type ImportRequest =
@@ -30,6 +32,7 @@ type alias GuiState =
     , readMem        : Bool
     , unsavedMemInfo : MemInfo
     , chromeNotify   : Maybe (String, String)
+    , wantSetKeyboard : Maybe Int
     , common         : CommonState
     }
 
@@ -62,6 +65,7 @@ default =
     , readMem        = False
     , unsavedMemInfo = NoMemInfo
     , chromeNotify   = Nothing
+    , wantSetKeyboard = Nothing
     , common         = Common.default
     }
 
@@ -73,7 +77,7 @@ disabledTabs s =
         Common.NotConnected -> [] -- [Manage, Developer]
         Common.NoCard       -> [Manage]
         Common.Locked       -> [Settings, Manage, Developer]
-        Common.ManageMode   -> [Settings]
+        Common.ManageMode   -> []
         Common.UnknownCard ->  [Settings]
 
 {-| Transform the state to a new state according to an action -}
@@ -174,6 +178,8 @@ update action s =
                             _ -> updateMemInfo
                         _ -> updateMemInfo
 
+                SetKeyboard kb ->
+                    log ("GUI set kb to " ++ toString kb) <| { s' | wantSetKeyboard <- Just kb }
                 _ -> s'
         Interpret packet -> case packet of
             ReceivedGetCardCpz cpz -> case s.unsavedMemInfo of

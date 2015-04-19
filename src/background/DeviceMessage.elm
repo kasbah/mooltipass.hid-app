@@ -14,6 +14,8 @@ import DeviceFlash (..)
 import Util (..)
 import Byte (..)
 
+import Debug (log)
+
 type alias FromDeviceMessage = { setHidConnected : Maybe Bool
                                , receiveCommand  : Maybe (List Int)
                                , appendToLog     : Maybe String
@@ -71,8 +73,14 @@ encode s =
             _                        -> False
         extNeedsToSend' = extNeedsToSend s.extRequest && not s.waitingForDevice
                         && s.common.deviceStatus == Unlocked
-    in if | not s.deviceConnected -> (connect, [])
-          | extNeedsToSend' ->
+        setKb = case s.bgSetKeyboard of
+            Just _  -> True
+            Nothing -> False
+        kb' = Maybe.withDefault 0 s.bgSetKeyboard
+    in if | not s.deviceConnected -> log ("bg encode NOT CONNECTED") <| (connect, [])
+          | setKb -> log ("bg encode set kb " ++ toString kb') <|
+              sendCommand' (OutgoingSetParameter KeyboardLayout kb') []
+          | extNeedsToSend' -> log ("bg encode extNeedsToSend'") <|
               ({e | sendCommand <-
                     Maybe.map toInts
                         (extRequestToPacket s.currentContext s.extRequest)}
@@ -85,8 +93,9 @@ encode s =
               )
           | s.deviceVersion == Nothing
             && s.common.deviceStatus == Unlocked && not s.waitingForDevice
-                -> sendCommand' OutgoingGetVersion []
-          | mediaImportActive s -> case s.mediaImport of
+                -> log ("bg encode GetVersion'") <| sendCommand' OutgoingGetVersion []
+          | mediaImportActive s -> log ("bg encode mediaImportActive") <|
+              case s.mediaImport of
                 MediaImportStart ps ->
                     sendCommand'
                         OutgoingImportMediaStart
@@ -99,7 +108,8 @@ encode s =
                         OutgoingImportMediaEnd
                         [SetMediaImport (MediaImportWaiting [])]
                 _ -> (e, [])
-          | memManageNeedsToSend -> case s.memoryManage of
+          | memManageNeedsToSend -> log ("memManageNeedsToSend") <|
+             case s.memoryManage of
               MemManageEnd ->    sendCommand'
                                         OutgoingMemManageModeEnd
                                         [SetMemManage NotManaging]
@@ -154,9 +164,10 @@ encode s =
                         OutgoingGetCardCpz
                         [SetMemManage (MemManageReadCpzWaiting d)]
           | not (mediaImportActive s) && not (memoryManageBusy s.memoryManage) ->
+             log ("bg encode OutgoingGetStatus") <| 
               ({ e | sendCommand <- Just (toInts OutgoingGetStatus)}
               , [])
-          | otherwise -> (e,[])
+          | otherwise -> log ("bg encode OTHERWISE") <| (e,[])
 
 sendCommand' : OutgoingPacket
             -> (List BackgroundAction)

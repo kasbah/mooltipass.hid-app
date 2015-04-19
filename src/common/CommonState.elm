@@ -7,12 +7,17 @@ import String
 -- local source
 import Byte (..)
 
+import Debug (log)
+
 {-| The background state excluding gui components -}
 type alias CommonState =
     { deviceStatus : DeviceStatus
     , log          : List String
     , importInfo   : ImportInfo
     , memoryInfo   : MemInfo
+    , setKeyboard  : Int
+    -- , settingsInfo : SettingsInfo
+    -- , sentDeviceMessage : DeviceMessage
     , forceUpdate  : Bool
     }
 
@@ -22,6 +27,7 @@ default =
     , log          = []
     , importInfo   = NoImport
     , memoryInfo   = NoMemInfo
+    , setKeyboard  = 0
     , forceUpdate  = True
     }
 
@@ -44,6 +50,10 @@ type MemInfo =
     | MemInfoUnknownCardAdd   Card
     | MemInfoUnknownCardError ByteArray
     | NoMemInfo
+
+type alias SettingsInfo =
+    { keyboard  : Int
+    }
 
 type alias ServiceName =
     { address    : FlashAddress
@@ -113,6 +123,8 @@ type CommonAction = SetLog (List String)
                   | StartMemManage
                   | SaveMemManage MemInfoData
                   | EndMemManage
+                  -- | SendDeviceMessage DeviceMessage
+                  | SetKeyboard Int
                   | CommonNoOp
 
 {-| Transform the state to a new state according to an action -}
@@ -126,10 +138,12 @@ update action s =
         SetDeviceStatus c   -> {s | deviceStatus <- c}
         SetImportInfo i     -> {s | importInfo <- i}
         StartImportMedia id -> {s | importInfo <- ImportRequested id}
-        SetMemInfo i        -> {s | memoryInfo <- i}
+        SetMemInfo i        -> log ("SetMemInfo") <| {s | memoryInfo <- i}
         StartMemManage      -> {s | memoryInfo <- MemInfoRequest}
         SaveMemManage d     -> {s | memoryInfo <- MemInfoSave d}
         EndMemManage        -> {s | memoryInfo <- NoMemInfo}
+        SetKeyboard kb      -> log ("Set kb to " ++ toString kb) <| {s | setKeyboard <- kb}
+        -- SendDeviceMessage m -> s -- {s | sentDeviceMessage <- m}
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force
         -- an update through if we need to (like when the GUI is newly opened

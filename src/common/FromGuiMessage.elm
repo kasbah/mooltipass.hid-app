@@ -6,6 +6,8 @@ import Maybe
 -- local source
 import CommonState (..)
 
+import Debug (log)
+
 type alias FromGuiMessage =
     { setLog           : Maybe (List String)
     , getState         : Maybe ()
@@ -13,6 +15,7 @@ type alias FromGuiMessage =
     , startMemManage   : Maybe ()
     , endMemManage     : Maybe ()
     , saveMemManage    : Maybe MemInfoData
+    , setKeyboard      : Maybe Int
     }
 
 emptyFromGuiMessage =
@@ -22,6 +25,7 @@ emptyFromGuiMessage =
     , startMemManage   = Nothing
     , endMemManage     = Nothing
     , saveMemManage    = Nothing
+    , setKeyboard      = Nothing
     }
 
 encode : CommonAction -> FromGuiMessage
@@ -33,6 +37,7 @@ encode action =
         StartMemManage     -> {e | startMemManage <- Just ()}
         EndMemManage       -> {e | endMemManage <- Just ()}
         SaveMemManage d    -> {e | saveMemManage <- Just d}
+        SetKeyboard kb     -> log ("encode FromGuiMessage setKeyboard " ++ toString kb) <| {e | setKeyboard <- Just kb}
         _                  -> e
 
 decode :  FromGuiMessage -> CommonAction
@@ -45,5 +50,6 @@ decode msg =
             , Maybe.map (\_ -> StartMemManage) msg.startMemManage
             , Maybe.map (\_ -> EndMemManage) msg.endMemManage
             , Maybe.map SaveMemManage msg.saveMemManage
+            , Maybe.map SetKeyboard msg.setKeyboard
             ]
     in Maybe.withDefault CommonNoOp decode'

@@ -92,8 +92,7 @@ onDeviceFound = function (devices)
 
     chrome.hid.connect(devId, function(connectInfo)
     {
-        if (!chrome.runtime.lastError)
-		{
+        if (!chrome.runtime.lastError) {
             device.connection = connectInfo.connectionId;
             deviceSendToElm({setHidConnected:true});
             //make sure then next status won't be dropped because of dropRepeats

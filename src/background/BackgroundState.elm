@@ -11,6 +11,8 @@ import DevicePacket (..)
 import DeviceFlash (..)
 import Byte (..)
 
+import Debug (log)
+
 type alias BackgroundState = { deviceConnected  : Bool
                              , deviceVersion    : Maybe MpVersion
                              , waitingForDevice : Bool
@@ -19,6 +21,7 @@ type alias BackgroundState = { deviceConnected  : Bool
                              , extRequest       : ExtensionRequest
                              , mediaImport      : MediaImport
                              , memoryManage     : MemManageState
+                             , bgSetKeyboard      : Maybe Int
                              , common           : CommonState
                              }
 
@@ -31,6 +34,7 @@ default = { deviceConnected  = False
           , extRequest       = NoRequest
           , mediaImport      = NoMediaImport
           , memoryManage     = NotManaging
+          , bgSetKeyboard      = Nothing
           , common           = Common.default
           }
 
@@ -263,6 +267,10 @@ update action s =
             if not (mediaImportActive s)
             then setMedia (MediaImportRequested p) s
             else s
+        CommonAction (SetKeyboard kb) ->
+            if kb == 0
+            then log ("background update to clear kb") <| {s | bgSetKeyboard <- Nothing}
+            else log ("background update to set kb " ++ toString kb) <| {s | bgSetKeyboard <- Just kb}
         CommonAction a -> {s | common <- updateCommon a}
         Interpret p -> interpret p s
         NoOp -> s
@@ -455,6 +463,8 @@ interpret packet s =
         ReceivedGetCardCpz cpz -> case s.memoryManage of
             MemManageReadCpzWaiting (p,f,a,c,cs) -> setMemManage (MemManageReadSuccess (p,f,a,c,cs,cpz)) s
             _ -> s -- can be meant for gui, we just ignore it
+        ReceivedSetParameter x -> log ("ReceivedSetParameter " ++ toString x) <|
+            {s | bgSetKeyboard <- Nothing }
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s
