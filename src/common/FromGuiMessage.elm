@@ -16,6 +16,7 @@ type alias FromGuiMessage =
     , endMemManage     : Maybe ()
     , saveMemManage    : Maybe MemInfoData
     , setKeyboard      : Maybe Int
+    , getKeyboard      : Maybe (Maybe ())
     }
 
 emptyFromGuiMessage =
@@ -26,6 +27,7 @@ emptyFromGuiMessage =
     , endMemManage     = Nothing
     , saveMemManage    = Nothing
     , setKeyboard      = Nothing
+    , getKeyboard      = Nothing
     }
 
 encode : CommonAction -> FromGuiMessage
@@ -38,6 +40,7 @@ encode action =
         EndMemManage       -> {e | endMemManage <- Just ()}
         SaveMemManage d    -> {e | saveMemManage <- Just d}
         SetKeyboard kb     -> log ("encode FromGuiMessage setKeyboard " ++ toString kb) <| {e | setKeyboard <- Just kb}
+        GetKeyboard i      -> log ("encode FromGuiMessage getKeyboard") <| {e | getKeyboard <- Just i}
         _                  -> e
 
 decode :  FromGuiMessage -> CommonAction
@@ -51,5 +54,6 @@ decode msg =
             , Maybe.map (\_ -> EndMemManage) msg.endMemManage
             , Maybe.map SaveMemManage msg.saveMemManage
             , Maybe.map SetKeyboard msg.setKeyboard
+            , Maybe.map GetKeyboard msg.getKeyboard
             ]
     in Maybe.withDefault CommonNoOp decode'

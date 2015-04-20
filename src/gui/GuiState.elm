@@ -33,6 +33,7 @@ type alias GuiState =
     , unsavedMemInfo : MemInfo
     , chromeNotify   : Maybe (String, String)
     , wantSetKeyboard : Maybe Int
+    , wantGetKeyboard : Maybe ()
     , common         : CommonState
     }
 
@@ -66,6 +67,7 @@ default =
     , unsavedMemInfo = NoMemInfo
     , chromeNotify   = Nothing
     , wantSetKeyboard = Nothing
+    , wantGetKeyboard = Nothing
     , common         = Common.default
     }
 
@@ -179,7 +181,11 @@ update action s =
                         _ -> updateMemInfo
 
                 SetKeyboard kb ->
-                    log ("GUI set kb to " ++ toString kb) <| { s' | wantSetKeyboard <- Just kb }
+                    if kb == 0
+                    then log ("gui.GuiState: clear kb") <| { s' | wantSetKeyboard <- Nothing }
+                    else log ("gui.GuiState: set kb to " ++ toString kb) <| { s' | wantSetKeyboard <- Just kb }
+                GetKeyboard i ->
+                    log ("gui.GuiState: get kb") <| {s' | wantGetKeyboard <- i}
                 _ -> s'
         Interpret packet -> case packet of
             ReceivedGetCardCpz cpz -> case s.unsavedMemInfo of

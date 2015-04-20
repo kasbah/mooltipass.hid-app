@@ -74,7 +74,9 @@ forBg s =
             Just _  -> True
             Nothing -> False
         kb' = Maybe.withDefault 0 s.wantSetKeyboard
-            
+        getKb = case s.wantGetKeyboard of
+            Just _  -> True
+            Nothing -> False
     in if
         | mImportRequested -> case s.importMedia of
             RequestFile p ->
@@ -88,7 +90,8 @@ forBg s =
                 Common.MemInfoSave d ->
                         (FromGuiMessage.encode (Common.SaveMemManage d)
                         , SetUnsavedMem (Common.MemInfo d))
-        | setKb -> log ("gui: WANT SET KB") <| (FromGuiMessage.encode (Common.SetKeyboard kb'), NoOp)
+        | setKb -> log ("gui.Main: WANT SET KB to " ++ toString kb') <| (FromGuiMessage.encode (Common.SetKeyboard kb'), NoOp)
+        | getKb -> log ("gui.Main: WANT GET KB") <| (FromGuiMessage.encode (Common.GetKeyboard s.wantGetKeyboard), NoOp)
         | otherwise -> (e, NoOp)
 
 output : Signal (ToChromeMessage, FromGuiMessage, List Int, GuiState)

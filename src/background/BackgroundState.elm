@@ -21,7 +21,8 @@ type alias BackgroundState = { deviceConnected  : Bool
                              , extRequest       : ExtensionRequest
                              , mediaImport      : MediaImport
                              , memoryManage     : MemManageState
-                             , bgSetKeyboard      : Maybe Int
+                             , bgSetKeyboard    : Maybe Int
+                             , bgGetKeyboard    : Maybe ()
                              , common           : CommonState
                              }
 
@@ -34,7 +35,8 @@ default = { deviceConnected  = False
           , extRequest       = NoRequest
           , mediaImport      = NoMediaImport
           , memoryManage     = NotManaging
-          , bgSetKeyboard      = Nothing
+          , bgSetKeyboard    = Nothing
+          , bgGetKeyboard    = Nothing
           , common           = Common.default
           }
 
@@ -271,6 +273,8 @@ update action s =
             if kb == 0
             then log ("background update to clear kb") <| {s | bgSetKeyboard <- Nothing}
             else log ("background update to set kb " ++ toString kb) <| {s | bgSetKeyboard <- Just kb}
+        CommonAction (GetKeyboard i) ->
+            log ("background update to get kb?") <| {s | bgGetKeyboard <- i}
         CommonAction a -> {s | common <- updateCommon a}
         Interpret p -> interpret p s
         NoOp -> s
@@ -463,8 +467,12 @@ interpret packet s =
         ReceivedGetCardCpz cpz -> case s.memoryManage of
             MemManageReadCpzWaiting (p,f,a,c,cs) -> setMemManage (MemManageReadSuccess (p,f,a,c,cs,cpz)) s
             _ -> s -- can be meant for gui, we just ignore it
-        ReceivedSetParameter x -> log ("ReceivedSetParameter " ++ toString x) <|
+        ReceivedSetParameter x ->
+            log ("background.BackgroundState: ReceivedSetParameter " ++ toString x) <|
             {s | bgSetKeyboard <- Nothing }
+        ReceivedGetParameter x ->
+            log ("background.BackgroundState: ReceivedGetParameter " ++ toString x) <|
+            {s | bgGetKeyboard <- Nothing }
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s

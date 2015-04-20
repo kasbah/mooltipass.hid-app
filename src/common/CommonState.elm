@@ -16,6 +16,7 @@ type alias CommonState =
     , importInfo   : ImportInfo
     , memoryInfo   : MemInfo
     , setKeyboard  : Int
+    , getKeyboard  : Maybe ()
     -- , settingsInfo : SettingsInfo
     -- , sentDeviceMessage : DeviceMessage
     , forceUpdate  : Bool
@@ -28,6 +29,7 @@ default =
     , importInfo   = NoImport
     , memoryInfo   = NoMemInfo
     , setKeyboard  = 0
+    , getKeyboard  = Nothing
     , forceUpdate  = True
     }
 
@@ -125,6 +127,7 @@ type CommonAction = SetLog (List String)
                   | EndMemManage
                   -- | SendDeviceMessage DeviceMessage
                   | SetKeyboard Int
+                  | GetKeyboard (Maybe ())
                   | CommonNoOp
 
 {-| Transform the state to a new state according to an action -}
@@ -138,11 +141,12 @@ update action s =
         SetDeviceStatus c   -> {s | deviceStatus <- c}
         SetImportInfo i     -> {s | importInfo <- i}
         StartImportMedia id -> {s | importInfo <- ImportRequested id}
-        SetMemInfo i        -> log ("SetMemInfo") <| {s | memoryInfo <- i}
+        SetMemInfo i        -> {s | memoryInfo <- i}
         StartMemManage      -> {s | memoryInfo <- MemInfoRequest}
         SaveMemManage d     -> {s | memoryInfo <- MemInfoSave d}
         EndMemManage        -> {s | memoryInfo <- NoMemInfo}
-        SetKeyboard kb      -> log ("Set kb to " ++ toString kb) <| {s | setKeyboard <- kb}
+        SetKeyboard kb      -> log ("common.CommonState.update: Set kb to " ++ toString kb) <| {s | setKeyboard <- kb}
+        GetKeyboard i       -> log ("common.CommonState.update: Get kb") <| {s | getKeyboard <- i}
         -- SendDeviceMessage m -> s -- {s | sentDeviceMessage <- m}
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force

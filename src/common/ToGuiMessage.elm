@@ -8,6 +8,7 @@ type alias ToGuiMessage = { setLog          : (List String)
                           , setImportInfo   : (Int,FileId,Int,Int)
                           , setMemInfo      : (Int, Maybe MemInfoData)
                           , setKbInfo       : Maybe Int
+                          , getKbInfo       : Maybe ()
                           }
 
 encode : CommonState -> ToGuiMessage
@@ -35,6 +36,7 @@ encode s =
     , setKbInfo = case s.setKeyboard of
         0                       -> Nothing
         x                       -> Just x
+    , getKbInfo = s.getKeyboard
     }
 
 decode : ToGuiMessage -> List CommonAction
@@ -60,11 +62,12 @@ decode msg=
             (3, Nothing) -> MemInfoWaitingForDevice
             (4, Just d)  -> MemInfo d
         kb = case msg.setKbInfo of
-            Nothing -> 0
-            Just x -> x
+            Nothing -> SetKeyboard 0
+            Just x -> SetKeyboard x
     in  [ SetLog msg.setLog
         , SetDeviceStatus setDeviceStatus
         , SetImportInfo setImportInfo
         , SetMemInfo setMemInfo
-        , SetKeyboard kb
+        , kb
+        , GetKeyboard msg.getKbInfo
         ]

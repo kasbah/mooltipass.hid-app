@@ -200,9 +200,10 @@ field w kString vString =
 sel : Int -> String -> (a -> Message) -> List (String, a) -> Element
 sel w kString act things =
     let -- username = uUp -- button disabled for beta release
-        username = Input.customButton (send guiActions NoOp) uUp uHover uDown
+        -- username = Input.customButton (send guiActions NoOp) uUp uHover uDown
         -- username = Input.customButton (send commonActions (OutgoingSetParameter KeyboardLayout 0x93)) uUp uHover uDown
         -- username = Input.customButton (send guiActions (CommonAction (SetKeyboard 0x93))) uUp uHover uDown
+        username = Input.customButton (send guiActions (CommonAction (GetKeyboard (Just ())))) uUp uHover uDown
         uUp      = layers [ubg lightGrey', utxt]
         uHover   = layers [ubg lightGrey'', utxt]
         uDown    = uUp
