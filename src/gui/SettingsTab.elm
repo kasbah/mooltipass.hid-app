@@ -9,7 +9,7 @@ import List (..)
 import Color
 import Text (..)
 import Text
-import Signal (send)
+import Signal (send, Message)
 import Maybe
 
 -- extra libraries
@@ -59,8 +59,10 @@ cardSettings (w,h) =
 
 mpSettings : (Int, Int) -> Element
 mpSettings (w,h) =
-    let mpSettings' = container w h midTop <| flow down
-            [ sel (w - 32) "Keyboard layout" (sortBy fst allKeyboards)
+    let changeKb kb = Debug.log ("mpSettings: Change kb to " ++ toString kb) <|
+                      send guiActions (CommonAction (SetKeyboard kb))
+        mpSettings' = container w h midTop <| flow down
+            [ sel (w - 32) "Keyboard layout" changeKb (sortBy fst allKeyboards)
             , field (w - 32) "User interaction timeout" "77"
             ]
     in box (w,h) "Mooltipass Settings"
@@ -194,12 +196,13 @@ field w kString vString =
      var option = NativeElement.createNode('option');
 
 -}
-sel : Int -> String -> List (String, a) -> Element
-sel w kString things =
+
+sel : Int -> String -> (a -> Message) -> List (String, a) -> Element
+sel w kString act things =
     let -- username = uUp -- button disabled for beta release
-        -- username = Input.customButton (send guiActions NoOp) uUp uHover uDown
+        username = Input.customButton (send guiActions NoOp) uUp uHover uDown
         -- username = Input.customButton (send commonActions (OutgoingSetParameter KeyboardLayout 0x93)) uUp uHover uDown
-        username = Input.customButton (send guiActions (CommonAction (SetKeyboard 0x93))) uUp uHover uDown
+        -- username = Input.customButton (send guiActions (CommonAction (SetKeyboard 0x93))) uUp uHover uDown
         uUp      = layers [ubg lightGrey', utxt]
         uHover   = layers [ubg lightGrey'', utxt]
         uDown    = uUp
@@ -219,7 +222,9 @@ sel w kString things =
         pw'      = toFloat pw
         pbg c    = collage pw lh [rect pw' lh' |> filled c]
         ptxt'    = flow right
-            [spacer 5 1, Input.dropDown (\x -> send guiActions NoOp) things]
+            -- [spacer 5 1, Input.dropDown (\x -> send guiActions NoOp) things]
+            -- [spacer 5 1, Input.dropDown (send kbChannel) things]
+            [spacer 5 1, Input.dropDown act things]
         ptxt     = container pw lh midLeft ptxt'
         lh       = heights.settingsLogin
         lh'      = toFloat lh
