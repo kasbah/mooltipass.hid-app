@@ -5,11 +5,14 @@ import Graphics.Element as Element
 import Graphics.Element (..)
 import Graphics.Collage (..)
 import Graphics.Input as Input
+import Graphics.Input.Field as Field
+import Graphics.Input.Field (defaultStyle, noContent, Content)
 import List (..)
 import Color
 import Text (..)
 import Text
-import Signal (send, Message)
+-- import Signal (channel, send, subscribe, Message)
+import Signal (..)
 import Maybe
 
 -- extra libraries
@@ -29,22 +32,23 @@ import KeyboardLayout (..)
 
 import Debug
 
-settingsTab : (Int, Int) -> Element
-settingsTab (w,h) =
+settingsTab : (Int, Int) -> SettingsInfo -> Element
+settingsTab (w,h) settings =
     let contentH = h - 32
         contentW = w - 64
         content' = container w contentH middle
-            <| content (contentW, contentH)
+            <| content (contentW, contentH) settings
     in container w h middle content'
 
-content : (Int, Int) -> Element
-content (w,h) =
+content : (Int, Int) -> SettingsInfo -> Element
+content (w,h) settings =
     let content' = container w h midTop <| flow down
             [ -- cardSettings (w,120) ,
-              mpSettings (w,120)
+              mpSettings (w,120) settings
             ]
     in content'
 
+{-
 cardSettings : (Int, Int) -> Element
 cardSettings (w,h) =
     let cardAuth = field (w - 32) "Bob" "********"
@@ -56,14 +60,17 @@ cardSettings (w,h) =
             [ spacer 1 10
             , flow right [spacer 16 1, cardSettings']
             ]
+-}
 
-mpSettings : (Int, Int) -> Element
-mpSettings (w,h) =
+mpSettings : (Int, Int) -> SettingsInfo -> Element
+mpSettings (w,h) settings =
     let changeKb kb = Debug.log ("mpSettings: Change kb to " ++ toString kb) <|
                       send guiActions (CommonAction (SetKeyboard kb))
+        changeTimeout t = Debug.log ("mpSettings: Change timeout to " ++ t.string) <|
+                      send guiActions (CommonAction CommonNoOp)
         mpSettings' = container w h midTop <| flow down
             [ sel (w - 32) "Keyboard layout" changeKb (sortBy fst allKeyboards)
-            , field (w - 32) "User interaction timeout" "77"
+            , field (w - 32) "User interaction timeout" changeTimeout (toString (settings.timeout))
             ]
     in box (w,h) "Mooltipass Settings"
         <| flow down
@@ -156,8 +163,8 @@ https://github.com/kasbah/mooltipass.hid-app/blob/39d80a0d593b93bcb7fe74ffd54197
 -}
 
 
-field : Int -> String -> String -> Element
-field w kString vString =
+field : Int -> String -> (Content -> Message) -> String -> Element
+field w kString act vString =
     let username = uUp -- button disabled for beta release
         --username = Input.customButton (send guiActions NoOp) uUp uHover uDown
         uUp      = layers [ubg lightGrey', utxt]
@@ -170,11 +177,12 @@ field w kString vString =
         utxt'    = flow right
             [spacer 5 5 , leftAligned <| whiteText kString]
         utxt     = container uw lh midLeft utxt'
-        password = pUp -- button disabled for beta release
-        --password = Input.customButton (send guiActions NoOp) pUp pHover pDown
+        -- password = pUp -- button disabled for beta release
+        -- password = Input.customButton (send guiActions NoOp) pUp pHover pDown
+        password = Field.field Field.defaultStyle act kString {noContent | string <- vString}
         pUp      = layers [pbg lightGrey', ptxt]
-        --pHover   = layers [pbg lightGrey'', ptxt]
-        --pDown    = pUp
+        pHover   = layers [pbg lightGrey'', ptxt]
+        pDown    = pUp
         pw       = (w//2) - (2*spw) - (2*iw)
         pw'      = toFloat pw
         pbg c    = collage pw lh [rect pw' lh' |> filled c]

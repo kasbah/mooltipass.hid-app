@@ -56,10 +56,11 @@ type MemInfo =
 
 type alias SettingsInfo =
     { keyboard  : Int
+    , timeout   : Int
     }
 
 defaultSettingsInfo : SettingsInfo
-defaultSettingsInfo = SettingsInfo defaultKeyboard
+defaultSettingsInfo = SettingsInfo defaultKeyboard 3
 
 type alias ServiceName =
     { address    : FlashAddress
