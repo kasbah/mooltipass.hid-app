@@ -9,6 +9,7 @@ type alias ToGuiMessage = { setLog          : (List String)
                           , setMemInfo      : (Int, Maybe MemInfoData)
                           , setKbInfo       : Maybe Int
                           , getKbInfo       : Maybe ()
+                          , settingsInfo    : SettingsInfo
                           }
 
 encode : CommonState -> ToGuiMessage
@@ -37,6 +38,7 @@ encode s =
         0                       -> Nothing
         x                       -> Just x
     , getKbInfo = s.getKeyboard
+    , settingsInfo = s.settingsInfo
     }
 
 decode : ToGuiMessage -> List CommonAction
@@ -70,4 +72,5 @@ decode msg=
         , SetMemInfo setMemInfo
         , kb
         , GetKeyboard msg.getKbInfo
+        , CommonSettings msg.settingsInfo
         ]

@@ -6,6 +6,7 @@ import String
 
 -- local source
 import Byte (..)
+import KeyboardLayout(..)
 
 import Debug (log)
 
@@ -17,8 +18,7 @@ type alias CommonState =
     , memoryInfo   : MemInfo
     , setKeyboard  : Int
     , getKeyboard  : Maybe ()
-    -- , settingsInfo : SettingsInfo
-    -- , sentDeviceMessage : DeviceMessage
+    , settingsInfo : SettingsInfo
     , forceUpdate  : Bool
     }
 
@@ -30,6 +30,7 @@ default =
     , memoryInfo   = NoMemInfo
     , setKeyboard  = 0
     , getKeyboard  = Nothing
+    , settingsInfo = defaultSettingsInfo
     , forceUpdate  = True
     }
 
@@ -56,6 +57,9 @@ type MemInfo =
 type alias SettingsInfo =
     { keyboard  : Int
     }
+
+defaultSettingsInfo : SettingsInfo
+defaultSettingsInfo = SettingsInfo defaultKeyboard
 
 type alias ServiceName =
     { address    : FlashAddress
@@ -128,6 +132,8 @@ type CommonAction = SetLog (List String)
                   -- | SendDeviceMessage DeviceMessage
                   | SetKeyboard Int
                   | GetKeyboard (Maybe ())
+                  | ReceiveKeyboard Int
+                  | CommonSettings SettingsInfo
                   | CommonNoOp
 
 {-| Transform the state to a new state according to an action -}
@@ -147,13 +153,20 @@ update action s =
         EndMemManage        -> {s | memoryInfo <- NoMemInfo}
         SetKeyboard kb      -> log ("common.CommonState.update: Set kb to " ++ toString kb) <| {s | setKeyboard <- kb}
         GetKeyboard i       -> log ("common.CommonState.update: Get kb") <| {s | getKeyboard <- i}
-        -- SendDeviceMessage m -> s -- {s | sentDeviceMessage <- m}
+        ReceiveKeyboard kb  -> log ("common.CommonState update: Rcv kb " ++ toString kb) <| {s | settingsInfo <- updateSettings action s.settingsInfo}
+        CommonSettings settings   -> log ("common.CommonState update: Settings") <| {s | settingsInfo <- settings}
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force
         -- an update through if we need to (like when the GUI is newly opened
         -- and definetely needs the state).
         GetState            -> {s | forceUpdate <- not s.forceUpdate}
         CommonNoOp          -> s
+
+updateSettings : CommonAction -> SettingsInfo -> SettingsInfo
+updateSettings action s =
+    case action of
+        ReceiveKeyboard i -> { s | keyboard <- i}
+        _                 -> s
 
 apply : List CommonAction -> CommonState -> CommonState
 apply actions state = foldr update state actions

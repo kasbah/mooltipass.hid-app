@@ -80,11 +80,17 @@ encode s =
         getKb = case s.bgGetKeyboard of
             Just _  -> True
             Nothing -> False
+        rcvKb = case s.bgReceiveKB of
+            Just _  -> True
+            Nothing -> False
+        rKb = Maybe.withDefault 0 s.bgReceiveKB
     in if | not s.deviceConnected -> log ("background.DeviceMessage: bg encode NOT CONNECTED") <| (connect, [])
           | setKb -> log ("background.DeviceMessage: bg encode set kb " ++ toString kb') <|
               sendCommand' (OutgoingSetParameter KeyboardLayout kb') []
           | getKb -> log ("background.DeviceMessage: bg encode get kb") <|
               sendCommand' (OutgoingGetParameter KeyboardLayout) []
+          | rcvKb -> log ("background.DeviceMessage: bg encode rcv kb " ++ toString rKb) <|
+              (e, [CommonAction (ReceiveKeyboard rKb)])
           | extNeedsToSend' -> log ("background.DeviceMessage: bg encode extNeedsToSend'") <|
               ({e | sendCommand <-
                     Maybe.map toInts

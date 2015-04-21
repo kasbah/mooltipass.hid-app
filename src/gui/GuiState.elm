@@ -186,6 +186,8 @@ update action s =
                     else log ("gui.GuiState: set kb to " ++ toString kb) <| { s' | wantSetKeyboard <- Just kb }
                 GetKeyboard i ->
                     log ("gui.GuiState: get kb") <| {s' | wantGetKeyboard <- i}
+                CommonSettings settings ->
+                    log ("gui.GuiState: settings") <| s'
                 _ -> s'
         Interpret packet -> case packet of
             ReceivedGetCardCpz cpz -> case s.unsavedMemInfo of

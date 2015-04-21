@@ -5,6 +5,7 @@ var emptyToGuiMessage =
     , setMemInfo      : [0,null]
     , setKbInfo       : null
     , getKbInfo       : null
+    , settingsInfo    : { keyboard: 0x93 }
     };
 
 var emptyFromGuiMessage =

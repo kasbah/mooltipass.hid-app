@@ -3,6 +3,9 @@ module KeyboardLayout where
 import List
 import Maybe
 
+defaultKeyboard : Int
+defaultKeyboard = snd (List.head allKeyboards)
+
 allKeyboards : List (String, Int)
 allKeyboards =
     [ ("EN_US", 0x92)

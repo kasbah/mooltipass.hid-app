@@ -23,6 +23,7 @@ type alias BackgroundState = { deviceConnected  : Bool
                              , memoryManage     : MemManageState
                              , bgSetKeyboard    : Maybe Int
                              , bgGetKeyboard    : Maybe ()
+                             , bgReceiveKB      : Maybe Int
                              , common           : CommonState
                              }
 
@@ -37,6 +38,7 @@ default = { deviceConnected  = False
           , memoryManage     = NotManaging
           , bgSetKeyboard    = Nothing
           , bgGetKeyboard    = Nothing
+          , bgReceiveKB      = Nothing
           , common           = Common.default
           }
 
@@ -275,6 +277,9 @@ update action s =
             else log ("background update to set kb " ++ toString kb) <| {s | bgSetKeyboard <- Just kb}
         CommonAction (GetKeyboard i) ->
             log ("background update to get kb?") <| {s | bgGetKeyboard <- i}
+        CommonAction (ReceiveKeyboard kb) ->
+            log ("background update to rcv kb " ++ toString kb) <|
+            {s | common <- updateCommon (ReceiveKeyboard kb), bgReceiveKB <- Nothing}
         CommonAction a -> {s | common <- updateCommon a}
         Interpret p -> interpret p s
         NoOp -> s
@@ -470,9 +475,10 @@ interpret packet s =
         ReceivedSetParameter x ->
             log ("background.BackgroundState: ReceivedSetParameter " ++ toString x) <|
             {s | bgSetKeyboard <- Nothing }
-        ReceivedGetParameter x ->
-            log ("background.BackgroundState: ReceivedGetParameter " ++ toString x) <|
-            {s | bgGetKeyboard <- Nothing }
+        ReceivedGetParameter (Just x) ->
+            log ("background.BackgroundState: ReceivedGetParameter " ++ toString (stringToInts x)) <|
+            let kb = head (stringToInts x) in
+            {s | bgGetKeyboard <- Nothing, bgReceiveKB <- Just kb }
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s

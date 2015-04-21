@@ -84,6 +84,12 @@ https://github.com/limpkin/mooltipass/tree/master/source_code/src/USB
   From plugin/app: Get parameter from Mooltipass, first byte is the param ID
   From Mooltipass: The param value
 
+<Nistur> Hmmm. The 64 byte packages, the first 2 bytes are defined, assuming the rest is a string, for
+example with the context, login or password, are they null terminated?
+<limpkin> they are
+<limpkin> and the length includes that null termination
+<limpkin> so length = strlen(string) + 1
+
 ParamIDs
 ========
 https://github.com/limpkin/mooltipass/blob/master/source_code/src/LOGIC/logic_eeprom.h#L44
