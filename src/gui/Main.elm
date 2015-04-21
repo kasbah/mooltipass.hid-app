@@ -70,10 +70,15 @@ forBg s =
             Common.MemInfoRequest -> True
             Common.MemInfoSave  _ -> True
             _                     -> False
+{-
         setKb = case s.wantSetKeyboard of
             Just _  -> True
             Nothing -> False
         kb' = Maybe.withDefault 0 s.wantSetKeyboard
+-}
+        (setParam, enc) = case s.setParameter of
+            Just (p,b) -> (True, FromGuiMessage.encode (Common.SetParameter (Just (p, b))))
+            Nothing -> (False, emptyFromGuiMessage)
         getKb = case s.wantGetKeyboard of
             Just _  -> True
             Nothing -> False
@@ -90,7 +95,11 @@ forBg s =
                 Common.MemInfoSave d ->
                         (FromGuiMessage.encode (Common.SaveMemManage d)
                         , SetUnsavedMem (Common.MemInfo d))
+{-
         | setKb -> log ("gui.Main: WANT SET KB to " ++ toString kb') <| (FromGuiMessage.encode (Common.SetKeyboard kb'), NoOp)
+-}
+        | setParam -> (enc, NoOp)
+        
         | getKb -> log ("gui.Main: WANT GET KB") <| (FromGuiMessage.encode (Common.GetKeyboard s.wantGetKeyboard), NoOp)
         | otherwise -> (e, NoOp)
 

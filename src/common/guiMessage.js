@@ -3,7 +3,7 @@ var emptyToGuiMessage =
     , setDeviceStatus : 0
     , setImportInfo   : [0,"",0,0]
     , setMemInfo      : [0,null]
-    , setKbInfo       : null
+    , setParameter    : null
     , getKbInfo       : null
     , settingsInfo    : { keyboard: 0x93, timeout: 3 }
     };
@@ -15,7 +15,7 @@ var emptyFromGuiMessage =
     , startMemManage   : null
     , endMemManage     : null
     , saveMemManage    : null
-    , setKeyboard      : null
+    , setParameter     : null
     , getKeyboard      : null
     };
 

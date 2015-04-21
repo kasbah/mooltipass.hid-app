@@ -9,6 +9,7 @@ import Graphics.Input.Field as Field
 import Graphics.Input.Field (defaultStyle, noContent, Content)
 import List (..)
 import Color
+import String (toInt)
 import Text (..)
 import Text
 -- import Signal (channel, send, subscribe, Message)
@@ -65,9 +66,11 @@ cardSettings (w,h) =
 mpSettings : (Int, Int) -> SettingsInfo -> Element
 mpSettings (w,h) settings =
     let changeKb kb = Debug.log ("mpSettings: Change kb to " ++ toString kb) <|
-                      send guiActions (CommonAction (SetKeyboard kb))
-        changeTimeout t = Debug.log ("mpSettings: Change timeout to " ++ t.string) <|
-                      send guiActions (CommonAction CommonNoOp)
+                      send guiActions (CommonAction (SetParameter (Just (KeyboardLayout, kb))))
+        changeTimeout s = Debug.log ("mpSettings: Change timeout to " ++ s.string) <|
+                      case toInt s.string of
+                        Ok t -> send guiActions (CommonAction (SetParameter (Just (UserInterTimeout, t))))
+                        _ -> send guiActions NoOp
         mpSettings' = container w h midTop <| flow down
             [ sel (w - 32) "Keyboard layout" changeKb (sortBy fst allKeyboards)
             , field (w - 32) "User interaction timeout" changeTimeout (toString (settings.timeout))

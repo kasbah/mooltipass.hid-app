@@ -4,6 +4,7 @@ module FromGuiMessage where
 import Maybe
 
 -- local source
+import Byte (..)
 import CommonState (..)
 
 import Debug (log)
@@ -15,7 +16,7 @@ type alias FromGuiMessage =
     , startMemManage   : Maybe ()
     , endMemManage     : Maybe ()
     , saveMemManage    : Maybe MemInfoData
-    , setKeyboard      : Maybe Int
+    , setParameter     : Maybe (Maybe (Int, Byte))
     , getKeyboard      : Maybe (Maybe ())
     }
 
@@ -26,7 +27,7 @@ emptyFromGuiMessage =
     , startMemManage   = Nothing
     , endMemManage     = Nothing
     , saveMemManage    = Nothing
-    , setKeyboard      = Nothing
+    , setParameter     = Nothing
     , getKeyboard      = Nothing
     }
 
@@ -39,7 +40,9 @@ encode action =
         StartMemManage     -> {e | startMemManage <- Just ()}
         EndMemManage       -> {e | endMemManage <- Just ()}
         SaveMemManage d    -> {e | saveMemManage <- Just d}
-        SetKeyboard kb     -> log ("encode FromGuiMessage setKeyboard " ++ toString kb) <| {e | setKeyboard <- Just kb}
+        SetParameter mpb   -> log ("encode FromGuiMessage setParamter") <|
+                              {e | setParameter <- Just
+                                (Maybe.map (\(p,b) -> (encodeParameter p, b)) mpb)} 
         GetKeyboard i      -> log ("encode FromGuiMessage getKeyboard") <| {e | getKeyboard <- Just i}
         _                  -> e
 
@@ -53,7 +56,8 @@ decode msg =
             , Maybe.map (\_ -> StartMemManage) msg.startMemManage
             , Maybe.map (\_ -> EndMemManage) msg.endMemManage
             , Maybe.map SaveMemManage msg.saveMemManage
-            , Maybe.map SetKeyboard msg.setKeyboard
+            -- , Maybe.map SetKeyboard msg.setKeyboard
+            , Maybe.map (\x -> SetParameter (Maybe.map (\(p,b) -> (decodeParameter p, b)) x)) msg.setParameter
             , Maybe.map GetKeyboard msg.getKeyboard
             ]
     in Maybe.withDefault CommonNoOp decode'

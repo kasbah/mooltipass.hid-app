@@ -21,7 +21,8 @@ type alias BackgroundState = { deviceConnected  : Bool
                              , extRequest       : ExtensionRequest
                              , mediaImport      : MediaImport
                              , memoryManage     : MemManageState
-                             , bgSetKeyboard    : Maybe Int
+                             -- , bgSetKeyboard    : Maybe Int
+                             , bgSetParameter   : Maybe (Parameter, Byte)
                              , bgGetKeyboard    : Maybe ()
                              , bgReceiveKB      : Maybe Int
                              , common           : CommonState
@@ -36,7 +37,8 @@ default = { deviceConnected  = False
           , extRequest       = NoRequest
           , mediaImport      = NoMediaImport
           , memoryManage     = NotManaging
-          , bgSetKeyboard    = Nothing
+          -- , bgSetKeyboard    = Nothing
+          , bgSetParameter   = Nothing
           , bgGetKeyboard    = Nothing
           , bgReceiveKB      = Nothing
           , common           = Common.default
@@ -271,10 +273,16 @@ update action s =
             if not (mediaImportActive s)
             then setMedia (MediaImportRequested p) s
             else s
+{-
         CommonAction (SetKeyboard kb) ->
             if kb == 0
             then log ("background update to clear kb") <| {s | bgSetKeyboard <- Nothing}
             else log ("background update to set kb " ++ toString kb) <| {s | bgSetKeyboard <- Just kb}
+-}
+        CommonAction (SetParameter mpb) -> -- {s | bgSetParameter <- mpb}
+            if mpb == Nothing
+            then log ("background update to clear param") <| {s | bgSetParameter <- Nothing}
+            else log ("background update to set param") <| {s | bgSetParameter <- mpb}
         CommonAction (GetKeyboard i) ->
             log ("background update to get kb?") <| {s | bgGetKeyboard <- i}
         CommonAction (ReceiveKeyboard kb) ->
@@ -474,7 +482,8 @@ interpret packet s =
             _ -> s -- can be meant for gui, we just ignore it
         ReceivedSetParameter x ->
             log ("background.BackgroundState: ReceivedSetParameter " ++ toString x) <|
-            {s | bgSetKeyboard <- Nothing }
+            -- {s | bgSetKeyboard <- Nothing }
+            {s | bgSetParameter <- Nothing }
         ReceivedGetParameter (Just x) ->
             log ("background.BackgroundState: ReceivedGetParameter " ++ toString (stringToInts x)) <|
             let kb = head (stringToInts x) in

@@ -73,10 +73,15 @@ encode s =
             _                        -> False
         extNeedsToSend' = extNeedsToSend s.extRequest && not s.waitingForDevice
                         && s.common.deviceStatus == Unlocked
+{-
         setKb = case s.bgSetKeyboard of
             Just _  -> True
             Nothing -> False
         kb' = Maybe.withDefault 0 s.bgSetKeyboard
+-}
+        (setParam, outCmd) = case s.bgSetParameter of
+            Just (p,b) -> (True, OutgoingSetParameter p b)
+            Nothing -> (False, OutgoingDebug "DeviceMessage error in setParam")
         getKb = case s.bgGetKeyboard of
             Just _  -> True
             Nothing -> False
@@ -85,8 +90,10 @@ encode s =
             Nothing -> False
         rKb = Maybe.withDefault 0 s.bgReceiveKB
     in if | not s.deviceConnected -> log ("background.DeviceMessage: bg encode NOT CONNECTED") <| (connect, [])
-          | setKb -> log ("background.DeviceMessage: bg encode set kb " ++ toString kb') <|
-              sendCommand' (OutgoingSetParameter KeyboardLayout kb') []
+          -- | setKb -> log ("background.DeviceMessage: bg encode set kb " ++ toString kb') <|
+          --     sendCommand' (OutgoingSetParameter KeyboardLayout kb') []
+          | setParam -> log ("background.DeviceMessage: bg encode set param") <|
+              sendCommand' outCmd []
           | getKb -> log ("background.DeviceMessage: bg encode get kb") <|
               sendCommand' (OutgoingGetParameter KeyboardLayout) []
           | rcvKb -> log ("background.DeviceMessage: bg encode rcv kb " ++ toString rKb) <|

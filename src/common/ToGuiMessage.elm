@@ -1,13 +1,16 @@
 module ToGuiMessage where
 
+import Maybe
+
 -- local source
+import Byte (..)
 import CommonState (..)
 
 type alias ToGuiMessage = { setLog          : (List String)
                           , setDeviceStatus : Int
                           , setImportInfo   : (Int,FileId,Int,Int)
                           , setMemInfo      : (Int, Maybe MemInfoData)
-                          , setKbInfo       : Maybe Int
+                          , setParameter    : Maybe (Int, Byte)
                           , getKbInfo       : Maybe ()
                           , settingsInfo    : SettingsInfo
                           }
@@ -34,9 +37,7 @@ encode s =
         MemInfoWaitingForUser   -> (2, Nothing)
         MemInfoWaitingForDevice -> (3, Nothing)
         MemInfo d               -> (4, Just d)
-    , setKbInfo = case s.setKeyboard of
-        0                       -> Nothing
-        x                       -> Just x
+    , setParameter = Maybe.map (\(p,b) -> (encodeParameter p, b)) s.setParameter
     , getKbInfo = s.getKeyboard
     , settingsInfo = s.settingsInfo
     }
@@ -63,14 +64,11 @@ decode msg=
             (2, Nothing) -> MemInfoWaitingForUser
             (3, Nothing) -> MemInfoWaitingForDevice
             (4, Just d)  -> MemInfo d
-        kb = case msg.setKbInfo of
-            Nothing -> SetKeyboard 0
-            Just x -> SetKeyboard x
     in  [ SetLog msg.setLog
         , SetDeviceStatus setDeviceStatus
         , SetImportInfo setImportInfo
         , SetMemInfo setMemInfo
-        , kb
+        , SetParameter (Maybe.map (\(p,b) -> (decodeParameter p, b)) msg.setParameter)
         , GetKeyboard msg.getKbInfo
         , CommonSettings msg.settingsInfo
         ]

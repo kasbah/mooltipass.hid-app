@@ -217,17 +217,6 @@ type SetContextReturn = UnknownContext | ContextSet | NoCardForContext
 {-| You dun it? -}
 type ReturnCode = Done | NotDone
 
-{-| Set-able parameters. Only some of these will be exposed to the user -}
-type Parameter = UserInitKey
-               | KeyboardLayout
-               | UserInterTimeout
-               | LockTimeoutEnable
-               | LockTimeout
-               | TouchDi
-               | TouchWheelOs
-               | TouchProxOs
-               | OfflineMode
-
 {-| The flash space is divided into these two regions -}
 type FlashSpace = FlashUserSpace | FlashGraphicsSpace
 
