@@ -40,8 +40,8 @@ settingsTab (w,h) =
 content : (Int, Int) -> Element
 content (w,h) =
     let content' = container w h midTop <| flow down
-            [ cardSettings (w,120)
-            , mpSettings (w,120)
+            [ -- cardSettings (w,120) ,
+              mpSettings (w,120)
             ]
     in content'
 
