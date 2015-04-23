@@ -101,6 +101,12 @@ type alias SettingsInfo =
 defaultSettingsInfo : SettingsInfo
 defaultSettingsInfo = SettingsInfo defaultKeyboard 3
 
+updateSettingsInfo : Parameter -> Byte -> SettingsInfo -> SettingsInfo
+updateSettingsInfo p b s = case p of
+  KeyboardLayout   -> { s | keyboard <- b }
+  UserInterTimeout -> { s | timeout <- b }
+  _                -> s
+
 type alias ServiceName =
     { address    : FlashAddress
     , flags      : (Byte,Byte)

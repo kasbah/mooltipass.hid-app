@@ -21,7 +21,6 @@ type alias BackgroundState = { deviceConnected  : Bool
                              , extRequest       : ExtensionRequest
                              , mediaImport      : MediaImport
                              , memoryManage     : MemManageState
-                             -- , bgSetKeyboard    : Maybe Int
                              , bgSetParameter   : Maybe (Parameter, Byte)
                              , bgGetKeyboard    : Maybe ()
                              , bgReceiveKB      : Maybe Int
@@ -482,8 +481,13 @@ interpret packet s =
             _ -> s -- can be meant for gui, we just ignore it
         ReceivedSetParameter x ->
             log ("background.BackgroundState: ReceivedSetParameter " ++ toString x) <|
-            -- {s | bgSetKeyboard <- Nothing }
-            {s | bgSetParameter <- Nothing }
+            -- update s.common with value of bgSetParameter
+            case s.bgSetParameter of
+              Just (p, b) ->
+                let c = s.common
+                    common' = { c | settingsInfo <- updateSettingsInfo p b s.common.settingsInfo }
+                in {s | bgSetParameter <- Nothing, common <- common' }
+              Nothing     -> {s | bgSetParameter <- Nothing }
         ReceivedGetParameter (Just x) ->
             log ("background.BackgroundState: ReceivedGetParameter " ++ toString (stringToInts x)) <|
             let kb = head (stringToInts x) in
