@@ -33,8 +33,7 @@ type alias GuiState =
     , unsavedMemInfo : MemInfo
     , chromeNotify   : Maybe (String, String)
     , setParameter   : Maybe (Parameter, Byte)
-    -- , wantSetKeyboard : Maybe Int
-    , wantGetKeyboard : Maybe ()
+    , getParameter   : Maybe Parameter
     , common         : CommonState
     }
 
@@ -67,9 +66,8 @@ default =
     , readMem        = False
     , unsavedMemInfo = NoMemInfo
     , chromeNotify   = Nothing
-    -- , wantSetKeyboard = Nothing
     , setParameter   = Nothing
-    , wantGetKeyboard = Nothing
+    , getParameter   = Nothing
     , common         = Common.default
     }
 
@@ -182,15 +180,9 @@ update action s =
                             _ -> updateMemInfo
                         _ -> updateMemInfo
 
-{-
-                SetKeyboard kb ->
-                    if kb == 0
-                    then log ("gui.GuiState: clear kb") <| { s' | wantSetKeyboard <- Nothing }
-                    else log ("gui.GuiState: set kb to " ++ toString kb) <| { s' | wantSetKeyboard <- Just kb }
--}
                 SetParameter mpb -> {s' | setParameter <- mpb}
-                GetKeyboard i ->
-                    log ("gui.GuiState: get kb") <| {s' | wantGetKeyboard <- i}
+                GetParameter mp ->
+                    log ("gui.GuiState: get kb") <| {s' | getParameter <- mp}
                 CommonSettings settings ->
                     log ("gui.GuiState: settings") <| s'
                 _ -> s'

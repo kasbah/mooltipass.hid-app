@@ -76,12 +76,12 @@ forBg s =
             Nothing -> False
         kb' = Maybe.withDefault 0 s.wantSetKeyboard
 -}
-        (setParam, enc) = case s.setParameter of
+        (setParam, encSet) = case s.setParameter of
             Just (p,b) -> (True, FromGuiMessage.encode (Common.SetParameter (Just (p, b))))
             Nothing -> (False, emptyFromGuiMessage)
-        getKb = case s.wantGetKeyboard of
-            Just _  -> True
-            Nothing -> False
+        (getParam, encGet)  = case s.getParameter of
+            Just p  -> (True, FromGuiMessage.encode (Common.GetParameter (Just p)))
+            Nothing -> (False, emptyFromGuiMessage)
     in if
         | mImportRequested -> case s.importMedia of
             RequestFile p ->
@@ -98,9 +98,9 @@ forBg s =
 {-
         | setKb -> log ("gui.Main: WANT SET KB to " ++ toString kb') <| (FromGuiMessage.encode (Common.SetKeyboard kb'), NoOp)
 -}
-        | setParam -> (enc, NoOp)
+        | setParam -> (encSet, NoOp)
         
-        | getKb -> log ("gui.Main: WANT GET KB") <| (FromGuiMessage.encode (Common.GetKeyboard s.wantGetKeyboard), NoOp)
+        | getParam -> log ("gui.Main: WANT GET KB") <| (encGet, NoOp)
         | otherwise -> (e, NoOp)
 
 output : Signal (ToChromeMessage, FromGuiMessage, List Int, GuiState)

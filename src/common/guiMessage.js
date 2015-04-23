@@ -4,7 +4,7 @@ var emptyToGuiMessage =
     , setImportInfo   : [0,"",0,0]
     , setMemInfo      : [0,null]
     , setParameter    : null
-    , getKbInfo       : null
+    , getParameter    : null
     , settingsInfo    : { keyboard: 0x93, timeout: 3 }
     };
 
@@ -16,7 +16,7 @@ var emptyFromGuiMessage =
     , endMemManage     : null
     , saveMemManage    : null
     , setParameter     : null
-    , getKeyboard      : null
+    , getParameter     : null
     };
 
 messageHasValue = function (message) {

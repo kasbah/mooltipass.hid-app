@@ -16,9 +16,8 @@ type alias CommonState =
     , log          : List String
     , importInfo   : ImportInfo
     , memoryInfo   : MemInfo
-    -- , setKeyboard  : Int
     , setParameter : Maybe (Parameter, Byte)
-    , getKeyboard  : Maybe ()
+    , getParameter : Maybe Parameter
     , settingsInfo : SettingsInfo
     , forceUpdate  : Bool
     }
@@ -31,7 +30,7 @@ default =
     , memoryInfo   = NoMemInfo
     -- , setKeyboard  = 0
     , setParameter = Nothing
-    , getKeyboard  = Nothing
+    , getParameter = Nothing
     , settingsInfo = defaultSettingsInfo
     , forceUpdate  = True
     }
@@ -175,11 +174,8 @@ type CommonAction = SetLog (List String)
                   | StartMemManage
                   | SaveMemManage MemInfoData
                   | EndMemManage
-                  -- | SendDeviceMessage DeviceMessage
-                  -- | SetKeyboard Int
                   | SetParameter (Maybe (Parameter, Byte))
-                  | GetKeyboard (Maybe ())
-                  | ReceiveKeyboard Int
+                  | GetParameter (Maybe Parameter)
                   | CommonSettings SettingsInfo
                   | CommonNoOp
 
@@ -198,11 +194,9 @@ update action s =
         StartMemManage      -> {s | memoryInfo <- MemInfoRequest}
         SaveMemManage d     -> {s | memoryInfo <- MemInfoSave d}
         EndMemManage        -> {s | memoryInfo <- NoMemInfo}
-        -- SetKeyboard kb      -> log ("common.CommonState.update: Set kb to " ++ toString kb) <| {s | setKeyboard <- kb}
         SetParameter mpb    -> log ("common.CommonState.update: Set param?") <|
                                {s | setParameter <- mpb}
-        GetKeyboard i       -> log ("common.CommonState.update: Get kb") <| {s | getKeyboard <- i}
-        ReceiveKeyboard kb  -> log ("common.CommonState update: Rcv kb " ++ toString kb) <| {s | settingsInfo <- updateSettings action s.settingsInfo}
+        GetParameter mp     -> log ("common.CommonState.update: Get param") <| {s | getParameter <- mp}
         CommonSettings settings   -> log ("common.CommonState update: Settings") <| {s | settingsInfo <- settings}
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force
@@ -210,12 +204,6 @@ update action s =
         -- and definetely needs the state).
         GetState            -> {s | forceUpdate <- not s.forceUpdate}
         CommonNoOp          -> s
-
-updateSettings : CommonAction -> SettingsInfo -> SettingsInfo
-updateSettings action s =
-    case action of
-        ReceiveKeyboard i -> { s | keyboard <- i}
-        _                 -> s
 
 apply : List CommonAction -> CommonState -> CommonState
 apply actions state = foldr update state actions

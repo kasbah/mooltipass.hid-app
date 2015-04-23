@@ -22,8 +22,7 @@ type alias BackgroundState = { deviceConnected  : Bool
                              , mediaImport      : MediaImport
                              , memoryManage     : MemManageState
                              , bgSetParameter   : Maybe (Parameter, Byte)
-                             , bgGetKeyboard    : Maybe ()
-                             , bgReceiveKB      : Maybe Int
+                             , bgGetParameter   : Maybe Parameter
                              , common           : CommonState
                              }
 
@@ -36,10 +35,8 @@ default = { deviceConnected  = False
           , extRequest       = NoRequest
           , mediaImport      = NoMediaImport
           , memoryManage     = NotManaging
-          -- , bgSetKeyboard    = Nothing
           , bgSetParameter   = Nothing
-          , bgGetKeyboard    = Nothing
-          , bgReceiveKB      = Nothing
+          , bgGetParameter   = Nothing
           , common           = Common.default
           }
 
@@ -272,21 +269,12 @@ update action s =
             if not (mediaImportActive s)
             then setMedia (MediaImportRequested p) s
             else s
-{-
-        CommonAction (SetKeyboard kb) ->
-            if kb == 0
-            then log ("background update to clear kb") <| {s | bgSetKeyboard <- Nothing}
-            else log ("background update to set kb " ++ toString kb) <| {s | bgSetKeyboard <- Just kb}
--}
         CommonAction (SetParameter mpb) -> -- {s | bgSetParameter <- mpb}
             if mpb == Nothing
             then log ("background update to clear param") <| {s | bgSetParameter <- Nothing}
             else log ("background update to set param") <| {s | bgSetParameter <- mpb}
-        CommonAction (GetKeyboard i) ->
-            log ("background update to get kb?") <| {s | bgGetKeyboard <- i}
-        CommonAction (ReceiveKeyboard kb) ->
-            log ("background update to rcv kb " ++ toString kb) <|
-            {s | common <- updateCommon (ReceiveKeyboard kb), bgReceiveKB <- Nothing}
+        CommonAction (GetParameter mp) ->
+            log ("background update to get param?") <| {s | bgGetParameter <- mp}
         CommonAction a -> {s | common <- updateCommon a}
         Interpret p -> interpret p s
         NoOp -> s
@@ -487,11 +475,16 @@ interpret packet s =
                 let c = s.common
                     common' = { c | settingsInfo <- updateSettingsInfo p b s.common.settingsInfo }
                 in {s | bgSetParameter <- Nothing, common <- common' }
-              Nothing     -> {s | bgSetParameter <- Nothing }
+              Nothing     -> s
         ReceivedGetParameter (Just x) ->
             log ("background.BackgroundState: ReceivedGetParameter " ++ toString (stringToInts x)) <|
-            let kb = head (stringToInts x) in
-            {s | bgGetKeyboard <- Nothing, bgReceiveKB <- Just kb }
+            case s.bgGetParameter of
+              Just p ->
+                let b = head (stringToInts x)
+                    c = s.common
+                    common' = { c | settingsInfo <- updateSettingsInfo p b s.common.settingsInfo }
+                in {s | bgGetParameter <- Nothing, common <- common' }
+              Nothing -> s
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s
