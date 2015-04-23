@@ -63,17 +63,30 @@ cardSettings (w,h) =
             ]
 -}
 
+sendParameter : Parameter -> Byte -> Message
+sendParameter p b = send guiActions (CommonAction (SetParameter (Just (p, b))))
+
+sendParseInt : Parameter -> String -> Message
+sendParseInt p s = case toInt s of
+  Ok i -> sendParameter p i
+  _    -> send guiActions NoOp
+
+sendBool : Parameter -> Bool -> Message
+sendBool p b = case b of
+  True  -> sendParameter p 1
+  False -> sendParameter p 0
+
+setKeyboard : Int -> Message
+setKeyboard kb = sendParameter KeyboardLayout kb
+
 mpSettings : (Int, Int) -> SettingsInfo -> Element
 mpSettings (w,h) settings =
-    let changeKb kb = Debug.log ("mpSettings: Change kb to " ++ toString kb) <|
-                      send guiActions (CommonAction (SetParameter (Just (KeyboardLayout, kb))))
-        changeTimeout s = Debug.log ("mpSettings: Change timeout to " ++ s.string) <|
-                      case toInt s.string of
-                        Ok t -> send guiActions (CommonAction (SetParameter (Just (UserInterTimeout, t))))
-                        _ -> send guiActions NoOp
+    let
         mpSettings' = container w h midTop <| flow down
-            [ sel (w - 32) "Keyboard layout" changeKb (sortBy fst allKeyboards)
-            , field (w - 32) "User interaction timeout" changeTimeout (toString (settings.timeout))
+            [ sel (w - 32) "Keyboard layout" setKeyboard (sortBy fst allKeyboards)
+            , field (w - 32) "User interaction timeout" (sendParseInt UserInterTimeout) (toString (settings.timeout))
+            , labelCheckbox (w - 32) "Offline Mode" (sendBool OfflineMode) (settings.offline)
+            , labelCheckbox (w - 32) "Screensaver" (sendBool ScreenSaver) (settings.screensaver)
             ]
     in box (w,h) "Mooltipass Settings"
         <| flow down
@@ -165,8 +178,36 @@ https://github.com/kasbah/mooltipass.hid-app/blob/39d80a0d593b93bcb7fe74ffd54197
 
 -}
 
+labelCheckbox : Int -> String -> (Bool -> Message) -> Bool -> Element
+labelCheckbox w kString act val =
+    let username = uUp -- button disabled for beta release
+        --username = Input.customButton (send guiActions NoOp) uUp uHover uDown
+        uUp      = layers [ubg lightGrey', utxt]
+        --uHover   = layers [ubg lightGrey'', utxt]
+        --uDown    = uUp
+        uw       = (w//2) - spw
+        uw'      = toFloat uw
+        ubg c    = collage uw lh
+            [roundedRectShape Left uw' lh' 5 |> filled c]
+        utxt'    = flow right
+            [spacer 5 5 , leftAligned <| whiteText kString]
+        utxt     = container uw lh midLeft utxt'
+        password = Input.checkbox act val
+        pw       = (w//2) - (2*spw) - (2*iw)
+        pw'      = toFloat pw
+        pbg c    = collage pw lh [rect pw' lh' |> filled c]
+        lh       = heights.settingsLogin
+        lh'      = toFloat lh
+        sp       = spacer spw 1
+        spw      = 2
+        iw       = 32
+        iw'      = toFloat iw
+    in flow right [username
+                  , sp, password
+                  ]
 
-field : Int -> String -> (Content -> Message) -> String -> Element
+
+field : Int -> String -> (String -> Message) -> String -> Element
 field w kString act vString =
     let username = uUp -- button disabled for beta release
         --username = Input.customButton (send guiActions NoOp) uUp uHover uDown
@@ -182,7 +223,8 @@ field w kString act vString =
         utxt     = container uw lh midLeft utxt'
         -- password = pUp -- button disabled for beta release
         -- password = Input.customButton (send guiActions NoOp) pUp pHover pDown
-        password = Field.field Field.defaultStyle act kString {noContent | string <- vString}
+        cAct c   = act c.string
+        password = Field.field Field.defaultStyle cAct kString {noContent | string <- vString}
         pUp      = layers [pbg lightGrey', ptxt]
         pHover   = layers [pbg lightGrey'', ptxt]
         pDown    = pUp

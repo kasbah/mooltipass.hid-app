@@ -240,6 +240,7 @@ toInts msg =
             TouchWheelOs       -> 0x06
             TouchProxOs        -> 0x07
             OfflineMode        -> 0x08
+            ScreenSaver        -> 0x09
             _                  -> 0xFF
     in case msg of
         OutgoingDebug       s  -> byteString cmd_DEBUG s

@@ -52,6 +52,8 @@ type Parameter = UserInitKey
                | TouchWheelOs
                | TouchProxOs
                | OfflineMode
+               | ScreenSaver
+               -- | FlashScreen
 
 encodeParameter : Parameter -> Int
 encodeParameter p = case p of
@@ -64,6 +66,7 @@ encodeParameter p = case p of
     TouchWheelOs       -> 0x06
     TouchProxOs        -> 0x07
     OfflineMode        -> 0x08
+    ScreenSaver        -> 0x09
     _                  -> 0xFF
 
 decodeParameter : Int -> Parameter
@@ -76,7 +79,9 @@ decodeParameter i = case i of
     0x05 -> TouchDi
     0x06 -> TouchWheelOs
     0x07 -> TouchProxOs
-    _    -> OfflineMode
+    0x08 -> OfflineMode
+    0x09 -> ScreenSaver
+    _    -> KeyboardLayout
 
 
 type MemInfo =
@@ -93,17 +98,21 @@ type MemInfo =
     | NoMemInfo
 
 type alias SettingsInfo =
-    { keyboard  : Int
-    , timeout   : Int
+    { keyboard    : Int
+    , timeout     : Int
+    , offline     : Bool
+    , screensaver : Bool
     }
 
 defaultSettingsInfo : SettingsInfo
-defaultSettingsInfo = SettingsInfo defaultKeyboard 3
+defaultSettingsInfo = SettingsInfo defaultKeyboard 3 False True
 
 updateSettingsInfo : Parameter -> Byte -> SettingsInfo -> SettingsInfo
-updateSettingsInfo p b s = case p of
-  KeyboardLayout   -> { s | keyboard <- b }
-  UserInterTimeout -> { s | timeout <- b }
+updateSettingsInfo p b s = let bbool = not (b==0) in case p of
+  KeyboardLayout   -> { s | keyboard    <- b }
+  UserInterTimeout -> { s | timeout     <- b }
+  OfflineMode      -> { s | offline     <- bbool }
+  ScreenSaver      -> { s | screensaver <- bbool }
   _                -> s
 
 type alias ServiceName =
