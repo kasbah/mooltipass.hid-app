@@ -76,8 +76,8 @@ disabledTabs : Common.DeviceStatus -> List Tab
 disabledTabs s =
     case s of
         Common.Unlocked     -> []
-        Common.NotConnected -> [] -- [Manage, Developer]
-        Common.NoCard       -> [Manage]
+        Common.NotConnected -> [Settings, Manage, Developer]
+        Common.NoCard       -> [Settings, Manage]
         Common.Locked       -> [Settings, Manage, Developer]
         Common.ManageMode   -> []
         Common.UnknownCard ->  [Settings]
