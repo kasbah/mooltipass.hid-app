@@ -10,7 +10,7 @@ import List
 import Layout (heights)
 import CommonState (..)
 import GuiState (..)
-import Actions (guiActions)
+import Actions (guiActions, loadSettings)
 
 {-| A tab navigation up top and a Mooltipass status icon on the top right. -}
 navigation : (Int, Int) -> GuiState -> Element
@@ -84,7 +84,10 @@ tab t active disabled =
         down           = img "inactive"
         disabledButton = img "disabled"
         activeButton   = img "active"
-        button         = customButton (send guiActions (ChangeTab t)) up hover down
+        act t'         = case t' of
+            Settings -> send loadSettings True
+            _        -> send guiActions (ChangeTab t)
+        button         = customButton (act t) up hover down
     in  if  | List.member t disabled -> disabledButton
             | t == active            -> activeButton
             | otherwise              -> button

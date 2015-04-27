@@ -74,9 +74,11 @@ forBg s =
             Just (p,b) -> (True, FromGuiMessage.encode (Common.SetParameter (Just (p, b))))
             Nothing -> (False, emptyFromGuiMessage)
         getParam p = FromGuiMessage.encode (Common.GetParameter (Just p))
+{-
         (doNeedParam, encGetNeed) = case List.take 1 s.needParameters of
             [p]  -> (True, getParam p)
             []   -> (False, emptyFromGuiMessage)
+-}
         (doGetParam, encGet)  = case s.getParameter of
             Just p  -> (True, getParam p)
             Nothing -> (False, emptyFromGuiMessage)
@@ -93,7 +95,7 @@ forBg s =
                 Common.MemInfoSave d ->
                         (FromGuiMessage.encode (Common.SaveMemManage d)
                         , SetUnsavedMem (Common.MemInfo d), s)
-        | doNeedParam -> log ("gui.Main: NEED PARAMS") <| (encGetNeed, NoOp, {s | needParameters <- List.drop 1 s.needParameters})
+        -- | doNeedParam -> log ("gui.Main: NEED PARAMS") <| (encGetNeed, NoOp, {s | needParameters <- List.drop 1 s.needParameters})
         | doSetParam -> (encSet, NoOp, s)
         | doGetParam -> (encGet, NoOp, s)
         | otherwise -> (e, NoOp, s)
@@ -120,11 +122,20 @@ main = Scene.scene <~ Window.dimensions ~ state
 
 inputActions : Signal (List Action)
 inputActions = mergeMany
-    [ map ((List.map CommonAction) << ToGuiMessage.decode) fromBackground
+    [ map (\x -> if x then loadAllSettings else []) (subscribe loadSettings)
+    , map ((List.map CommonAction) << ToGuiMessage.decode) fromBackground
     , map (\m -> [m]) (subscribe guiActions)
     , map ((\m -> [m]) << ChromeMessage.decode) fromChrome
     , map ((\m -> [m]) << fromResult << fromInts) fromDevice
     ]
+
+loadAllSettings : List Action
+loadAllSettings = log ("LOAD ALL SETTINGS!") <| [ChangeTab Settings] ++
+   List.map (\p -> CommonAction (GetParameter (Just p)))
+    [ Common.KeyboardLayout
+    , Common.UserInterTimeout
+    , Common.OfflineMode
+    , Common.ScreenSaver ]
 
 fromResult :  Result String ReceivedPacket -> Action
 fromResult r = case r of
