@@ -31,7 +31,7 @@ default =
     -- , setKeyboard  = 0
     , setParameter = Nothing
     , getParameter = Nothing
-    , settingsInfo = defaultSettingsInfo
+    , settingsInfo = emptySettingsInfo
     , forceUpdate  = True
     }
 
@@ -98,21 +98,21 @@ type MemInfo =
     | NoMemInfo
 
 type alias SettingsInfo =
-    { keyboard    : Int
-    , timeout     : Int
-    , offline     : Bool
-    , screensaver : Bool
+    { keyboard    : Maybe Int
+    , timeout     : Maybe Int
+    , offline     : Maybe Bool
+    , screensaver : Maybe Bool
     }
 
-defaultSettingsInfo : SettingsInfo
-defaultSettingsInfo = SettingsInfo defaultKeyboard 3 False True
+emptySettingsInfo : SettingsInfo
+emptySettingsInfo = SettingsInfo Nothing Nothing Nothing Nothing
 
 updateSettingsInfo : Parameter -> Byte -> SettingsInfo -> SettingsInfo
 updateSettingsInfo p b s = let bbool = not (b==0) in case p of
-  KeyboardLayout   -> { s | keyboard    <- b }
-  UserInterTimeout -> { s | timeout     <- b }
-  OfflineMode      -> { s | offline     <- bbool }
-  ScreenSaver      -> { s | screensaver <- bbool }
+  KeyboardLayout   -> { s | keyboard    <- Just b }
+  UserInterTimeout -> { s | timeout     <- Just b }
+  OfflineMode      -> { s | offline     <- Just bbool }
+  ScreenSaver      -> { s | screensaver <- Just bbool }
   _                -> s
 
 type alias ServiceName =

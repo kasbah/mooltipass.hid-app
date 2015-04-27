@@ -32,6 +32,7 @@ type alias GuiState =
     , readMem        : Bool
     , unsavedMemInfo : MemInfo
     , chromeNotify   : Maybe (String, String)
+    , needParameters : List Parameter
     , setParameter   : Maybe (Parameter, Byte)
     , getParameter   : Maybe Parameter
     , common         : CommonState
@@ -66,6 +67,7 @@ default =
     , readMem        = False
     , unsavedMemInfo = NoMemInfo
     , chromeNotify   = Nothing
+    , needParameters = []
     , setParameter   = Nothing
     , getParameter   = Nothing
     , common         = Common.default
@@ -90,14 +92,21 @@ update action s =
             appendToLog
                 ("Error: trying to " ++ str ++ " without having memory data")
                 s
+
+        initParams : List Parameter
+        initParams = [ KeyboardLayout, UserInterTimeout, OfflineMode, ScreenSaver ]
     in case action of
-        ChangeTab t -> if t == Manage && s.unsavedMemInfo == NoMemInfo
-                         then {s | activeTab <- Manage
-                                 , unsavedMemInfo <- if s.common.deviceStatus /= UnknownCard
-                                                     then MemInfoRequest
-                                                     else s.unsavedMemInfo
-                              }
-                         else {s | activeTab <- t}
+        ChangeTab t -> let s' = {s | activeTab <- t } in case t of
+                         Manage ->
+                           if s.unsavedMemInfo == NoMemInfo
+                           then {s | activeTab <- Manage
+                                   , unsavedMemInfo <- if s.common.deviceStatus /= UnknownCard
+                                                       then MemInfoRequest
+                                                       else s.unsavedMemInfo
+                                }
+                           else s'
+                         Settings -> {s' | needParameters <- initParams }
+                         _ -> s'
         -- clicking the icon 7 times toggles developer tab visibility
         ClickIcon     -> if s.iconClicked >= 6
                          then { s | iconClicked <- 0

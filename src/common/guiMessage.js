@@ -5,7 +5,7 @@ var emptyToGuiMessage =
     , setMemInfo      : [0,null]
     , setParameter    : null
     , getParameter    : null
-    , settingsInfo    : { keyboard: 0x93, timeout: 3 , offline: false, screensaver: true}
+    , settingsInfo    : { keyboard: null, timeout: null , offline: null, screensaver: null}
     };
 
 var emptyFromGuiMessage =

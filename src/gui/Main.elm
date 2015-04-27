@@ -60,7 +60,7 @@ forDevice s =
             , NoOp)
         _ -> ([],NoOp)
 
-forBg : GuiState -> (FromGuiMessage, Action)
+forBg : GuiState -> (FromGuiMessage, Action, GuiState)
 forBg s =
     let e = emptyFromGuiMessage
         mImportRequested = case s.importMedia of
@@ -70,49 +70,44 @@ forBg s =
             Common.MemInfoRequest -> True
             Common.MemInfoSave  _ -> True
             _                     -> False
-{-
-        setKb = case s.wantSetKeyboard of
-            Just _  -> True
-            Nothing -> False
-        kb' = Maybe.withDefault 0 s.wantSetKeyboard
--}
-        (setParam, encSet) = case s.setParameter of
+        (doSetParam, encSet) = case s.setParameter of
             Just (p,b) -> (True, FromGuiMessage.encode (Common.SetParameter (Just (p, b))))
             Nothing -> (False, emptyFromGuiMessage)
-        (getParam, encGet)  = case s.getParameter of
-            Just p  -> (True, FromGuiMessage.encode (Common.GetParameter (Just p)))
+        getParam p = FromGuiMessage.encode (Common.GetParameter (Just p))
+        (doNeedParam, encGetNeed) = case List.take 1 s.needParameters of
+            [p]  -> (True, getParam p)
+            []   -> (False, emptyFromGuiMessage)
+        (doGetParam, encGet)  = case s.getParameter of
+            Just p  -> (True, getParam p)
             Nothing -> (False, emptyFromGuiMessage)
     in if
         | mImportRequested -> case s.importMedia of
             RequestFile p ->
                 ( FromGuiMessage.encode (Common.StartImportMedia p)
-                , SetImportMedia NotRequested)
-            _             -> (e, NoOp)
+                , SetImportMedia NotRequested, s)
+            _             -> (e, NoOp, s)
         | memManage -> case s.unsavedMemInfo of
                 Common.MemInfoRequest ->
                         (FromGuiMessage.encode Common.StartMemManage
-                        , SetUnsavedMem Common.MemInfoWaitingForUser)
+                        , SetUnsavedMem Common.MemInfoWaitingForUser, s)
                 Common.MemInfoSave d ->
                         (FromGuiMessage.encode (Common.SaveMemManage d)
-                        , SetUnsavedMem (Common.MemInfo d))
-{-
-        | setKb -> log ("gui.Main: WANT SET KB to " ++ toString kb') <| (FromGuiMessage.encode (Common.SetKeyboard kb'), NoOp)
--}
-        | setParam -> (encSet, NoOp)
-        
-        | getParam -> log ("gui.Main: WANT GET KB") <| (encGet, NoOp)
-        | otherwise -> (e, NoOp)
+                        , SetUnsavedMem (Common.MemInfo d), s)
+        | doNeedParam -> log ("gui.Main: NEED PARAMS") <| (encGetNeed, NoOp, {s | needParameters <- List.drop 1 s.needParameters})
+        | doSetParam -> (encSet, NoOp, s)
+        | doGetParam -> (encGet, NoOp, s)
+        | otherwise -> (e, NoOp, s)
 
 output : Signal (ToChromeMessage, FromGuiMessage, List Int, GuiState)
 output =
     let go ias (_,_,_,s) =
-        let s'        = apply ias s
-            (tcm, a1) = ChromeMessage.encode s'
-            s''       = update a1 s'
-            (fgm, a2) = forBg s''
-            (is, a3)  = forDevice s''
-            s'''      = update a3 s''
-        in (tcm, fgm, is, update a2 s''')
+        let s1            = apply ias s
+            (tcm, a1)     = ChromeMessage.encode s1
+            s2            = update a1 s1
+            (fgm, a2, s3) = forBg s2
+            (is, a3)      = forDevice s3
+            s4            = update a3 s3
+        in (tcm, fgm, is, update a2 s4)
     in foldp go
         (emptyToChromeMessage, emptyFromGuiMessage, [], default)
         inputActions
