@@ -17,6 +17,7 @@ type alias ToGuiMessage = { setLog          : (List String)
 
 encode : CommonState -> ToGuiMessage
 encode s =
+    
     { setLog = s.log
     , setDeviceStatus = case s.deviceStatus of
                     NotConnected -> 0
@@ -64,11 +65,15 @@ decode msg=
             (2, Nothing) -> MemInfoWaitingForUser
             (3, Nothing) -> MemInfoWaitingForDevice
             (4, Just d)  -> MemInfo d
+        setParam = case msg.setParameter of
+            Nothing -> []
+            Just (p,b) -> [SetParameter (Just (decodeParameter p, b))]
+        getParam = case msg.getParameter of
+            Nothing -> []
+            Just p  -> [GetParameter (Just (decodeParameter p))]
     in  [ SetLog msg.setLog
         , SetDeviceStatus setDeviceStatus
         , SetImportInfo setImportInfo
         , SetMemInfo setMemInfo
-        , SetParameter (Maybe.map (\(p,b) -> (decodeParameter p, b)) msg.setParameter)
-        , GetParameter (Maybe.map decodeParameter msg.getParameter)
         , CommonSettings msg.settingsInfo
-        ]
+        ] ++ setParam ++ getParam

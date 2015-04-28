@@ -67,8 +67,8 @@ mpSettings : (Int, Int) -> SettingsInfo -> Element
 mpSettings (w,h) settings =
     let
         mpSettings' = container w h midTop <| flow down
-            [ sel (w - 32) "Keyboard layout" setKeyboard (sortBy fst allKeyboards)
-            , field (w - 32) "User interaction timeout" (sendParseInt UserInterTimeout) (Maybe.map toString (settings.timeout))
+            --[ sel (w - 32) "Keyboard layout" setKeyboard (sortBy fst allKeyboards)
+            [ field (w - 32) "User interaction timeout" (sendParseInt UserInterTimeout) (Maybe.map toString (settings.timeout))
             , labelCheckbox (w - 32) "Offline Mode" (sendBool OfflineMode) (settings.offline)
             , labelCheckbox (w - 32) "Screensaver" (sendBool ScreenSaver) (settings.screensaver)
             ]

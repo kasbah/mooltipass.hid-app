@@ -73,12 +73,12 @@ encode s =
             _                        -> False
         extNeedsToSend' = extNeedsToSend s.extRequest && not s.waitingForDevice
                         && s.common.deviceStatus == Unlocked
-        (setParam, outCmd) = case s.bgSetParameter of
-            Just (p,b) -> (True, OutgoingSetParameter p b)
-            Nothing -> (False, OutgoingDebug "DeviceMessage error in setParam")
-        (getParam, outParam) = case s.bgGetParameter of
-            Just p  -> (True, OutgoingGetParameter p)
-            Nothing -> (False, OutgoingDebug "DeviceMessage error in getParam")
+        (setParam, outCmd) = case (s.waitingForDevice, s.bgSetParameter) of
+            (False, Just (p,b)) -> (True, OutgoingSetParameter p b)
+            _                   -> (False, OutgoingDebug "DeviceMessage error in setParam")
+        (getParam, outParam) = case (s.waitingForDevice, s.bgGetParameter) of
+            (False, (p::_)) -> (True, OutgoingGetParameter p)
+            _               -> (False, OutgoingDebug "DeviceMessage error in getParam")
     in if | not s.deviceConnected -> log ("background.DeviceMessage: bg encode NOT CONNECTED") <| (connect, [])
           -- | setKb -> log ("background.DeviceMessage: bg encode set kb " ++ toString kb') <|
           --     sendCommand' (OutgoingSetParameter KeyboardLayout kb') []

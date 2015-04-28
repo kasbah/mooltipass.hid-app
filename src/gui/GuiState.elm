@@ -32,7 +32,7 @@ type alias GuiState =
     , readMem        : Bool
     , unsavedMemInfo : MemInfo
     , chromeNotify   : Maybe (String, String)
-    -- , needParameters : List Parameter
+    , needParameters : List Parameter
     , setParameter   : Maybe (Parameter, Byte)
     , getParameter   : Maybe Parameter
     , common         : CommonState
@@ -67,7 +67,7 @@ default =
     , readMem        = False
     , unsavedMemInfo = NoMemInfo
     , chromeNotify   = Nothing
-    -- , needParameters = []
+    , needParameters = []
     , setParameter   = Nothing
     , getParameter   = Nothing
     , common         = Common.default
@@ -93,8 +93,8 @@ update action s =
                 ("Error: trying to " ++ str ++ " without having memory data")
                 s
 
-        -- initParams : List Parameter
-        -- initParams = [ KeyboardLayout, UserInterTimeout, OfflineMode, ScreenSaver ]
+        initParams : List Parameter
+        initParams = [ KeyboardLayout, UserInterTimeout, OfflineMode, ScreenSaver ]
     in case action of
         ChangeTab t -> let s' = {s | activeTab <- t } in case t of
                          Manage ->
@@ -105,7 +105,7 @@ update action s =
                                                        else s.unsavedMemInfo
                                 }
                            else s'
-                         -- Settings -> {s' | needParameters <- initParams }
+                         Settings -> {s' | needParameters <- initParams }
                          _ -> s'
         -- clicking the icon 7 times toggles developer tab visibility
         ClickIcon     -> if s.iconClicked >= 6

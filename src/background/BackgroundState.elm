@@ -22,7 +22,7 @@ type alias BackgroundState = { deviceConnected  : Bool
                              , mediaImport      : MediaImport
                              , memoryManage     : MemManageState
                              , bgSetParameter   : Maybe (Parameter, Byte)
-                             , bgGetParameter   : Maybe Parameter
+                             , bgGetParameter   : List Parameter
                              , common           : CommonState
                              }
 
@@ -36,7 +36,7 @@ default = { deviceConnected  = False
           , mediaImport      = NoMediaImport
           , memoryManage     = NotManaging
           , bgSetParameter   = Nothing
-          , bgGetParameter   = Nothing
+          , bgGetParameter   = []
           , common           = Common.default
           }
 
@@ -274,11 +274,19 @@ update action s =
             then log ("background update to clear param") <| {s | bgSetParameter <- Nothing}
             else log ("background update to set param") <| {s | bgSetParameter <- mpb}
         CommonAction (GetParameter mp) ->
-            log ("background update to get param?") <| {s | bgGetParameter <- mp}
+            case mp of
+                Nothing -> s
+                Just p  -> { s | bgGetParameter <- uniqAppend p s.bgGetParameter }
         CommonAction a -> {s | common <- updateCommon a}
         Interpret p -> interpret p s
         NoOp -> s
 
+uniqAppend : Parameter -> List Parameter -> List Parameter
+uniqAppend p ps = case ps of
+    [] -> [p]
+    (x::xs) -> case x == p of
+        True -> (x::xs)
+        False -> x :: uniqAppend p xs
 
 interpret : ReceivedPacket -> BackgroundState -> BackgroundState
 interpret packet s =
@@ -476,15 +484,14 @@ interpret packet s =
                     common' = { c | settingsInfo <- updateSettingsInfo p b s.common.settingsInfo }
                 in {s | bgSetParameter <- Nothing, common <- common' }
               Nothing     -> s
-        ReceivedGetParameter (Just x) ->
-            log ("background.BackgroundState: ReceivedGetParameter " ++ toString (stringToInts x)) <|
+        ReceivedGetParameter xm -> let x = Maybe.withDefault "0" xm in
             case s.bgGetParameter of
-              Just p ->
+              [] -> log ("background.BackgroundState: ReceivedGetParameter " ++ toString (stringToInts x) ++ ", s.bgGetParameter = []") <| s
+              (p::ps) ->
                 let b = head (stringToInts x)
                     c = s.common
                     common' = { c | settingsInfo <- updateSettingsInfo p b s.common.settingsInfo }
-                in {s | bgGetParameter <- Nothing, common <- common' }
-              Nothing -> s
+                in log ("background.BackgroundState: ReceivedGetParameter " ++ toString (stringToInts x) ++ ", s.bgGetParameter = " ++ toString s.bgGetParameter) <| {s | bgGetParameter <- ps, common <- common' }
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s

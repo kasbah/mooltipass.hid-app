@@ -28,7 +28,6 @@ default =
     , log          = []
     , importInfo   = NoImport
     , memoryInfo   = NoMemInfo
-    -- , setKeyboard  = 0
     , setParameter = Nothing
     , getParameter = Nothing
     , settingsInfo = emptySettingsInfo
@@ -203,9 +202,13 @@ update action s =
         StartMemManage      -> {s | memoryInfo <- MemInfoRequest}
         SaveMemManage d     -> {s | memoryInfo <- MemInfoSave d}
         EndMemManage        -> {s | memoryInfo <- NoMemInfo}
-        SetParameter mpb    -> log ("common.CommonState.update: Set param?") <|
-                               {s | setParameter <- mpb}
-        GetParameter mp     -> log ("common.CommonState.update: Get param") <| {s | getParameter <- mp}
+        SetParameter mpb    -> case mpb of
+                                   Nothing -> log ("common.CommonState.update: Set param Nothing") { s | setParameter <- Nothing }
+                                   Just pb -> log ("common.CommonState.update: Set param Just") <| {s | setParameter <- Just pb}
+        GetParameter mp     -> case mp of
+                                   Nothing -> log ("common.CommonState.update: Get param Nothing") <| {s | getParameter <- Nothing }
+                                   Just p -> log ("common.CommonState.update: Get param Just") <|
+                                             {s | getParameter <- Just p}
         CommonSettings settings   -> log ("common.CommonState update: Settings") <| {s | settingsInfo <- settings}
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force
