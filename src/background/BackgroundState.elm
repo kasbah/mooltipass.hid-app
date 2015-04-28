@@ -484,7 +484,7 @@ interpret packet s =
                     common' = { c | settingsInfo <- updateSettingsInfo p b s.common.settingsInfo }
                 in {s | bgSetParameter <- Nothing, common <- common' }
               Nothing     -> s
-        ReceivedGetParameter xm -> let x = Maybe.withDefault "0" xm in
+        ReceivedGetParameter xm -> let x = Maybe.withDefault "\0" xm in
             case s.bgGetParameter of
               [] -> log ("background.BackgroundState: ReceivedGetParameter " ++ toString (stringToInts x) ++ ", s.bgGetParameter = []") <| s
               (p::ps) ->
