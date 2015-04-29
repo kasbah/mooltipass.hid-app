@@ -71,6 +71,7 @@ mpSettings (w,h) settings =
             [ field (w - 32) "User interaction timeout" (sendParseInt UserInterTimeout) (Maybe.map toString (settings.timeout))
             , labelCheckbox (w - 32) "Offline Mode" (sendBool OfflineMode) (settings.offline)
             , labelCheckbox (w - 32) "Screensaver" (sendBool ScreenSaver) (settings.screensaver)
+            , textButton (w - 32) "Flash Screen" (sendBool FlashScreen True)
             ]
     in box (w,h) "Mooltipass Settings"
         <| flow down
@@ -232,6 +233,23 @@ field w kString act vStringm =
      var option = NativeElement.createNode('option');
 
 -}
+
+textButton : Int -> String -> Message -> Element
+textButton w l act =
+    let bUp      = layers [ubg lightGrey', btxt]
+        bHover   = layers [ubg lightGrey'', btxt]
+        bDown    = bUp
+        bw       = (w//2) - spw
+        bw'      = toFloat bw
+        ubg c    = collage bw lh [roundedRectShape Left bw' lh' 5 |> filled c]
+        btxt'    = flow right [spacer 5 5 , leftAligned <| whiteText l]
+        btxt     = container bw lh midLeft btxt'
+        lh       = heights.settingsLogin
+        lh'      = toFloat lh
+        spw      = 2
+        iw       = 32
+        iw'      = toFloat iw
+    in Input.customButton act bUp bHover bDown
 
 sel : Int -> String -> (a -> Message) -> List (String, a) -> Element
 sel w kString act things =

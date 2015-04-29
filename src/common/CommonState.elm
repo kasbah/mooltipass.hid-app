@@ -52,7 +52,7 @@ type Parameter = UserInitKey
                | TouchProxOs
                | OfflineMode
                | ScreenSaver
-               -- | FlashScreen
+               | FlashScreen
 
 encodeParameter : Parameter -> Int
 encodeParameter p = case p of
@@ -66,6 +66,7 @@ encodeParameter p = case p of
     TouchProxOs        -> 0x07
     OfflineMode        -> 0x08
     ScreenSaver        -> 0x09
+    FlashScreen        -> 0x0e
     _                  -> 0xFF
 
 decodeParameter : Int -> Parameter
@@ -80,6 +81,7 @@ decodeParameter i = case i of
     0x07 -> TouchProxOs
     0x08 -> OfflineMode
     0x09 -> ScreenSaver
+    0x0e -> FlashScreen
     _    -> KeyboardLayout
 
 
@@ -112,6 +114,7 @@ updateSettingsInfo p b s = let bbool = not (b==0) in case p of
   UserInterTimeout -> { s | timeout     <- Just b }
   OfflineMode      -> { s | offline     <- Just bbool }
   ScreenSaver      -> { s | screensaver <- Just bbool }
+  FlashScreen      -> s -- Don't keep state
   _                -> s
 
 type alias ServiceName =
