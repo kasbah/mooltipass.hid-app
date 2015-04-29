@@ -230,18 +230,6 @@ toInts msg =
         byteStringNull msgType s =
             (String.length s + 1)::msgType::stringToInts s ++ [0]
         zeroSize msgType     = [0, msgType]
-        param p              = case p of
-            UserInitKey        -> 0x00
-            KeyboardLayout     -> 0x01
-            UserInterTimeout   -> 0x02
-            LockTimeoutEnable  -> 0x03
-            LockTimeout        -> 0x04
-            TouchDi            -> 0x05
-            TouchWheelOs       -> 0x06
-            TouchProxOs        -> 0x07
-            OfflineMode        -> 0x08
-            ScreenSaver        -> 0x09
-            _                  -> 0xFF
     in case msg of
         OutgoingDebug       s  -> byteString cmd_DEBUG s
         OutgoingPing           -> zeroSize cmd_PING
@@ -287,8 +275,8 @@ toInts msg =
         OutgoingSetCtrValue (ctr1,ctr2,ctr3) -> [3, cmd_SET_CTRVALUE, ctr1, ctr2, ctr3]
         OutgoingAddCpzCtr c -> 24::cmd_ADD_CARD_CPZ_CTR::c.cpz ++ c.ctrNonce
         OutgoingGetCpzCtrValues      -> zeroSize cmd_GET_CARD_CPZ_CTR
-        OutgoingSetParameter p b     -> [2, cmd_SET_MOOLTIPASS_PARM, param p, b]
-        OutgoingGetParameter p       -> [1, cmd_GET_MOOLTIPASS_PARM, param p]
+        OutgoingSetParameter p b     -> [2, cmd_SET_MOOLTIPASS_PARM, encodeParameter p, b]
+        OutgoingGetParameter p       -> [1, cmd_GET_MOOLTIPASS_PARM, encodeParameter p]
         OutgoingGetFavorite  b       -> [1, cmd_GET_FAVORITE, b]
         OutgoingResetCard (b1,b2)    -> [2, cmd_RESET_CARD, b1, b2]
         OutgoingGetCardLogin         -> zeroSize cmd_READ_CARD_LOGIN
