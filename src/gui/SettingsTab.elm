@@ -1,12 +1,14 @@
 module SettingsTab where
 
 -- Elm standard library
+import Dict
+import Dict (Dict)
 import Graphics.Element as Element
 import Graphics.Element (..)
 import Graphics.Collage (..)
 import Graphics.Input as Input
 import Graphics.Input.Field as Field
-import Graphics.Input.Field (defaultStyle, noContent, Content)
+import Graphics.Input.Field (defaultStyle, noContent, Content, Selection)
 import List (..)
 import Color
 import String (toInt)
@@ -33,19 +35,19 @@ import KeyboardLayout (..)
 
 import Debug
 
-settingsTab : (Int, Int) -> SettingsInfo -> Element
-settingsTab (w,h) settings =
+settingsTab : (Int, Int) -> SettingsInfo -> Dict Int Selection -> Element
+settingsTab (w,h) settings selections =
     let contentH = h - 32
         contentW = w - 64
         content' = container w contentH middle
-            <| content (contentW, contentH) settings
+            <| content (contentW, contentH) settings selections
     in container w h middle content'
 
-content : (Int, Int) -> SettingsInfo -> Element
-content (w,h) settings =
+content : (Int, Int) -> SettingsInfo -> Dict Int Selection -> Element
+content (w,h) settings selections =
     let content' = container w h midTop <| flow down
             [ -- cardSettings (w,120) ,
-              mpSettings (w,120) settings
+              mpSettings (w,120) settings selections
             ]
     in content'
 
@@ -63,12 +65,16 @@ cardSettings (w,h) =
             ]
 -}
 
-mpSettings : (Int, Int) -> SettingsInfo -> Element
-mpSettings (w,h) settings =
+mpSettings : (Int, Int) -> SettingsInfo -> Dict Int Selection -> Element
+mpSettings (w,h) settings selections =
     let
+        noSelection = Selection 0 0 Field.Forward
+        timeoutSelection = Maybe.withDefault noSelection <|
+                             Dict.get (encodeParameter UserInterTimeout) selections
+        timeoutContent = Maybe.map (\x -> Content (toString x) timeoutSelection) settings.timeout
         mpSettings' = container w h midTop <| flow down
             --[ sel (w - 32) "Keyboard layout" setKeyboard (sortBy fst allKeyboards)
-            [ field (w - 32) "User interaction timeout" (sendParseInt UserInterTimeout) (Maybe.map toString (settings.timeout))
+            [ field (w - 32) "User interaction timeout" (sendIntContent UserInterTimeout) timeoutContent
             , labelCheckbox (w - 32) "Offline Mode" (sendBool OfflineMode) (settings.offline)
             , labelCheckbox (w - 32) "Screensaver" (sendBool ScreenSaver) (settings.screensaver)
             , textButton (w - 32) "Flash Screen" (sendBool FlashScreen True)
@@ -194,7 +200,7 @@ labelCheckbox w kString act valm =
                   ]
 
 
-field : Int -> String -> (String -> Message) -> Maybe String -> Element
+field : Int -> String -> (Content -> Message) -> Maybe Content -> Element
 field w kString act vStringm =
     let username = uUp -- button disabled for beta release
         --username = Input.customButton (send guiActions NoOp) uUp uHover uDown
@@ -208,9 +214,8 @@ field w kString act vStringm =
         utxt'    = flow right
             [spacer 5 5 , leftAligned <| whiteText kString]
         utxt     = container uw lh midLeft utxt'
-        cAct c   = act c.string
         password = case vStringm of
-                       Just vString -> Field.field Field.defaultStyle cAct kString {noContent | string <- vString}
+                       Just vString -> Field.field Field.defaultStyle act kString vString
                        Nothing  -> flow right [spacer 5 5, leftAligned <| whiteText "Loading ..."]
         lh       = heights.settingsLogin
         lh'      = toFloat lh

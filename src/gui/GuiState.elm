@@ -1,15 +1,20 @@
 module GuiState where
 
 -- Elm standard library
+import Dict
+import Dict (Dict)
 import List (..)
 import Maybe
 import Result
+import Graphics.Input.Field as Field
+import Graphics.Input.Field (Content, Selection)
 
 -- local source
 import CommonState as Common
 import CommonState (..)
 import Util (..)
 import Byte (..)
+import String (toInt)
 import DevicePacket (..)
 
 import Debug (log)
@@ -35,6 +40,7 @@ type alias GuiState =
     , needParameters : List Parameter
     , setParameter   : Maybe (Parameter, Byte)
     , getParameter   : Maybe Parameter
+    , selections     : Dict.Dict Int Selection
     , common         : CommonState
     }
 
@@ -46,6 +52,7 @@ type Action = ChangeTab Tab
             | SetReadMem Bool
             | SetUnsavedMem MemInfo
             | AddToUnsavedMem MemInfoData
+            | SetParameterField Parameter Content
             | CommonAction CommonAction
             | AddFav (FlashAddress, FlashAddress)
             | RemoveFav (FlashAddress, FlashAddress)
@@ -70,6 +77,7 @@ default =
     , needParameters = []
     , setParameter   = Nothing
     , getParameter   = Nothing
+    , selections     = Dict.empty
     , common         = Common.default
     }
 
@@ -163,6 +171,18 @@ update action s =
                             (Maybe.map MemInfoUnknownCardAdd (maybeHead (filter (\c -> c.cpz == cpz) d.cards)))
                 }
             _        -> errorTryingTo "add to memory"
+        SetParameterField p c -> log ("Set content " ++ toString c) <|
+            if c.string == ""
+            then let mpb = Just (p, 0)
+                 in { s | common <- updateCommon (SetParameter mpb)
+                        , selections <- Dict.insert (encodeParameter p) (Selection 0 1 Field.Forward) s.selections
+                        , setParameter <- mpb }
+            else case toInt c.string of
+              Ok i -> let mpb = Just (p, i)
+                      in { s | common <- updateCommon (SetParameter mpb)
+                             , selections <- Dict.insert (encodeParameter p) c.selection s.selections
+                             , setParameter <- mpb }
+              _    -> s
         -- An action on the common state can have a effect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
         -- device state for instance.

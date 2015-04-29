@@ -2,6 +2,7 @@ module Actions where
 
 -- Elm standard library
 import List
+import Graphics.Input.Field (Content)
 import Signal (..)
 
 import Byte (..)
@@ -23,6 +24,9 @@ sendGetParameter p = send guiActions (CommonAction (GetParameter (Just p)))
 
 sendParameter : Parameter -> Byte -> Message
 sendParameter p b = send guiActions (CommonAction (SetParameter (Just (p, b))))
+
+sendIntContent : Parameter -> Content -> Message
+sendIntContent p content = send guiActions (SetParameterField p content)
 
 sendParseInt : Parameter -> String -> Message
 sendParseInt p s = case toInt s of
