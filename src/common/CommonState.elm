@@ -103,10 +103,11 @@ type alias SettingsInfo =
     , timeout     : Maybe Int
     , offline     : Maybe Bool
     , screensaver : Maybe Bool
+    , flashscreen : Maybe Bool
     }
 
 emptySettingsInfo : SettingsInfo
-emptySettingsInfo = SettingsInfo Nothing Nothing Nothing Nothing
+emptySettingsInfo = SettingsInfo Nothing Nothing Nothing Nothing Nothing
 
 updateSettingsInfo : Parameter -> Byte -> SettingsInfo -> SettingsInfo
 updateSettingsInfo p b s = let bbool = not (b==0) in case p of
@@ -114,7 +115,7 @@ updateSettingsInfo p b s = let bbool = not (b==0) in case p of
   UserInterTimeout -> { s | timeout     <- Just b }
   OfflineMode      -> { s | offline     <- Just bbool }
   ScreenSaver      -> { s | screensaver <- Just bbool }
-  FlashScreen      -> s -- Don't keep state
+  FlashScreen      -> { s | flashscreen <- Just bbool }
   _                -> s
 
 type alias ServiceName =

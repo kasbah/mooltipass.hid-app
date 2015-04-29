@@ -102,7 +102,7 @@ update action s =
                 s
 
         initParams : List Parameter
-        initParams = [ KeyboardLayout, UserInterTimeout, OfflineMode, ScreenSaver ]
+        initParams = [ KeyboardLayout, UserInterTimeout, OfflineMode, ScreenSaver, FlashScreen ]
     in case action of
         ChangeTab t -> let s' = {s | activeTab <- t } in case t of
                          Manage ->

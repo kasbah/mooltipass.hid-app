@@ -77,7 +77,7 @@ mpSettings (w,h) settings selections =
             [ field (w - 32) "User interaction timeout" (sendIntContent UserInterTimeout) timeoutContent
             , labelCheckbox (w - 32) "Offline Mode" (sendBool OfflineMode) (settings.offline)
             , labelCheckbox (w - 32) "Screensaver" (sendBool ScreenSaver) (settings.screensaver)
-            , textButton (w - 32) "Flash Screen" (sendBool FlashScreen True)
+            , labelCheckbox (w - 32) "Flash Screen" (sendBool FlashScreen) (settings.flashscreen)
             ]
     in box (w,h) "Mooltipass Settings"
         <| flow down
