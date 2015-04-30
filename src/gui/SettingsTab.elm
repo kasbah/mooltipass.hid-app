@@ -70,8 +70,9 @@ mpSettings (w,h) settings selections =
         getSelection p = Maybe.withDefault noSelection <| Dict.get (encodeParameter p) selections
         getContent p v = Maybe.map (\x -> Content (toString x) (getSelection p)) v
         mpSettings' = container w h midTop <| flow down
-            --[ sel (w - 32) "Keyboard layout" setKeyboard (sortBy fst allKeyboards)
-            [ field (w - 32) "User interaction timeout" (sendIntContent UserInterTimeout 0 255)
+            [ sel (w - 32) "Keyboard layout" setKeyboard (sortBy fst allKeyboards)
+                                             (Maybe.withDefault "" (settings.keyboard `Maybe.andThen` keyboardFromInt))
+            , field (w - 32) "User interaction timeout" (sendIntContent UserInterTimeout 0 255)
                                                         (getContent UserInterTimeout settings.timeout)
             , labelCheckbox (w - 32) "Lock timeout enable" (sendBool LockTimeoutEnable) (settings.lockTimeoutEnable)
             , field (w - 32) "Lock timeout"             (sendIntContent LockTimeout 10 255)
@@ -257,8 +258,8 @@ textButton w l act =
         iw'      = toFloat iw
     in Input.customButton act bUp bHover bDown
 
-sel : Int -> String -> (a -> Message) -> List (String, a) -> Element
-sel w kString act things =
+sel : Int -> String -> (a -> Message) -> List (String, a) -> String -> Element
+sel w kString act things selected =
     let -- username = uUp -- button disabled for beta release
         -- username = Input.customButton (send guiActions NoOp) uUp uHover uDown
         -- username = Input.customButton (send commonActions (OutgoingSetParameter KeyboardLayout 0x93)) uUp uHover uDown
@@ -286,7 +287,7 @@ sel w kString act things =
         ptxt'    = flow right
             -- [spacer 5 1, Input.dropDown (\x -> send guiActions NoOp) things]
             -- [spacer 5 1, Input.dropDown (send kbChannel) things]
-            [spacer 5 1, Input.dropDown act things]
+            [spacer 5 1, Input.dropDown act things selected]
         ptxt     = container pw lh midLeft ptxt'
         lh       = heights.settingsLogin
         lh'      = toFloat lh
