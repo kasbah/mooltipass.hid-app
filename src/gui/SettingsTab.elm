@@ -74,7 +74,7 @@ mpSettings (w,h) settings selections =
             [ field (w - 32) "User interaction timeout" (sendIntContent UserInterTimeout 0 255)
                                                         (getContent UserInterTimeout settings.timeout)
             , labelCheckbox (w - 32) "Lock timeout enable" (sendBool LockTimeoutEnable) (settings.lockTimeoutEnable)
-            , field (w - 32) "Lock timeout"             (sendIntContent LockTimeout 0 255)
+            , field (w - 32) "Lock timeout"             (sendIntContent LockTimeout 10 255)
                                                         (getContent LockTimeout settings.lockTimeout)
             , labelCheckbox (w - 32) "Offline Mode"     (sendBool OfflineMode) (settings.offline)
             , labelCheckbox (w - 32) "Screensaver"      (sendBool ScreenSaver) (settings.screensaver)
