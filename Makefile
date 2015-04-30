@@ -52,9 +52,11 @@ build/%: src/%
 
 test: build/test/elm-test.js
 
-clean:
+realclean:
 	rm -rf build
 	rm -rf elm-stuff
+clean:
+	rm -rf build
 
 package: all
 	cp -r build $(PACKAGE_NAME)
