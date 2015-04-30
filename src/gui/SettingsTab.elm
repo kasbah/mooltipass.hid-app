@@ -45,7 +45,7 @@ content : (Int, Int) -> SettingsInfo -> Dict Int Selection -> Element
 content (w,h) settings selections =
     let content' = container w h midTop <| flow down
             [ -- cardSettings (w,120) ,
-              mpSettings (w,120) settings selections
+              mpSettings (w,220) settings selections
             ]
     in content'
 
@@ -73,6 +73,7 @@ mpSettings (w,h) settings selections =
             --[ sel (w - 32) "Keyboard layout" setKeyboard (sortBy fst allKeyboards)
             [ field (w - 32) "User interaction timeout" (sendIntContent UserInterTimeout)
                                                         (getContent UserInterTimeout settings.timeout)
+            , labelCheckbox (w - 32) "Lock timeout enable" (sendBool LockTimeoutEnable) (settings.lockTimeoutEnable)
             , field (w - 32) "Lock timeout"             (sendIntContent LockTimeout)
                                                         (getContent LockTimeout settings.lockTimeout)
             , labelCheckbox (w - 32) "Offline Mode"     (sendBool OfflineMode) (settings.offline)
