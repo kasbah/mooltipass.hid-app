@@ -99,18 +99,20 @@ type MemInfo =
 type alias SettingsInfo =
     { keyboard    : Maybe Int
     , timeout     : Maybe Int
+    , lockTimeout : Maybe Int
     , offline     : Maybe Bool
     , screensaver : Maybe Bool
     , flashscreen : Maybe Bool
     }
 
 emptySettingsInfo : SettingsInfo
-emptySettingsInfo = SettingsInfo Nothing Nothing Nothing Nothing Nothing
+emptySettingsInfo = SettingsInfo Nothing Nothing Nothing Nothing Nothing Nothing
 
 updateSettingsInfo : Parameter -> Byte -> SettingsInfo -> SettingsInfo
 updateSettingsInfo p b s = let bbool = not (b==0) in case p of
   KeyboardLayout   -> { s | keyboard    <- Just b }
   UserInterTimeout -> { s | timeout     <- Just b }
+  LockTimeout      -> { s | lockTimeout <- Just b }
   OfflineMode      -> { s | offline     <- Just bbool }
   ScreenSaver      -> { s | screensaver <- Just bbool }
   FlashScreen      -> { s | flashscreen <- Just bbool }

@@ -67,15 +67,17 @@ mpSettings : (Int, Int) -> SettingsInfo -> Dict Int Selection -> Element
 mpSettings (w,h) settings selections =
     let
         noSelection = Selection 0 0 Field.Forward
-        timeoutSelection = Maybe.withDefault noSelection <|
-                             Dict.get (encodeParameter UserInterTimeout) selections
-        timeoutContent = Maybe.map (\x -> Content (toString x) timeoutSelection) settings.timeout
+        getSelection p = Maybe.withDefault noSelection <| Dict.get (encodeParameter p) selections
+        getContent p v = Maybe.map (\x -> Content (toString x) (getSelection p)) v
         mpSettings' = container w h midTop <| flow down
             --[ sel (w - 32) "Keyboard layout" setKeyboard (sortBy fst allKeyboards)
-            [ field (w - 32) "User interaction timeout" (sendIntContent UserInterTimeout) timeoutContent
-            , labelCheckbox (w - 32) "Offline Mode" (sendBool OfflineMode) (settings.offline)
-            , labelCheckbox (w - 32) "Screensaver" (sendBool ScreenSaver) (settings.screensaver)
-            , labelCheckbox (w - 32) "Flash Screen" (sendBool FlashScreen) (settings.flashscreen)
+            [ field (w - 32) "User interaction timeout" (sendIntContent UserInterTimeout)
+                                                        (getContent UserInterTimeout settings.timeout)
+            , field (w - 32) "Lock timeout"             (sendIntContent LockTimeout)
+                                                        (getContent LockTimeout settings.lockTimeout)
+            , labelCheckbox (w - 32) "Offline Mode"     (sendBool OfflineMode) (settings.offline)
+            , labelCheckbox (w - 32) "Screensaver"      (sendBool ScreenSaver) (settings.screensaver)
+            , labelCheckbox (w - 32) "Flash Screen"     (sendBool FlashScreen) (settings.flashscreen)
             ]
     in box (w,h) "Mooltipass Settings"
         <| flow down
