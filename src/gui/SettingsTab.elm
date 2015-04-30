@@ -71,10 +71,10 @@ mpSettings (w,h) settings selections =
         getContent p v = Maybe.map (\x -> Content (toString x) (getSelection p)) v
         mpSettings' = container w h midTop <| flow down
             --[ sel (w - 32) "Keyboard layout" setKeyboard (sortBy fst allKeyboards)
-            [ field (w - 32) "User interaction timeout" (sendIntContent UserInterTimeout)
+            [ field (w - 32) "User interaction timeout" (sendIntContent UserInterTimeout 0 255)
                                                         (getContent UserInterTimeout settings.timeout)
             , labelCheckbox (w - 32) "Lock timeout enable" (sendBool LockTimeoutEnable) (settings.lockTimeoutEnable)
-            , field (w - 32) "Lock timeout"             (sendIntContent LockTimeout)
+            , field (w - 32) "Lock timeout"             (sendIntContent LockTimeout 0 255)
                                                         (getContent LockTimeout settings.lockTimeout)
             , labelCheckbox (w - 32) "Offline Mode"     (sendBool OfflineMode) (settings.offline)
             , labelCheckbox (w - 32) "Screensaver"      (sendBool ScreenSaver) (settings.screensaver)
