@@ -36,6 +36,7 @@ Elm.Native.Graphics.Input.make = function(localRuntime) {
             var name = values[i]._0;
             option.value = name;
             option.innerHTML = name;
+            if (name == model.selected) {option.selected = "true"} else { option.selected = null }
             drop.appendChild(option);
         }
         drop.addEventListener('change', function() {
@@ -59,6 +60,7 @@ Elm.Native.Graphics.Input.make = function(localRuntime) {
             var name = values[i]._0;
             option.value = name;
             option.innerHTML = name;
+            if (name == newModel.selected) {option.selected = "true"} else { option.selected = null }
         }
         for (; i < kidsLength; ++i) {
             node.removeChild(node.lastChild);
@@ -68,12 +70,13 @@ Elm.Native.Graphics.Input.make = function(localRuntime) {
             var name = values[i]._0;
             option.value = name;
             option.innerHTML = name;
+            if (name == newModel.selected) {option.selected = "true"} else { option.selected = null }
             node.appendChild(option);
         }
         return node;
     }
 
-    function dropDown(handler, values) {
+    function dropDown(handler, values, selected) {
         return A3(Element.newElement, 100, 24, {
             ctor: 'Custom',
             type: 'DropDown',
@@ -81,6 +84,7 @@ Elm.Native.Graphics.Input.make = function(localRuntime) {
             update: updateDropDown,
             model: {
                 values: values,
+                selected: selected,
                 handler: handler
             }
         });
@@ -404,7 +408,7 @@ Elm.Native.Graphics.Input.make = function(localRuntime) {
         button: F2(button),
         customButton: F4(customButton),
         checkbox: F2(checkbox),
-        dropDown: F2(dropDown),
+        dropDown: F3(dropDown),
         field: mkField('text'),
         email: mkField('email'),
         password: mkField('password'),

@@ -99,7 +99,7 @@ favorite British sport:
 If the user selects "Football" from the drop down menue, `Signal.subscribe sport`
 will update to `Just Football`.
 -}
-dropDown : (a -> Signal.Message) -> List (String, a) -> Element
+dropDown : (a -> Signal.Message) -> List (String, a) -> String -> Element
 dropDown =
   Native.Graphics.Input.dropDown
 
