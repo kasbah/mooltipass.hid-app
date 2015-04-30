@@ -33,8 +33,6 @@ import Util (..)
 import Byte (..)
 import KeyboardLayout (..)
 
-import Debug
-
 settingsTab : (Int, Int) -> SettingsInfo -> Dict Int Selection -> Element
 settingsTab (w,h) settings selections =
     let contentH = h - 32

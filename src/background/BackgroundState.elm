@@ -11,8 +11,6 @@ import DevicePacket (..)
 import DeviceFlash (..)
 import Byte (..)
 
-import Debug (log)
-
 type alias BackgroundState = { deviceConnected  : Bool
                              , deviceVersion    : Maybe MpVersion
                              , waitingForDevice : Bool
@@ -269,10 +267,7 @@ update action s =
             if not (mediaImportActive s)
             then setMedia (MediaImportRequested p) s
             else s
-        CommonAction (SetParameter mpb) -> -- {s | bgSetParameter <- mpb}
-            if mpb == Nothing
-            then log ("background update to clear param") <| {s | bgSetParameter <- Nothing}
-            else log ("background update to set param") <| {s | bgSetParameter <- mpb}
+        CommonAction (SetParameter mpb) -> {s | bgSetParameter <- mpb}
         CommonAction (GetParameter mp) ->
             case mp of
                 Nothing -> s
@@ -476,7 +471,6 @@ interpret packet s =
             MemManageReadCpzWaiting (p,f,a,c,cs) -> setMemManage (MemManageReadSuccess (p,f,a,c,cs,cpz)) s
             _ -> s -- can be meant for gui, we just ignore it
         ReceivedSetParameter x ->
-            log ("background.BackgroundState: ReceivedSetParameter " ++ toString x) <|
             -- update s.common with value of bgSetParameter
             case s.bgSetParameter of
               Just (p, b) ->
@@ -486,12 +480,12 @@ interpret packet s =
               Nothing     -> s
         ReceivedGetParameter xm -> let x = Maybe.withDefault "\0" xm in
             case s.bgGetParameter of
-              [] -> log ("background.BackgroundState: ReceivedGetParameter " ++ toString (stringToInts x) ++ ", s.bgGetParameter = []") <| s
+              []      -> s
               (p::ps) ->
                 let b = head (stringToInts x)
                     c = s.common
                     common' = { c | settingsInfo <- updateSettingsInfo p b s.common.settingsInfo }
-                in log ("background.BackgroundState: ReceivedGetParameter " ++ toString (stringToInts x) ++ ", s.bgGetParameter = " ++ toString s.bgGetParameter) <| {s | bgGetParameter <- ps, common <- common' }
+                in {s | bgGetParameter <- ps, common <- common' }
         x -> appendToLog
                 ("Error: received unhandled packet " ++ toString x)
                 s

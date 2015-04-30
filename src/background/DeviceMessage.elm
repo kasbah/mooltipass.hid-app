@@ -14,8 +14,6 @@ import DeviceFlash (..)
 import Util (..)
 import Byte (..)
 
-import Debug (log)
-
 type alias FromDeviceMessage = { setHidConnected : Maybe Bool
                                , receiveCommand  : Maybe (List Int)
                                , appendToLog     : Maybe String
@@ -79,14 +77,10 @@ encode s =
         (getParam, outParam) = case (s.waitingForDevice, s.bgGetParameter) of
             (False, (p::_)) -> (True, OutgoingGetParameter p)
             _               -> (False, OutgoingDebug "DeviceMessage error in getParam")
-    in if | not s.deviceConnected -> log ("background.DeviceMessage: bg encode NOT CONNECTED") <| (connect, [])
-          -- | setKb -> log ("background.DeviceMessage: bg encode set kb " ++ toString kb') <|
-          --     sendCommand' (OutgoingSetParameter KeyboardLayout kb') []
-          | setParam -> log ("background.DeviceMessage: bg encode set param") <|
-              sendCommand' outCmd []
-          | getParam -> log ("background.DeviceMessage: bg encode get param") <|
-              sendCommand' outParam []
-          | extNeedsToSend' -> log ("background.DeviceMessage: bg encode extNeedsToSend'") <|
+    in if | not s.deviceConnected -> (connect, [])
+          | setParam              -> sendCommand' outCmd []
+          | getParam              -> sendCommand' outParam []
+          | extNeedsToSend' ->
               ({e | sendCommand <-
                     Maybe.map toInts
                         (extRequestToPacket s.currentContext s.extRequest)}
@@ -172,7 +166,7 @@ encode s =
           | not (mediaImportActive s) && not (memoryManageBusy s.memoryManage) ->
               ({ e | sendCommand <- Just (toInts OutgoingGetStatus)}
               , [])
-          | otherwise -> log ("bg encode OTHERWISE") <| (e,[])
+          | otherwise -> (e,[])
 
 sendCommand' : OutgoingPacket
             -> (List BackgroundAction)

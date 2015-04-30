@@ -17,8 +17,6 @@ import Byte (..)
 import String (toInt)
 import DevicePacket (..)
 
-import Debug (log)
-
 type Tab = Log | Settings | Manage | Developer
 
 type ImportRequest =
@@ -171,7 +169,7 @@ update action s =
                             (Maybe.map MemInfoUnknownCardAdd (maybeHead (filter (\c -> c.cpz == cpz) d.cards)))
                 }
             _        -> errorTryingTo "add to memory"
-        SetParameterField p c -> log ("Set content " ++ toString c) <|
+        SetParameterField p c ->
             if c.string == ""
             then let mpb = Just (p, 0)
                  in { s | common <- updateCommon (SetParameter mpb)
@@ -210,10 +208,8 @@ update action s =
                         _ -> updateMemInfo
 
                 SetParameter mpb -> {s' | setParameter <- mpb}
-                GetParameter mp ->
-                    log ("gui.GuiState: get kb") <| {s' | getParameter <- mp}
-                CommonSettings settings ->
-                    log ("gui.GuiState: settings") <| s'
+                GetParameter mp  -> {s' | getParameter <- mp}
+                CommonSettings settings -> s'
                 _ -> s'
         Interpret packet -> case packet of
             ReceivedGetCardCpz cpz -> case s.unsavedMemInfo of

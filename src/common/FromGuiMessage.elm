@@ -7,8 +7,6 @@ import Maybe
 import Byte (..)
 import CommonState (..)
 
-import Debug (log)
-
 type alias FromGuiMessage =
     { setLog           : Maybe (List String)
     , getState         : Maybe ()
@@ -40,11 +38,9 @@ encode action =
         StartMemManage     -> {e | startMemManage <- Just ()}
         EndMemManage       -> {e | endMemManage <- Just ()}
         SaveMemManage d    -> {e | saveMemManage <- Just d}
-        SetParameter mpb   -> log ("encode FromGuiMessage setParamter") <|
-                              {e | setParameter <- Just
+        SetParameter mpb   -> {e | setParameter <- Just
                                 (Maybe.map (\(p,b) -> (encodeParameter p, b)) mpb)} 
-        GetParameter mp    -> log ("encode FromGuiMessage getParameter") <|
-                              {e | getParameter <- Just (Maybe.map encodeParameter mp)} 
+        GetParameter mp    -> {e | getParameter <- Just (Maybe.map encodeParameter mp)} 
         _                  -> e
 
 decode :  FromGuiMessage -> CommonAction

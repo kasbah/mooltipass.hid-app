@@ -21,8 +21,6 @@ import CommonState as Common
 import CommonState(MemInfo(..), CommonAction(..))
 import DevicePacket (..)
 
-import Debug (log)
-
 {-| Any state updates from the background are received through this port -}
 port fromBackground : Signal ToGuiMessage
 
@@ -94,9 +92,8 @@ forBg s =
                         (FromGuiMessage.encode (Common.SaveMemManage d)
                         , SetUnsavedMem (Common.MemInfo d), s)
         | doSetParam -> (encSet, NoOp, {s | setParameter <- Nothing})
-        | doGetParam -> log ("gui.Main: doGetParam") <| (encGet, NoOp, {s | getParameter <- Nothing})
-        | doNeedParam -> log ("gui.Main: NEED PARAMS") <|
-              (needGet, NoOp,
+        | doGetParam -> (encGet, NoOp, {s | getParameter <- Nothing})
+        | doNeedParam -> (needGet, NoOp,
                {s | needParameters <- List.drop 1 s.needParameters, getParameter <- needParam})
  
         | otherwise -> (e, NoOp, s)
