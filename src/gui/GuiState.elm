@@ -169,13 +169,9 @@ update action s =
                             (Maybe.map MemInfoUnknownCardAdd (maybeHead (filter (\c -> c.cpz == cpz) d.cards)))
                 }
             _        -> errorTryingTo "add to memory"
-        SetParameterField p c ->
-            if c.string == ""
-            then let mpb = Just (p, 0)
-                 in { s | common <- updateCommon (SetParameter mpb)
-                        , selections <- Dict.insert (encodeParameter p) (Selection 0 1 Field.Forward) s.selections
-                        , setParameter <- mpb }
-            else case toInt c.string of
+        SetParameterField p c0 ->
+            let c = if c0.string == "" then Content "0" (Selection 0 1 Field.Forward) else c0
+            in case toInt c.string of
               Ok i -> let mpb = Just (p, i)
                       in { s | common <- updateCommon (SetParameter mpb)
                              , selections <- Dict.insert (encodeParameter p) c.selection s.selections
