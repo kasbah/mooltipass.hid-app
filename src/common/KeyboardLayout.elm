@@ -26,9 +26,10 @@ allKeyboards =
     , ("NL_NL", 0xA1)
     , ("NO_NO", 0xA2)
     , ("PO_PO", 0xA3)
-    , ("SL_SL", 0xA4)
-    , ("FRDE_CH", 0xA5)
-    , ("EN_UK", 0xA6)
+    , ("RO_RO", 0xA4)
+    , ("SL_SL", 0xA5)
+    , ("FRDE_CH", 0xA6)
+    , ("EN_UK", 0xA7)
     ]
 
 keyboardToInt : String -> Maybe Int
