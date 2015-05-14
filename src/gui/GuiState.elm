@@ -36,6 +36,7 @@ type alias GuiState =
     , unsavedMemInfo : MemInfo
     , chromeNotify   : Maybe (String, String)
     , needParameters : List Parameter
+    , saveParameters : List (Parameter, Byte)
     , setParameter   : Maybe (Parameter, Byte)
     , getParameter   : Maybe Parameter
     , selections     : Dict.Dict Int Selection
@@ -54,6 +55,7 @@ type Action = ChangeTab Tab
             | StageParameter (Parameter, Byte)
             | StageParameterField Parameter Int Int Content
             | ResetStageParameters
+            | SaveStageParameters
             | CommonAction CommonAction
             | AddFav (FlashAddress, FlashAddress)
             | RemoveFav (FlashAddress, FlashAddress)
@@ -76,6 +78,7 @@ default =
     , unsavedMemInfo = NoMemInfo
     , chromeNotify   = Nothing
     , needParameters = []
+    , saveParameters = []
     , setParameter   = Nothing
     , getParameter   = Nothing
     , selections     = Dict.empty
@@ -188,6 +191,10 @@ update action s =
               _    -> s
 
         ResetStageParameters -> {s | stageParameters <- Dict.empty }
+        SaveStageParameters ->
+          {s | saveParameters <- map (\(i,b) -> (decodeParameter i, b))
+                                   (Dict.toList s.stageParameters)
+             ,  stageParameters <- Dict.empty }
 
         -- An action on the common state can have a effect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the

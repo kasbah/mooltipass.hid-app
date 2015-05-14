@@ -68,9 +68,15 @@ forBg s =
             Common.MemInfoRequest -> True
             Common.MemInfoSave  _ -> True
             _                     -> False
+
+        setParam pb = FromGuiMessage.encode (Common.SetParameter (Just pb))
+        (doSaveParam, needSet, saveParam) = case List.take 1 s.saveParameters of
+            [pb] -> (True, setParam pb, Just pb)
+            []   -> (False, emptyFromGuiMessage, Nothing)
         (doSetParam, encSet) = case s.setParameter of
-            Just (p,b) -> (True, FromGuiMessage.encode (Common.SetParameter (Just (p, b))))
+            Just pb -> (True, setParam pb)
             Nothing -> (False, emptyFromGuiMessage)
+
         getParam p = FromGuiMessage.encode (Common.GetParameter (Just p))
         (doNeedParam, needGet, needParam) = case List.take 1 s.needParameters of
             [p]  -> (True, getParam p, Just p)
@@ -93,6 +99,8 @@ forBg s =
                         , SetUnsavedMem (Common.MemInfo d), s)
         | doSetParam -> (encSet, NoOp, {s | setParameter <- Nothing})
         | doGetParam -> (encGet, NoOp, {s | getParameter <- Nothing})
+        | doSaveParam -> (needSet, NoOp,
+               {s | saveParameters <- List.drop 1 s.saveParameters, setParameter <- saveParam})
         | doNeedParam -> (needGet, NoOp,
                {s | needParameters <- List.drop 1 s.needParameters, getParameter <- needParam})
  

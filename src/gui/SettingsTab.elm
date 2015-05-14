@@ -45,6 +45,7 @@ settingsTab (w,h) settings selections stageParameters =
 content : (Int, Int) -> SettingsInfo -> Dict Int Selection -> Element
 content (w,h) settings selections =
     let resetButton = button (send guiActions ResetStageParameters) "reset"
+        saveButton = button (send guiActions SaveStageParameters) "save"
         content' = container w h midTop <| flow down
             [ -- cardSettings (w,120) ,
               mpSettings
@@ -52,13 +53,9 @@ content (w,h) settings selections =
                 , h - 100)
                 settings selections
             , container w (heights.button + 4) middle
-                <| flow right [resetButton, spacer 16 1, saveButton settings]
+                <| flow right [resetButton, spacer 16 1, saveButton]
             ]
     in content'
-
-saveButton : SettingsInfo -> Element
--- saveButton settings = button (send commonActions (SaveSettings settings) ) "save"
-saveButton settings = button (send guiActions NoOp) "save"
 
 {-
 cardSettings : (Int, Int) -> Element
