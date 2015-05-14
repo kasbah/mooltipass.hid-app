@@ -53,6 +53,7 @@ type Action = ChangeTab Tab
             | AddToUnsavedMem MemInfoData
             | StageParameter (Parameter, Byte)
             | StageParameterField Parameter Int Int Content
+            | ResetStageParameters
             | CommonAction CommonAction
             | AddFav (FlashAddress, FlashAddress)
             | RemoveFav (FlashAddress, FlashAddress)
@@ -185,6 +186,8 @@ update action s =
                                selections <- Dict.insert (encodeParameter p) c.selection s.selections
                              , stageParameters <- Dict.insert (encodeParameter p) b s.stageParameters }
               _    -> s
+
+        ResetStageParameters -> {s | stageParameters <- Dict.empty }
 
         -- An action on the common state can have a effect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the

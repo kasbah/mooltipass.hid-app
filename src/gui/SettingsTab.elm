@@ -33,17 +33,18 @@ import Util (..)
 import Byte (..)
 import KeyboardLayout (..)
 
-settingsTab : (Int, Int) -> SettingsInfo -> Dict Int Selection -> Element
-settingsTab (w,h) settings selections =
+settingsTab : (Int, Int) -> SettingsInfo -> Dict Int Selection -> Dict Int Byte -> Element
+settingsTab (w,h) settings selections stageParameters =
     let contentH = h - 32
         contentW = w - 64
+        settings' = Dict.foldl (\i b -> updateSettingsInfo (decodeParameter i) b) settings stageParameters
         content' = container w contentH middle
-            <| content (contentW, contentH) settings selections
+            <| content (contentW, contentH) settings' selections
     in container w h middle content'
 
 content : (Int, Int) -> SettingsInfo -> Dict Int Selection -> Element
 content (w,h) settings selections =
-    let resetButton = button (send guiActions NoOp) "reset"
+    let resetButton = button (send guiActions ResetStageParameters) "reset"
         content' = container w h midTop <| flow down
             [ -- cardSettings (w,120) ,
               mpSettings
