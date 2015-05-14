@@ -39,6 +39,7 @@ type alias GuiState =
     , setParameter   : Maybe (Parameter, Byte)
     , getParameter   : Maybe Parameter
     , selections     : Dict.Dict Int Selection
+    , stageParameters : Dict.Dict Int Byte
     , common         : CommonState
     }
 
@@ -50,7 +51,8 @@ type Action = ChangeTab Tab
             | SetReadMem Bool
             | SetUnsavedMem MemInfo
             | AddToUnsavedMem MemInfoData
-            | SetParameterField Parameter Int Int Content
+            | StageParameter (Parameter, Byte)
+            | StageParameterField Parameter Int Int Content
             | CommonAction CommonAction
             | AddFav (FlashAddress, FlashAddress)
             | RemoveFav (FlashAddress, FlashAddress)
@@ -76,6 +78,7 @@ default =
     , setParameter   = Nothing
     , getParameter   = Nothing
     , selections     = Dict.empty
+    , stageParameters = Dict.empty
     , common         = Common.default
     }
 
@@ -169,14 +172,20 @@ update action s =
                             (Maybe.map MemInfoUnknownCardAdd (maybeHead (filter (\c -> c.cpz == cpz) d.cards)))
                 }
             _        -> errorTryingTo "add to memory"
-        SetParameterField p lo hi c0 ->
+        
+        StageParameter (p,b) ->
+          {s | stageParameters <- Dict.insert (encodeParameter p) b s.stageParameters }
+
+        StageParameterField p lo hi c0 ->
             let c = if c0.string == "" then Content "0" (Selection 0 1 Field.Forward) else c0
             in case toInt c.string of
-              Ok i -> let mpb = Just (p, clamp lo hi i)
-                      in { s | common <- updateCommon (SetParameter mpb)
-                             , selections <- Dict.insert (encodeParameter p) c.selection s.selections
-                             , setParameter <- mpb }
+              Ok i -> let b = clamp lo hi i
+                          mpb = Just (p, b)
+                      in { s | -- common <- updateCommon (SetParameter mpb)
+                               selections <- Dict.insert (encodeParameter p) c.selection s.selections
+                             , stageParameters <- Dict.insert (encodeParameter p) b s.stageParameters }
               _    -> s
+
         -- An action on the common state can have a effect on the gui-only
         -- state as well. The activeTab may become disabled due to setting the
         -- device state for instance.

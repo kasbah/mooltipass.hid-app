@@ -43,11 +43,21 @@ settingsTab (w,h) settings selections =
 
 content : (Int, Int) -> SettingsInfo -> Dict Int Selection -> Element
 content (w,h) settings selections =
-    let content' = container w h midTop <| flow down
+    let resetButton = button (send guiActions NoOp) "reset"
+        content' = container w h midTop <| flow down
             [ -- cardSettings (w,120) ,
-              mpSettings (w,220) settings selections
+              mpSettings
+                ( w
+                , h - 100)
+                settings selections
+            , container w (heights.button + 4) middle
+                <| flow right [resetButton, spacer 16 1, saveButton settings]
             ]
     in content'
+
+saveButton : SettingsInfo -> Element
+-- saveButton settings = button (send commonActions (SaveSettings settings) ) "save"
+saveButton settings = button (send guiActions NoOp) "save"
 
 {-
 cardSettings : (Int, Int) -> Element
@@ -70,16 +80,16 @@ mpSettings (w,h) settings selections =
         getSelection p = Maybe.withDefault noSelection <| Dict.get (encodeParameter p) selections
         getContent p v = Maybe.map (\x -> Content (toString x) (getSelection p)) v
         mpSettings' = container w h midTop <| flow down
-            [ sel (w - 32) "Keyboard layout" setKeyboard (sortBy fst allKeyboards)
+            [ sel (w - 32) "Keyboard layout" stageKeyboard (sortBy fst allKeyboards)
                                              (Maybe.withDefault "" (settings.keyboard `Maybe.andThen` keyboardFromInt))
-            , field (w - 32) "User interaction timeout" (sendIntContent UserInterTimeout 0 255)
+            , field (w - 32) "User interaction timeout" (stageIntContent UserInterTimeout 0 255)
                                                         (getContent UserInterTimeout settings.timeout)
-            , labelCheckbox (w - 32) "Lock timeout enable" (sendBool LockTimeoutEnable) (settings.lockTimeoutEnable)
-            , field (w - 32) "Lock timeout"             (sendIntContent LockTimeout 10 255)
+            , labelCheckbox (w - 32) "Lock timeout enable" (stageBool LockTimeoutEnable) (settings.lockTimeoutEnable)
+            , field (w - 32) "Lock timeout"             (stageIntContent LockTimeout 10 255)
                                                         (getContent LockTimeout settings.lockTimeout)
-            , labelCheckbox (w - 32) "Offline Mode"     (sendBool OfflineMode) (settings.offline)
-            , labelCheckbox (w - 32) "Screensaver"      (sendBool ScreenSaver) (settings.screensaver)
-            , labelCheckbox (w - 32) "Flash Screen"     (sendBool FlashScreen) (settings.flashscreen)
+            , labelCheckbox (w - 32) "Offline Mode"     (stageBool OfflineMode) (settings.offline)
+            , labelCheckbox (w - 32) "Screensaver"      (stageBool ScreenSaver) (settings.screensaver)
+            , labelCheckbox (w - 32) "Flash Screen"     (stageBool FlashScreen) (settings.flashscreen)
             ]
     in box (w,h) "Mooltipass Settings"
         <| flow down

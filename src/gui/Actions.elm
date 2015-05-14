@@ -22,6 +22,7 @@ commonActions = channel CommonNoOp
 sendGetParameter : Parameter -> Message
 sendGetParameter p = send guiActions (CommonAction (GetParameter (Just p)))
 
+{-
 sendParameter : Parameter -> Byte -> Message
 sendParameter p b = send guiActions (CommonAction (SetParameter (Just (p, b))))
 
@@ -40,3 +41,23 @@ sendBool p b = case b of
 
 setKeyboard : Int -> Message
 setKeyboard kb = sendParameter KeyboardLayout kb
+-}
+
+stageParameter : Parameter -> Byte -> Message
+stageParameter p b = send guiActions (StageParameter (p, b))
+
+stageIntContent : Parameter -> Int -> Int -> Content -> Message
+stageIntContent p lo hi content = send guiActions (StageParameterField p lo hi content)
+
+stageParseInt : Parameter -> String -> Message
+stageParseInt p s = case toInt s of
+  Ok i -> stageParameter p i
+  _    -> send guiActions NoOp
+
+stageBool : Parameter -> Bool -> Message
+stageBool p b = case b of
+  True  -> stageParameter p 1
+  False -> stageParameter p 0
+
+stageKeyboard : Int -> Message
+stageKeyboard kb = stageParameter KeyboardLayout kb
