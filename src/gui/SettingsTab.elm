@@ -82,12 +82,17 @@ mpSettings (w,h) settings selections =
                                              (Maybe.withDefault "" (settings.keyboard `Maybe.andThen` keyboardFromInt))
             , field (w - 32) "User interaction timeout" (stageIntContent UserInterTimeout 0 255)
                                                         (getContent UserInterTimeout settings.timeout)
-            , labelCheckbox (w - 32) "Lock timeout enable" (stageBool LockTimeoutEnable) (settings.lockTimeoutEnable)
-            , field (w - 32) "Lock timeout"             (stageIntContent LockTimeout 0 255)
-                                                        (getContent LockTimeout settings.lockTimeout)
-            , labelCheckbox (w - 32) "Offline Mode"     (stageBool OfflineMode) (settings.offline)
-            , labelCheckbox (w - 32) "Screensaver"      (stageBool ScreenSaver) (settings.screensaver)
-            , labelCheckbox (w - 32) "Flash Screen"     (stageBool FlashScreen) (settings.flashscreen)
+            , labelCheckbox (w - 32) "Lock the Mooltipass after inactivity"
+                (stageBool LockTimeoutEnable) (settings.lockTimeoutEnable)
+            , field (w - 32) "  Timeout for lock"
+                (stageIntContent LockTimeout 0 255)
+                (getContent LockTimeout settings.lockTimeout)
+            , labelCheckbox (w - 32) "Enable screensaver"
+                (stageBool ScreenSaver) (settings.screensaver)
+            , labelCheckbox (w - 32) "Flash screen when sending credentials"
+                (stageBool FlashScreen) (settings.flashscreen)
+            , labelCheckbox (w - 32) "Allow Mooltipass to boot when connected to a USB battery"
+                (stageBool OfflineMode) (settings.offline)
             ]
     in box (w,h) "Mooltipass Settings"
         <| flow down
