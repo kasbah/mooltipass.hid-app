@@ -33,21 +33,23 @@ import Util (..)
 import Byte (..)
 import KeyboardLayout (..)
 
-settingsTab : (Int, Int) -> SettingsInfo -> Dict Int Selection -> Dict Int Byte -> Element
-settingsTab (w,h) settings selections stageParameters =
+settingsTab : (Int, Int) -> Dict StringCmd Content
+    -> SettingsInfo -> Dict Int Selection -> Dict Int Byte -> Element
+settingsTab (w,h) stageStringCmds settings selections stageParameters =
     let contentH = h - 32
         contentW = w - 64
         settings' = Dict.foldl (\i b -> updateSettingsInfo (decodeParameter i) b) settings stageParameters
         content' = container w contentH middle
-            <| content (contentW, contentH) settings' selections
+            <| content (contentW, contentH) stageStringCmds settings' selections
     in container w h middle content'
 
-content : (Int, Int) -> SettingsInfo -> Dict Int Selection -> Element
-content (w,h) settings selections =
+content : (Int, Int) -> Dict StringCmd Content
+    -> SettingsInfo -> Dict Int Selection -> Element
+content (w,h) stageStringCmds settings selections =
     let resetButton = button (send guiActions ResetStageParameters) "reset"
         saveButton = button (send guiActions SaveStageParameters) "save"
         content' = container w h midTop <| flow down
-            [ -- cardSettings (w,120) ,
+            [ cardSettings (w,120) stageStringCmds,
               mpSettings
                 ( w
                 , h - 100)
@@ -57,19 +59,20 @@ content (w,h) settings selections =
             ]
     in content'
 
-{-
-cardSettings : (Int, Int) -> Element
-cardSettings (w,h) =
-    let cardAuth = field (w - 32) "Bob" "********"
+cardSettings : (Int, Int) -> Dict StringCmd Content -> Element
+cardSettings (w,h) stageStringCmds =
+    let cardField label cmd = field (w - 32) label
+                                  (stageStringContent cmd)
+                                  (Dict.get cmd stageStringCmds)
         cardSettings' = container w h midTop <| flow down
-            [ cardAuth
+            [ cardField "Username" gui_CardLogin
+            , cardField "Password" gui_CardPassword
             ]
     in box (w,h) "Card Authentication"
         <| flow down
             [ spacer 1 10
             , flow right [spacer 16 1, cardSettings']
             ]
--}
 
 mpSettings : (Int, Int) -> SettingsInfo -> Dict Int Selection -> Element
 mpSettings (w,h) settings selections =

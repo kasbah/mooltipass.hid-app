@@ -28,6 +28,8 @@ content (w,h) state =
         Log       -> withBackground <| logTab (w, h') state.common.log
         Developer -> withBackground <| developerTab (w, h') state.common.importInfo
         Manage    -> withBackground <| manageTab (w, h') state
-        Settings  -> withBackground <| settingsTab (w, h') state.common.settingsInfo
+        Settings  -> withBackground <| settingsTab (w, h')
+                                         state.stageStringCmds
+                                         state.common.settingsInfo
                                          state.selections state.stageParameters
         _         -> empty
