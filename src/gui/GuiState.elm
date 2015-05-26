@@ -36,6 +36,7 @@ type alias GuiState =
     , unsavedMemInfo : MemInfo
     , chromeNotify   : Maybe (String, String)
     , needStringCmds : List StringCmd
+    , getStringCmd   : Maybe StringCmd
     , needParameters : List Parameter
     , saveParameters : List (Parameter, Byte)
     , setParameter   : Maybe (Parameter, Byte)
@@ -86,6 +87,7 @@ default =
     , unsavedMemInfo = NoMemInfo
     , chromeNotify   = Nothing
     , needStringCmds = []
+    , getStringCmd   = Nothing
     , needParameters = []
     , saveParameters = []
     , setParameter   = Nothing

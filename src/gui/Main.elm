@@ -73,6 +73,9 @@ forBg s =
         (doNeedStringCmd, needSC, needCmd) = case List.take 1 s.needStringCmds of
             [c]  -> (True, getStringCmd c, Just c)
             []   -> (False, emptyFromGuiMessage, Nothing)
+        (doGetCmd, encGetCmd)  = case s.getStringCmd of
+            Just c  -> (True, getStringCmd c)
+            Nothing -> (False, emptyFromGuiMessage)
 
         setParam pb = FromGuiMessage.encode (Common.SetParameter (Just pb))
         (doSaveParam, needSet, saveParam) = case List.take 1 s.saveParameters of
@@ -103,11 +106,12 @@ forBg s =
                         (FromGuiMessage.encode (Common.SaveMemManage d)
                         , SetUnsavedMem (Common.MemInfo d), s)
         | doSetParam -> (encSet, NoOp, {s | setParameter <- Nothing})
+        | doGetCmd   -> (encGetCmd, NoOp, {s | getStringCmd <- Nothing})
         | doGetParam -> (encGet, NoOp, {s | getParameter <- Nothing})
         | doSaveParam -> (needSet, NoOp,
                {s | saveParameters <- List.drop 1 s.saveParameters, setParameter <- saveParam})
         | doNeedStringCmd -> (needSC, NoOp,
-               {s | needStringCmds <- List.drop 1 s.needStringCmds})
+               {s | needStringCmds <- List.drop 1 s.needStringCmds, getStringCmd <- needCmd})
         | doNeedParam -> (needGet, NoOp,
                {s | needParameters <- List.drop 1 s.needParameters, getParameter <- needParam})
  
