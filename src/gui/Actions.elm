@@ -19,6 +19,9 @@ guiActions = channel NoOp
 commonActions : Channel CommonAction
 commonActions = channel CommonNoOp
 
+stageStringContent : StringCmd -> Content -> Message
+stageStringContent cmd content = send guiActions (StageStringCmd cmd content)
+
 sendGetParameter : Parameter -> Message
 sendGetParameter p = send guiActions (CommonAction (GetParameter (Just p)))
 

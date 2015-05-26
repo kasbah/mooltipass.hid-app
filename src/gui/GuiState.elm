@@ -41,6 +41,7 @@ type alias GuiState =
     , getParameter   : Maybe Parameter
     , selections     : Dict.Dict Int Selection
     , stageParameters : Dict.Dict Int Byte
+    , stageStringCmds : Dict.Dict StringCmd Content
     , common         : CommonState
     }
 
@@ -52,6 +53,7 @@ type Action = ChangeTab Tab
             | SetReadMem Bool
             | SetUnsavedMem MemInfo
             | AddToUnsavedMem MemInfoData
+            | StageStringCmd StringCmd Content
             | StageParameter Parameter Byte
             | StageParameterIntField Parameter Int Int Content
             | ResetStageParameters
@@ -65,6 +67,11 @@ type Action = ChangeTab Tab
             | Interpret ReceivedPacket
             | NotifyChrome (Maybe (String, String))
             | NoOp
+
+{- String Commands -}
+type alias StringCmd = Int
+gui_CardLogin    = 0
+gui_CardPassword = 1
 
 {-| The initial state -}
 default : GuiState
@@ -83,6 +90,7 @@ default =
     , getParameter   = Nothing
     , selections     = Dict.empty
     , stageParameters = Dict.empty
+    , stageStringCmds = Dict.empty
     , common         = Common.default
     }
 
@@ -176,6 +184,9 @@ update action s =
                             (Maybe.map MemInfoUnknownCardAdd (maybeHead (filter (\c -> c.cpz == cpz) d.cards)))
                 }
             _        -> errorTryingTo "add to memory"
+
+        StageStringCmd cmd c ->
+          {s | stageStringCmds <- Dict.insert cmd c s.stageStringCmds}
 
         StageParameter p b ->
           {s | stageParameters <- Dict.insert (encodeParameter p) b s.stageParameters }
