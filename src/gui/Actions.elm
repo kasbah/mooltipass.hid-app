@@ -23,7 +23,7 @@ sendGetParameter : Parameter -> Message
 sendGetParameter p = send guiActions (CommonAction (GetParameter (Just p)))
 
 stageParameter : Parameter -> Byte -> Message
-stageParameter p b = send guiActions (StageParameter (p, b))
+stageParameter p b = send guiActions (StageParameter p b)
 
 stageIntContent : Parameter -> Int -> Int -> Content -> Message
 stageIntContent p lo hi content = send guiActions (StageParameterIntField p lo hi content)

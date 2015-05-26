@@ -52,7 +52,7 @@ type Action = ChangeTab Tab
             | SetReadMem Bool
             | SetUnsavedMem MemInfo
             | AddToUnsavedMem MemInfoData
-            | StageParameter (Parameter, Byte)
+            | StageParameter Parameter Byte
             | StageParameterIntField Parameter Int Int Content
             | ResetStageParameters
             | SaveStageParameters
@@ -176,8 +176,8 @@ update action s =
                             (Maybe.map MemInfoUnknownCardAdd (maybeHead (filter (\c -> c.cpz == cpz) d.cards)))
                 }
             _        -> errorTryingTo "add to memory"
-        
-        StageParameter (p,b) ->
+
+        StageParameter p b ->
           {s | stageParameters <- Dict.insert (encodeParameter p) b s.stageParameters }
 
         StageParameterIntField p lo hi c0 ->
