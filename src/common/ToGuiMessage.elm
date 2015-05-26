@@ -10,6 +10,7 @@ type alias ToGuiMessage = { setLog          : (List String)
                           , setDeviceStatus : Int
                           , setImportInfo   : (Int,FileId,Int,Int)
                           , setMemInfo      : (Int, Maybe MemInfoData)
+                          , getStringCmd    : Maybe Int
                           , setParameter    : Maybe (Int, Byte)
                           , getParameter    : Maybe Int
                           , settingsInfo    : SettingsInfo
@@ -38,6 +39,7 @@ encode s =
         MemInfoWaitingForUser   -> (2, Nothing)
         MemInfoWaitingForDevice -> (3, Nothing)
         MemInfo d               -> (4, Just d)
+    , getStringCmd = s.getStringCmd
     , setParameter = Maybe.map (\(p,b) -> (encodeParameter p, b)) s.setParameter
     , getParameter = Maybe.map encodeParameter s.getParameter
     , settingsInfo = s.settingsInfo
@@ -65,6 +67,9 @@ decode msg=
             (2, Nothing) -> MemInfoWaitingForUser
             (3, Nothing) -> MemInfoWaitingForDevice
             (4, Just d)  -> MemInfo d
+        getStringCmd = case msg.getStringCmd of
+            Nothing -> []
+            Just c  -> [GetStringCmd (Just c)]
         setParam = case msg.setParameter of
             Nothing -> []
             Just (p,b) -> [SetParameter (Just (decodeParameter p, b))]
@@ -76,4 +81,4 @@ decode msg=
         , SetImportInfo setImportInfo
         , SetMemInfo setMemInfo
         , CommonSettings msg.settingsInfo
-        ] ++ setParam ++ getParam
+        ] ++ getStringCmd ++ setParam ++ getParam
