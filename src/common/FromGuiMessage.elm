@@ -14,6 +14,7 @@ type alias FromGuiMessage =
     , startMemManage   : Maybe ()
     , endMemManage     : Maybe ()
     , saveMemManage    : Maybe MemInfoData
+    , getStringCmd     : Maybe (Maybe Int)
     , setParameter     : Maybe (Maybe (Int, Byte))
     , getParameter     : Maybe (Maybe Int)
     }
@@ -25,6 +26,7 @@ emptyFromGuiMessage =
     , startMemManage   = Nothing
     , endMemManage     = Nothing
     , saveMemManage    = Nothing
+    , getStringCmd     = Nothing
     , setParameter     = Nothing
     , getParameter     = Nothing
     }
@@ -41,6 +43,7 @@ encode action =
         SetParameter mpb   -> {e | setParameter <- Just
                                 (Maybe.map (\(p,b) -> (encodeParameter p, b)) mpb)} 
         GetParameter mp    -> {e | getParameter <- Just (Maybe.map encodeParameter mp)} 
+        GetStringCmd mc    -> {e | getStringCmd <- Just mc}
         _                  -> e
 
 decode :  FromGuiMessage -> CommonAction
@@ -55,5 +58,6 @@ decode msg =
             , Maybe.map SaveMemManage msg.saveMemManage
             , Maybe.map (\x -> SetParameter (Maybe.map (\(p,b) -> (decodeParameter p, b)) x)) msg.setParameter
             , Maybe.map (\x -> GetParameter (Maybe.map decodeParameter x)) msg.getParameter
+            , Maybe.map GetStringCmd msg.getStringCmd
             ]
     in Maybe.withDefault CommonNoOp decode'
