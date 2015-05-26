@@ -35,6 +35,7 @@ type alias GuiState =
     , readMem        : Bool
     , unsavedMemInfo : MemInfo
     , chromeNotify   : Maybe (String, String)
+    , needStringCmds : List StringCmd
     , needParameters : List Parameter
     , saveParameters : List (Parameter, Byte)
     , setParameter   : Maybe (Parameter, Byte)
@@ -84,6 +85,7 @@ default =
     , readMem        = False
     , unsavedMemInfo = NoMemInfo
     , chromeNotify   = Nothing
+    , needStringCmds = []
     , needParameters = []
     , saveParameters = []
     , setParameter   = Nothing
@@ -114,6 +116,8 @@ update action s =
                 ("Error: trying to " ++ str ++ " without having memory data")
                 s
 
+        initStringCmds = [ gui_CardLogin, gui_CardPassword ]
+
         initParams : List Parameter
         initParams = [ KeyboardLayout, UserInterTimeout, LockTimeoutEnable, LockTimeout, OfflineMode, ScreenSaver, FlashScreen ]
     in case action of
@@ -126,7 +130,8 @@ update action s =
                                                        else s.unsavedMemInfo
                                 }
                            else s'
-                         Settings -> {s' | needParameters <- initParams }
+                         Settings -> {s' | needStringCmds <- initStringCmds
+                                         , needParameters <- initParams }
                          _ -> s'
         -- clicking the icon 7 times toggles developer tab visibility
         ClickIcon     -> if s.iconClicked >= 6
