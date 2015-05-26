@@ -53,7 +53,7 @@ type Action = ChangeTab Tab
             | SetUnsavedMem MemInfo
             | AddToUnsavedMem MemInfoData
             | StageParameter (Parameter, Byte)
-            | StageParameterField Parameter Int Int Content
+            | StageParameterIntField Parameter Int Int Content
             | ResetStageParameters
             | SaveStageParameters
             | CommonAction CommonAction
@@ -180,7 +180,7 @@ update action s =
         StageParameter (p,b) ->
           {s | stageParameters <- Dict.insert (encodeParameter p) b s.stageParameters }
 
-        StageParameterField p lo hi c0 ->
+        StageParameterIntField p lo hi c0 ->
             let c = if c0.string == "" then Content "0" (Selection 0 1 Field.Forward) else c0
             in case toInt c.string of
               Ok i -> let b = clamp lo hi i

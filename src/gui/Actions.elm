@@ -26,7 +26,7 @@ stageParameter : Parameter -> Byte -> Message
 stageParameter p b = send guiActions (StageParameter (p, b))
 
 stageIntContent : Parameter -> Int -> Int -> Content -> Message
-stageIntContent p lo hi content = send guiActions (StageParameterField p lo hi content)
+stageIntContent p lo hi content = send guiActions (StageParameterIntField p lo hi content)
 
 stageParseInt : Parameter -> String -> Message
 stageParseInt p s = case toInt s of
