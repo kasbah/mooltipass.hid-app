@@ -185,8 +185,7 @@ update action s =
             in case toInt c.string of
               Ok i -> let b = clamp lo hi i
                           mpb = Just (p, b)
-                      in { s | -- common <- updateCommon (SetParameter mpb)
-                               selections <- Dict.insert (encodeParameter p) c.selection s.selections
+                      in { s | selections <- Dict.insert (encodeParameter p) c.selection s.selections
                              , stageParameters <- Dict.insert (encodeParameter p) b s.stageParameters }
               _    -> s
 
