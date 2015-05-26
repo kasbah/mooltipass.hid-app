@@ -69,7 +69,7 @@ forBg s =
             Common.MemInfoSave  _ -> True
             _                     -> False
 
-        getStringCmd cmd = FromGuiMessage.encode (Common.CommonNoOp)
+        getStringCmd cmd = FromGuiMessage.encode (Common.GetStringCmd (Just cmd))
         (doNeedStringCmd, needSC, needCmd) = case List.take 1 s.needStringCmds of
             [c]  -> (True, getStringCmd c, Just c)
             []   -> (False, emptyFromGuiMessage, Nothing)

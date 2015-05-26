@@ -14,6 +14,7 @@ type alias CommonState =
     , log          : List String
     , importInfo   : ImportInfo
     , memoryInfo   : MemInfo
+    , getStringCmd : Maybe Int
     , setParameter : Maybe (Parameter, Byte)
     , getParameter : Maybe Parameter
     , settingsInfo : SettingsInfo
@@ -26,6 +27,7 @@ default =
     , log          = []
     , importInfo   = NoImport
     , memoryInfo   = NoMemInfo
+    , getStringCmd = Nothing
     , setParameter = Nothing
     , getParameter = Nothing
     , settingsInfo = emptySettingsInfo
@@ -188,6 +190,7 @@ type CommonAction = SetLog (List String)
                   | StartMemManage
                   | SaveMemManage MemInfoData
                   | EndMemManage
+                  | GetStringCmd (Maybe Int)
                   | SetParameter (Maybe (Parameter, Byte))
                   | GetParameter (Maybe Parameter)
                   | CommonSettings SettingsInfo
@@ -208,6 +211,9 @@ update action s =
         StartMemManage      -> {s | memoryInfo <- MemInfoRequest}
         SaveMemManage d     -> {s | memoryInfo <- MemInfoSave d}
         EndMemManage        -> {s | memoryInfo <- NoMemInfo}
+        GetStringCmd mc     -> case mc of
+                                   Nothing -> {s | getStringCmd <- Nothing }
+                                   Just c  -> {s | getStringCmd <- Just c}
         SetParameter mpb    -> case mpb of
                                    Nothing -> { s | setParameter <- Nothing }
                                    Just pb -> {s | setParameter <- Just pb}
