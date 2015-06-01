@@ -29,6 +29,7 @@ content (w,h) state =
         Developer -> withBackground <| developerTab (w, h') state.common.importInfo
         Manage    -> withBackground <| manageTab (w, h') state
         Settings  -> withBackground <| settingsTab (w, h')
+                                         state.common.strCmdInfo
                                          state.stageStringCmds
                                          state.common.settingsInfo
                                          state.selections state.stageParameters

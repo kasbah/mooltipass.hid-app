@@ -33,23 +33,23 @@ import Util (..)
 import Byte (..)
 import KeyboardLayout (..)
 
-settingsTab : (Int, Int) -> Dict StringCmd Content
+settingsTab : (Int, Int) -> StringCmdInfo -> Dict StringCmd Content
     -> SettingsInfo -> Dict Int Selection -> Dict Int Byte -> Element
-settingsTab (w,h) stageStringCmds settings selections stageParameters =
+settingsTab (w,h) strCmdInfo stageStringCmds settings selections stageParameters =
     let contentH = h - 32
         contentW = w - 64
         settings' = Dict.foldl (\i b -> updateSettingsInfo (decodeParameter i) b) settings stageParameters
         content' = container w contentH middle
-            <| content (contentW, contentH) stageStringCmds settings' selections
+            <| content (contentW, contentH) strCmdInfo stageStringCmds settings' selections
     in container w h middle content'
 
-content : (Int, Int) -> Dict StringCmd Content
+content : (Int, Int) -> StringCmdInfo -> Dict StringCmd Content
     -> SettingsInfo -> Dict Int Selection -> Element
-content (w,h) stageStringCmds settings selections =
+content (w,h) strCmdInfo stageStringCmds settings selections =
     let resetButton = button (send guiActions ResetStageParameters) "reset"
         saveButton = button (send guiActions SaveStageParameters) "save"
         content' = container w h midTop <| flow down
-            [ cardSettings (w,120) stageStringCmds,
+            [ cardSettings (w,120) strCmdInfo stageStringCmds,
               mpSettings
                 ( w
                 , h - 100)
@@ -59,11 +59,16 @@ content (w,h) stageStringCmds settings selections =
             ]
     in content'
 
-cardSettings : (Int, Int) -> Dict StringCmd Content -> Element
-cardSettings (w,h) stageStringCmds =
-    let cardField label cmd = field (w - 32) label
+cardSettings : (Int, Int) -> StringCmdInfo -> Dict StringCmd Content -> Element
+cardSettings (w,h) strCmdInfo stageStringCmds =
+    let noSelection = Selection 0 0 Field.Forward
+        cardField label cmd = field (w - 32) label
                                   (stageStringContent cmd)
-                                  (Dict.get cmd stageStringCmds)
+                                  (Just (foo cmd))
+        foo cmd = Maybe.withDefault (Content (bar cmd) noSelection) <| Dict.get cmd stageStringCmds
+        bar cmd = Maybe.withDefault "Loading..." <| case cmd of
+            str_CardLogin    -> strCmdInfo.cardLogin
+            str_CardPassword -> strCmdInfo.cardPassword
         cardSettings' = container w h midTop <| flow down
             [ cardField "Username" str_CardLogin
             , cardField "Password" str_CardPassword

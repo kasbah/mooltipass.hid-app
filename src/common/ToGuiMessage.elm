@@ -14,6 +14,7 @@ type alias ToGuiMessage = { setLog          : (List String)
                           , setParameter    : Maybe (Int, Byte)
                           , getParameter    : Maybe Int
                           , settingsInfo    : SettingsInfo
+                          , strCmdInfo      : StringCmdInfo
                           }
 
 encode : CommonState -> ToGuiMessage
@@ -43,6 +44,7 @@ encode s =
     , setParameter = Maybe.map (\(p,b) -> (encodeParameter p, b)) s.setParameter
     , getParameter = Maybe.map encodeParameter s.getParameter
     , settingsInfo = s.settingsInfo
+    , strCmdInfo   = s.strCmdInfo
     }
 
 decode : ToGuiMessage -> List CommonAction
@@ -81,4 +83,5 @@ decode msg=
         , SetImportInfo setImportInfo
         , SetMemInfo setMemInfo
         , CommonSettings msg.settingsInfo
+        , CommonStrCmds  msg.strCmdInfo
         ] ++ getStringCmd ++ setParam ++ getParam

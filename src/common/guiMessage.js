@@ -7,6 +7,7 @@ var emptyToGuiMessage =
     , setParameter    : null
     , getParameter    : null
     , settingsInfo    : { keyboard: null, timeout: null , lockTimeoutEnable: null, lockTimeout: null, offline: null, screensaver: null, flashscreen: null}
+    , strCmdInfo      : { cardLogin: null, cardPassword: null }
     };
 
 var emptyFromGuiMessage =

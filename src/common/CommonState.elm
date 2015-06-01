@@ -17,6 +17,7 @@ type alias CommonState =
     , getStringCmd : Maybe Int
     , setParameter : Maybe (Parameter, Byte)
     , getParameter : Maybe Parameter
+    , strCmdInfo   : StringCmdInfo
     , settingsInfo : SettingsInfo
     , forceUpdate  : Bool
     }
@@ -30,6 +31,7 @@ default =
     , getStringCmd = Nothing
     , setParameter = Nothing
     , getParameter = Nothing
+    , strCmdInfo   = emptyStringCmdInfo
     , settingsInfo = emptySettingsInfo
     , forceUpdate  = True
     }
@@ -212,6 +214,7 @@ type CommonAction = SetLog (List String)
                   | SetParameter (Maybe (Parameter, Byte))
                   | GetParameter (Maybe Parameter)
                   | CommonSettings SettingsInfo
+                  | CommonStrCmds StringCmdInfo
                   | CommonNoOp
 
 {-| Transform the state to a new state according to an action -}
@@ -238,7 +241,8 @@ update action s =
         GetParameter mp     -> case mp of
                                    Nothing -> {s | getParameter <- Nothing }
                                    Just p  -> {s | getParameter <- Just p}
-        CommonSettings settings   -> {s | settingsInfo <- settings}
+        CommonSettings settings -> {s | settingsInfo <- settings}
+        CommonStrCmds strCmds   -> {s | strCmdInfo <- strCmds }
         -- GetState just twiddles the forceUpdate bit to make the state seem
         -- changed. This is so we can dropRepeats on the state signal but force
         -- an update through if we need to (like when the GUI is newly opened

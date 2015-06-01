@@ -71,6 +71,10 @@ encode s =
             _                        -> False
         extNeedsToSend' = extNeedsToSend s.extRequest && not s.waitingForDevice
                         && s.common.deviceStatus == Unlocked
+        (getStrCmd, outStrCmd) = case (s.waitingForDevice, s.bgGetStringCmd) of
+            (False, (0::_)) -> (True, OutgoingGetCardLogin)
+            (False, (1::_)) -> (True, OutgoingGetCardPassword)
+            _               -> (False, OutgoingDebug "DeviceMessage error in getStrCmd")
         (setParam, outCmd) = case (s.waitingForDevice, s.bgSetParameter) of
             (False, Just (p,b)) -> (True, OutgoingSetParameter p b)
             _                   -> (False, OutgoingDebug "DeviceMessage error in setParam")
@@ -78,6 +82,7 @@ encode s =
             (False, (p::_)) -> (True, OutgoingGetParameter p)
             _               -> (False, OutgoingDebug "DeviceMessage error in getParam")
     in if | not s.deviceConnected -> (connect, [])
+          | getStrCmd             -> sendCommand' outStrCmd []
           | setParam              -> sendCommand' outCmd []
           | getParam              -> sendCommand' outParam []
           | extNeedsToSend' ->

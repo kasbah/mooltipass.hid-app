@@ -19,6 +19,7 @@ type alias BackgroundState = { deviceConnected  : Bool
                              , extRequest       : ExtensionRequest
                              , mediaImport      : MediaImport
                              , memoryManage     : MemManageState
+                             , bgGetStringCmd   : List Int
                              , bgSetParameter   : Maybe (Parameter, Byte)
                              , bgGetParameter   : List Parameter
                              , common           : CommonState
@@ -33,6 +34,7 @@ default = { deviceConnected  = False
           , extRequest       = NoRequest
           , mediaImport      = NoMediaImport
           , memoryManage     = NotManaging
+          , bgGetStringCmd   = []
           , bgSetParameter   = Nothing
           , bgGetParameter   = []
           , common           = Common.default
@@ -267,6 +269,10 @@ update action s =
             if not (mediaImportActive s)
             then setMedia (MediaImportRequested p) s
             else s
+        CommonAction (GetStringCmd mc) ->
+            case mc of
+                Nothing -> s
+                Just c  -> { s | bgGetStringCmd <- uniqAppend c s.bgGetStringCmd }
         CommonAction (SetParameter mpb) -> {s | bgSetParameter <- mpb}
         CommonAction (GetParameter mp) ->
             case mp of
@@ -276,7 +282,7 @@ update action s =
         Interpret p -> interpret p s
         NoOp -> s
 
-uniqAppend : Parameter -> List Parameter -> List Parameter
+uniqAppend : a -> List a -> List a
 uniqAppend p ps = case ps of
     [] -> [p]
     (x::xs) -> case x == p of
@@ -470,6 +476,18 @@ interpret packet s =
         ReceivedGetCardCpz cpz -> case s.memoryManage of
             MemManageReadCpzWaiting (p,f,a,c,cs) -> setMemManage (MemManageReadSuccess (p,f,a,c,cs,cpz)) s
             _ -> s -- can be meant for gui, we just ignore it
+        ReceivedGetCardLogin    xm -> case xm of
+            Nothing -> s
+            Just x  ->
+                let c = s.common
+                    common' = { c | strCmdInfo <- updateStringCmdInfo str_CardLogin x c.strCmdInfo }
+                in { s | bgGetStringCmd <- drop 1 s.bgGetStringCmd, common <- common'}
+        ReceivedGetCardPassword xm -> case xm of
+            Nothing -> s
+            Just x  -> 
+                let c = s.common
+                    common' = { c | strCmdInfo <- updateStringCmdInfo str_CardPassword x c.strCmdInfo }
+                in { s | bgGetStringCmd <- drop 1 s.bgGetStringCmd, common <- common'}
         ReceivedSetParameter x ->
             -- update s.common with value of bgSetParameter
             case s.bgSetParameter of
