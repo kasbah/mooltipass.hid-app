@@ -3,6 +3,7 @@ var emptyToGuiMessage =
     , setDeviceStatus : 0
     , setImportInfo   : [0,"",0,0]
     , setMemInfo      : [0,null]
+    , getStringCmd    : null
     , setParameter    : null
     , getParameter    : null
     , settingsInfo    : { keyboard: null, timeout: null , lockTimeoutEnable: null, lockTimeout: null, offline: null, screensaver: null, flashscreen: null}
@@ -15,6 +16,7 @@ var emptyFromGuiMessage =
     , startMemManage   : null
     , endMemManage     : null
     , saveMemManage    : null
+    , getStringCmd     : null
     , setParameter     : null
     , getParameter     : null
     };
