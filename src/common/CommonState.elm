@@ -41,6 +41,11 @@ maxFavs = 14
 emptyFavorites : List Favorite
 emptyFavorites = repeat maxFavs Nothing
 
+{- String Commands -}
+type alias StringCmd = Int
+str_CardLogin    = 0
+str_CardPassword = 1
+
 {-| Set-able parameters. Only some of these will be exposed to the user -}
 type Parameter = UserInitKey
                | KeyboardLayout
@@ -97,6 +102,19 @@ type MemInfo =
     | MemInfoUnknownCardAdd   Card
     | MemInfoUnknownCardError ByteArray
     | NoMemInfo
+
+type alias StringCmdInfo =
+    { cardLogin    : Maybe String
+    , cardPassword : Maybe String
+    }
+
+emptyStringCmdInfo = StringCmdInfo Nothing Nothing
+
+updateStringCmdInfo : StringCmd -> String -> StringCmdInfo -> StringCmdInfo
+updateStringCmdInfo cmd v s = case cmd of
+    str_CardLogin    -> { s | cardLogin    <- Just v }
+    str_CardPassword -> { s | cardPassword <- Just v }
+    _                -> s
 
 type alias SettingsInfo =
     { keyboard    : Maybe Int

@@ -65,8 +65,8 @@ cardSettings (w,h) stageStringCmds =
                                   (stageStringContent cmd)
                                   (Dict.get cmd stageStringCmds)
         cardSettings' = container w h midTop <| flow down
-            [ cardField "Username" gui_CardLogin
-            , cardField "Password" gui_CardPassword
+            [ cardField "Username" str_CardLogin
+            , cardField "Password" str_CardPassword
             ]
     in box (w,h) "Card Authentication"
         <| flow down

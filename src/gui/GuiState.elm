@@ -70,11 +70,6 @@ type Action = ChangeTab Tab
             | NotifyChrome (Maybe (String, String))
             | NoOp
 
-{- String Commands -}
-type alias StringCmd = Int
-gui_CardLogin    = 0
-gui_CardPassword = 1
-
 {-| The initial state -}
 default : GuiState
 default =
@@ -118,7 +113,7 @@ update action s =
                 ("Error: trying to " ++ str ++ " without having memory data")
                 s
 
-        initStringCmds = [ gui_CardLogin, gui_CardPassword ]
+        initStringCmds = [ str_CardLogin, str_CardPassword ]
 
         initParams : List Parameter
         initParams = [ KeyboardLayout, UserInterTimeout, LockTimeoutEnable, LockTimeout, OfflineMode, ScreenSaver, FlashScreen ]
