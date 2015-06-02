@@ -113,10 +113,8 @@ type alias StringCmdInfo =
 emptyStringCmdInfo = StringCmdInfo Nothing Nothing
 
 updateStringCmdInfo : StringCmd -> String -> StringCmdInfo -> StringCmdInfo
-updateStringCmdInfo cmd v s = case cmd of
-    str_CardLogin    -> { s | cardLogin    <- Just v }
-    str_CardPassword -> { s | cardPassword <- Just v }
-    _                -> s
+updateStringCmdInfo cmd v s =
+    if (cmd == 0) then { s | cardLogin <- Just v } else { s | cardPassword <- Just v }
 
 type alias SettingsInfo =
     { keyboard    : Maybe Int

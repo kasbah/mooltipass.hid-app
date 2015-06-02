@@ -66,9 +66,8 @@ cardSettings (w,h) strCmdInfo stageStringCmds =
                                   (stageStringContent cmd)
                                   (Just (foo cmd))
         foo cmd = Maybe.withDefault (Content (bar cmd) noSelection) <| Dict.get cmd stageStringCmds
-        bar cmd = Maybe.withDefault "Loading..." <| case cmd of
-            str_CardLogin    -> strCmdInfo.cardLogin
-            str_CardPassword -> strCmdInfo.cardPassword
+        bar cmd = Maybe.withDefault "Loading..." <|
+            if (cmd == 0) then strCmdInfo.cardLogin else strCmdInfo.cardPassword
         cardSettings' = container w h midTop <| flow down
             [ cardField "Username" str_CardLogin
             , cardField "Password" str_CardPassword

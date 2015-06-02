@@ -3,6 +3,7 @@ module BackgroundState where
 -- Elm standard library
 import Maybe
 import List (..)
+import String
 
 -- local source
 import CommonState as Common
@@ -292,8 +293,9 @@ uniqAppend p ps = case ps of
 interpret : ReceivedPacket -> BackgroundState -> BackgroundState
 interpret packet s =
     let setExtRequest r = case incomingExtRequestToLog r of
-        Just str -> appendToLog str {s | extRequest <- r}
-        Nothing -> {s | extRequest <- r}
+          Just str -> appendToLog str {s | extRequest <- r}
+          Nothing -> {s | extRequest <- r}
+        trunc0 s = String.filter (\x -> x /='\0') (head (String.split "\0" s))
     in case packet of
         ReceivedGetLogin ml -> case ml of
             Just l ->
@@ -476,17 +478,17 @@ interpret packet s =
         ReceivedGetCardCpz cpz -> case s.memoryManage of
             MemManageReadCpzWaiting (p,f,a,c,cs) -> setMemManage (MemManageReadSuccess (p,f,a,c,cs,cpz)) s
             _ -> s -- can be meant for gui, we just ignore it
-        ReceivedGetCardLogin    xm -> case xm of
+        ReceivedGetCardLogin xm -> case xm of
             Nothing -> s
             Just x  ->
                 let c = s.common
-                    common' = { c | strCmdInfo <- updateStringCmdInfo str_CardLogin x c.strCmdInfo }
+                    common' = { c | strCmdInfo <- updateStringCmdInfo str_CardLogin (trunc0 x) s.common.strCmdInfo }
                 in { s | bgGetStringCmd <- drop 1 s.bgGetStringCmd, common <- common'}
         ReceivedGetCardPassword xm -> case xm of
             Nothing -> s
-            Just x  -> 
+            Just x  ->
                 let c = s.common
-                    common' = { c | strCmdInfo <- updateStringCmdInfo str_CardPassword x c.strCmdInfo }
+                    common' = { c | strCmdInfo <- updateStringCmdInfo str_CardPassword (trunc0 x) s.common.strCmdInfo }
                 in { s | bgGetStringCmd <- drop 1 s.bgGetStringCmd, common <- common'}
         ReceivedSetParameter x ->
             -- update s.common with value of bgSetParameter
